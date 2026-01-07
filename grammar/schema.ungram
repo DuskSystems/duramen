@@ -1,0 +1,98 @@
+// Cedar Schema Grammar.
+// https://docs.cedarpolicy.com/schema/human-readable-schema-grammar.html
+
+// Annotation
+Annotation = '@' IDENT '(' STR ')'
+
+// Annotations
+Annotations = Annotation*
+
+// Schema
+Schema = Namespace*
+
+// Namespace
+Namespace =
+  (Annotations 'namespace' Path '{' Decl* '}')
+  | Decl
+
+// Decl
+Decl = Entity | Action | TypeDecl
+
+// Entity
+Entity =
+  Annotations 'entity' Idents ('in' EntOrTyps)? ('='? RecType)? ('tags' Type)? ';'
+  | Annotations 'entity' Idents 'enum' '[' STR+ ']' ';'
+
+// Action
+Action = Annotations 'action' Names ('in' RefOrRefs)? AppliesTo? ';'
+
+// TypeDecl
+TypeDecl = Annotations 'type' TYPENAME '=' Type ';'
+
+// Type
+Type = Path | SetType | RecType
+
+// EntType
+EntType = Path
+
+// SetType
+SetType = 'Set' '<' Type '>'
+
+// RecType
+RecType = '{' AttrDecls? '}'
+
+// AttrDecls
+AttrDecls = Annotations Name '?'? ':' Type (',' AttrDecls?)?
+
+// AppliesTo
+AppliesTo = 'appliesTo' '{' AppDecls '}'
+
+// AppDecls
+AppDecls =
+  ('principal' | 'resource') ':' EntOrTyps (',' AppDecls?)?
+  | 'context' ':' (Path | RecType) (',' AppDecls?)?
+
+// Path
+Path = IDENT ('::' IDENT)*
+
+// Ref
+Ref = Path '::' STR | Name
+
+// RefOrRefs
+RefOrRefs = Ref | '[' RefOrRefs? ']'
+
+// EntTypes
+EntTypes = Path (',' Path)*
+
+// EntOrTyps
+EntOrTyps = EntType | '[' EntTypes? ']'
+
+// Name
+Name = IDENT | STR
+
+// Names
+Names = Name (',' Name)*
+
+// Idents
+Idents = IDENT (',' IDENT)*
+
+// IDENT
+IDENT = 'ident'
+
+// TYPENAME
+TYPENAME = 'typename'
+
+// STR
+STR = 'str'
+
+// PRIMTYPE
+PRIMTYPE = 'Long' | 'String' | 'Bool'
+
+// WHITESPC
+WHITESPC = 'whitespc'
+
+// COMMENT
+COMMENT = 'comment'
+
+// RESERVED
+RESERVED = 'Bool' | 'Boolean' | 'Entity' | 'Extension' | 'Long' | 'Record' | 'Set' | 'String'
