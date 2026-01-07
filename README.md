@@ -1,2 +1,3 @@
-# duramen
+# `duramen`
+
 A `cedar` parser.
