@@ -1,7 +1,10 @@
 use syntree::{FlavorDefault, Node, Tree};
 
+mod lexer;
+pub use lexer::{SchemaLexer, SchemaToken};
+
 mod syntax;
 pub use syntax::SchemaKind;
 
-pub type SyntaxTree = Tree<SchemaKind, FlavorDefault>;
-pub type SyntaxNode<'a> = Node<'a, SchemaKind, FlavorDefault>;
+pub type SchemaTree = Tree<SchemaKind, FlavorDefault>;
+pub type SchemaNode<'a> = Node<'a, SchemaKind, FlavorDefault>;

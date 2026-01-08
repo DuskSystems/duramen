@@ -1,7 +1,10 @@
 use syntree::{FlavorDefault, Node, Tree};
 
+mod lexer;
+pub use lexer::{PolicyLexer, PolicyToken};
+
 mod syntax;
 pub use syntax::PolicyKind;
 
-pub type SyntaxTree = Tree<PolicyKind, FlavorDefault>;
-pub type SyntaxNode<'a> = Node<'a, PolicyKind, FlavorDefault>;
+pub type PolicyTree = Tree<PolicyKind, FlavorDefault>;
+pub type PolicyNode<'a> = Node<'a, PolicyKind, FlavorDefault>;
