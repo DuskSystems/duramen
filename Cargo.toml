@@ -123,6 +123,9 @@ prettyplease = { version = "0.2", default-features = false }
 # Text
 heck = { version = "0.5", default-features = false }
 
+# SIMD
+memchr = { version = "2.7", default-features = false }
+
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "duramen"
@@ -151,6 +154,9 @@ workspace = true
 [dependencies]
 # Syntax
 syntree = { workspace = true }
+
+# SIMD
+memchr = { workspace = true }
 
 [dev-dependencies]
 # ...
