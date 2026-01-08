@@ -91,10 +91,12 @@ STR = 'str'
 PRIMTYPE = 'Long' | 'String' | 'Bool'
 
 // WHITESPC
-WHITESPC = 'whitespc'
+// duramen: Removed
+// WHITESPC = 'whitespc'
 
 // COMMENT
-COMMENT = 'comment'
+// duramen: Removed
+// COMMENT = 'comment'
 
 // RESERVED
 RESERVED = 'Bool' | 'Boolean' | 'Entity' | 'Extension' | 'Long' | 'Record' | 'Set' | 'String'

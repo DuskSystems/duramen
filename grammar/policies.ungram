@@ -5,6 +5,9 @@
 // https://docs.cedarpolicy.com/policies/syntax-grammar.html#grammar-policy
 Policy = Annotation* Effect '(' Scope ')' Condition* ';'
 
+// duramen: Added
+Policies = Policy*
+
 // Effect
 // https://docs.cedarpolicy.com/policies/syntax-grammar.html#grammar-effect
 Effect = 'permit' | 'forbid'
