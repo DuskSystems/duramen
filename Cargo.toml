@@ -109,6 +109,10 @@ new_without_default = "allow"
 too_many_lines = "allow"
 
 [workspace.dependencies]
+# Upstream
+cedar-policy = { version = "4.8", default-features = false }
+cedar-policy-core = { version = "4.8", default-features = false }
+
 # Syntax
 syntree = { version = "0.18", default-features = false }
 
@@ -132,6 +136,10 @@ serde_json = { version = "1.0", default-features = false }
 facet = { version = "0.42", default-features = false }
 facet-json = { version = "0.42", default-features = false }
 prost = { version = "0.14", default-features = false }
+
+# Testing
+datatest-stable = { version = "0.3", default-features = false }
+similar-asserts = { version = "1.7", default-features = false }
 
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
@@ -180,4 +188,46 @@ facet-json = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
 
 [dev-dependencies]
-# ...
+# Upstream
+cedar-policy = { workspace = true, features = ["protobufs"] }
+cedar-policy-core = { workspace = true, features = ["ipaddr", "decimal", "datetime"] }
+
+# Serialization
+serde_json = { workspace = true }
+
+# Testing
+datatest-stable = { workspace = true }
+similar-asserts = { workspace = true }
+
+[[test]]
+name = "policy_fixtures"
+harness = false
+
+[[test]]
+name = "policy_fixtures_serde"
+harness = false
+required-features = ["serde"]
+
+[[test]]
+name = "policy_fixtures_facet"
+harness = false
+required-features = ["facet"]
+
+[[test]]
+name = "policy_fixtures_prost"
+harness = false
+required-features = ["prost"]
+
+[[test]]
+name = "schema_fixtures"
+harness = false
+
+[[test]]
+name = "schema_fixtures_serde"
+harness = false
+required-features = ["serde"]
+
+[[test]]
+name = "schema_fixtures_facet"
+harness = false
+required-features = ["facet"]

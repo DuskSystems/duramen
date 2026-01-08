@@ -62,7 +62,11 @@
               ];
             })
             taplo
+            cargo-nextest
             vscode-extensions.vadimcn.vscode-lldb.adapter
+
+            # Build
+            protobuf
 
             # GitHub
             zizmor
