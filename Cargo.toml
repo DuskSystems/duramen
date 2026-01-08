@@ -117,7 +117,7 @@ ungrammar = { version = "1.16", default-features = false }
 
 # Code Generation
 quote = { version = "1.0", default-features = false }
-syn = { version = "2.0", default-features = false, features = ["parsing", "full"] }
+syn = { version = "2.0", default-features = false }
 prettyplease = { version = "0.2", default-features = false }
 
 # Text
@@ -125,6 +125,13 @@ heck = { version = "0.5", default-features = false }
 
 # SIMD
 memchr = { version = "2.7", default-features = false }
+
+# Serialization
+serde = { version = "1.0", default-features = false }
+serde_json = { version = "1.0", default-features = false }
+facet = { version = "0.42", default-features = false }
+facet-json = { version = "0.42", default-features = false }
+prost = { version = "0.14", default-features = false }
 
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
@@ -151,12 +158,26 @@ categories.workspace = true
 [lints]
 workspace = true
 
+[features]
+default = ["std"]
+std = ["syntree/std", "serde_json?/std", "facet?/std", "facet-json?/std", "prost?/std"]
+serde = ["dep:serde", "dep:serde_json"]
+facet = ["dep:facet", "dep:facet-json"]
+prost = ["dep:prost"]
+
 [dependencies]
 # Syntax
 syntree = { workspace = true }
 
 # SIMD
 memchr = { workspace = true }
+
+# Serialization
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+facet = { workspace = true, optional = true }
+facet-json = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
 
 [dev-dependencies]
 # ...
