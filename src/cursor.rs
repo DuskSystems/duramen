@@ -1,9 +1,13 @@
+use core::num::NonZeroUsize;
+
 pub struct Cursor<'a> {
     source: &'a str,
     position: usize,
 }
 
 impl<'a> Cursor<'a> {
+    pub const END: u8 = 0;
+
     #[must_use]
     pub const fn new(source: &'a str) -> Self {
         Self {
@@ -28,17 +32,22 @@ impl<'a> Cursor<'a> {
 
     #[inline]
     #[must_use]
-    pub fn peek(&self) -> Option<u8> {
-        self.source.as_bytes().get(self.position).copied()
+    pub fn current(&self) -> u8 {
+        self.source
+            .as_bytes()
+            .get(self.position)
+            .copied()
+            .unwrap_or(Self::END)
     }
 
     #[inline]
     #[must_use]
-    pub fn peek_next(&self) -> Option<u8> {
+    pub fn peek(&self, peek: NonZeroUsize) -> u8 {
         self.source
             .as_bytes()
-            .get(self.position.saturating_add(1))
+            .get(self.position.saturating_add(peek.get()))
             .copied()
+            .unwrap_or(Self::END)
     }
 
     #[inline]
@@ -48,12 +57,12 @@ impl<'a> Cursor<'a> {
 
     #[inline]
     pub fn bump_char(&mut self) {
-        if let Some(c) = self
+        if let Some(char) = self
             .source
             .get(self.position..)
             .and_then(|str| str.chars().next())
         {
-            self.position = self.position.saturating_add(c.len_utf8());
+            self.position = self.position.saturating_add(char.len_utf8());
         }
     }
 
@@ -63,8 +72,9 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn skip_whitespace(&mut self) {
-        while let Some(byte) = self.peek() {
-            if !Self::is_whitespace(byte) {
+        loop {
+            let byte = self.current();
+            if byte == Self::END || !Self::is_whitespace(byte) {
                 break;
             }
 
@@ -95,12 +105,12 @@ impl<'a> Cursor<'a> {
 
             self.position = self.position.saturating_add(position);
 
-            match self.peek() {
-                Some(b'"') => {
+            match self.current() {
+                b'"' => {
                     self.bump();
                     return true;
                 }
-                Some(b'\\') => {
+                b'\\' => {
                     self.bump();
                     self.bump_char();
                 }
@@ -111,8 +121,10 @@ impl<'a> Cursor<'a> {
 
     pub fn scan_ident(&mut self) -> &'a str {
         let start = self.position;
-        while let Some(byte) = self.peek() {
-            if !Self::is_ident_continue(byte) {
+
+        loop {
+            let byte = self.current();
+            if byte == Self::END || !Self::is_ident_continue(byte) {
                 break;
             }
 
@@ -123,19 +135,14 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn scan_integer(&mut self) {
-        while let Some(byte) = self.peek() {
-            if !Self::is_digit(byte) {
+        loop {
+            let byte = self.current();
+            if byte == Self::END || !Self::is_digit(byte) {
                 break;
             }
 
             self.bump();
         }
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn is_eof(&self) -> bool {
-        self.position >= self.source.len()
     }
 
     #[inline]

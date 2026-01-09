@@ -1,17 +1,17 @@
-use super::syntax::PolicyKind;
+use super::syntax::PolicySyntax;
 use crate::cursor::Cursor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PolicyToken<'a> {
-    kind: PolicyKind,
+    syntax: PolicySyntax,
     text: &'a str,
-    offset: usize,
+    position: usize,
 }
 
 impl<'a> PolicyToken<'a> {
     #[must_use]
-    pub const fn kind(&self) -> PolicyKind {
-        self.kind
+    pub const fn syntax(&self) -> PolicySyntax {
+        self.syntax
     }
 
     #[must_use]
@@ -20,8 +20,8 @@ impl<'a> PolicyToken<'a> {
     }
 
     #[must_use]
-    pub const fn offset(&self) -> usize {
-        self.offset
+    pub const fn position(&self) -> usize {
+        self.position
     }
 }
 
@@ -37,185 +37,185 @@ impl<'a> PolicyLexer<'a> {
         }
     }
 
+    #[must_use]
+    pub const fn position(&self) -> usize {
+        self.cursor.position()
+    }
+
     pub fn next_token(&mut self) -> PolicyToken<'a> {
-        if self.cursor.is_eof() {
-            return PolicyToken {
-                kind: PolicyKind::EOF,
-                text: "",
-                offset: self.cursor.position(),
-            };
-        }
-
         let start = self.cursor.position();
-        let Some(byte) = self.cursor.peek() else {
-            return PolicyToken {
-                kind: PolicyKind::EOF,
-                text: "",
-                offset: self.cursor.position(),
-            };
-        };
+        let first = self.cursor.current();
 
-        let kind = match byte {
+        let syntax = match first {
+            Cursor::END => PolicySyntax::Eof,
             byte if Cursor::is_whitespace(byte) => {
                 self.cursor.skip_whitespace();
-                PolicyKind::WHITESPACE
-            }
-            b'/' if self.cursor.peek_next() == Some(b'/') => {
-                self.cursor.bump();
-                self.cursor.bump();
-                self.cursor.skip_line();
-                PolicyKind::COMMENT
+                PolicySyntax::Whitespace
             }
             b'"' => {
                 self.cursor.bump();
                 if self.cursor.scan_string() {
-                    PolicyKind::STRING
+                    PolicySyntax::String
                 } else {
-                    PolicyKind::ERROR
+                    PolicySyntax::Unknown
                 }
             }
             byte if Cursor::is_digit(byte) => {
                 self.cursor.scan_integer();
-                PolicyKind::INT
+                PolicySyntax::Integer
             }
             byte if Cursor::is_ident_start(byte) => {
                 let text = self.cursor.scan_ident();
-                PolicyKind::from_keyword(text).unwrap_or(PolicyKind::IDENT)
-            }
-            b'@' => {
-                self.cursor.bump();
-                PolicyKind::AT
+                PolicySyntax::from_keyword(text).unwrap_or(PolicySyntax::Identifier)
             }
             b'(' => {
                 self.cursor.bump();
-                PolicyKind::L_PAREN
+                PolicySyntax::OpenParenthesis
             }
             b')' => {
                 self.cursor.bump();
-                PolicyKind::R_PAREN
+                PolicySyntax::CloseParenthesis
             }
             b'{' => {
                 self.cursor.bump();
-                PolicyKind::L_BRACE
+                PolicySyntax::OpenBrace
             }
             b'}' => {
                 self.cursor.bump();
-                PolicyKind::R_BRACE
+                PolicySyntax::CloseBrace
             }
             b'[' => {
                 self.cursor.bump();
-                PolicyKind::L_BRACKET
+                PolicySyntax::OpenBracket
             }
             b']' => {
                 self.cursor.bump();
-                PolicyKind::R_BRACKET
-            }
-            b';' => {
-                self.cursor.bump();
-                PolicyKind::SEMI
-            }
-            b':' => {
-                self.cursor.bump();
-                if self.cursor.peek() == Some(b':') {
-                    self.cursor.bump();
-                    PolicyKind::COLON2
-                } else {
-                    PolicyKind::COLON
-                }
+                PolicySyntax::CloseBracket
             }
             b',' => {
                 self.cursor.bump();
-                PolicyKind::COMMA
+                PolicySyntax::Comma
+            }
+            b';' => {
+                self.cursor.bump();
+                PolicySyntax::Semicolon
+            }
+            b':' => {
+                self.cursor.bump();
+                if self.cursor.current() == b':' {
+                    self.cursor.bump();
+                    PolicySyntax::Colon2
+                } else {
+                    PolicySyntax::Colon
+                }
+            }
+            b'@' => {
+                self.cursor.bump();
+                PolicySyntax::At
             }
             b'.' => {
                 self.cursor.bump();
-                PolicyKind::DOT
+                PolicySyntax::Dot
             }
             b'?' => {
                 self.cursor.bump();
-                if self.cursor.peek().is_some_and(Cursor::is_ident_start) {
-                    self.cursor.scan_ident();
-                    PolicyKind::SLOT
-                } else {
-                    PolicyKind::ERROR
-                }
+                PolicySyntax::Question
             }
             b'=' => {
                 self.cursor.bump();
-                if self.cursor.peek() == Some(b'=') {
-                    self.cursor.bump();
-                    PolicyKind::EQ2
-                } else {
-                    PolicyKind::EQ
+                match self.cursor.current() {
+                    b'=' => {
+                        self.cursor.bump();
+                        PolicySyntax::Equal2
+                    }
+                    b'>' => {
+                        self.cursor.bump();
+                        PolicySyntax::FatArrow
+                    }
+                    _ => PolicySyntax::Equal,
                 }
             }
             b'!' => {
                 self.cursor.bump();
-                if self.cursor.peek() == Some(b'=') {
+                if self.cursor.current() == b'=' {
                     self.cursor.bump();
-                    PolicyKind::NEQ
+                    PolicySyntax::NotEqual
                 } else {
-                    PolicyKind::BANG
+                    PolicySyntax::Not
                 }
             }
             b'<' => {
                 self.cursor.bump();
-                if self.cursor.peek() == Some(b'=') {
+                if self.cursor.current() == b'=' {
                     self.cursor.bump();
-                    PolicyKind::LTEQ
+                    PolicySyntax::LessEqual
                 } else {
-                    PolicyKind::LT
+                    PolicySyntax::LessThan
                 }
             }
             b'>' => {
                 self.cursor.bump();
-                if self.cursor.peek() == Some(b'=') {
+                if self.cursor.current() == b'=' {
                     self.cursor.bump();
-                    PolicyKind::GTEQ
+                    PolicySyntax::GreaterEqual
                 } else {
-                    PolicyKind::GT
+                    PolicySyntax::GreaterThan
                 }
             }
-            b'&' if self.cursor.peek_next() == Some(b'&') => {
+            b'&' => {
                 self.cursor.bump();
-                self.cursor.bump();
-                PolicyKind::AMP2
+                if self.cursor.current() == b'&' {
+                    self.cursor.bump();
+                    PolicySyntax::Ampersand2
+                } else {
+                    PolicySyntax::Ampersand
+                }
             }
-            b'|' if self.cursor.peek_next() == Some(b'|') => {
+            b'|' => {
                 self.cursor.bump();
-                self.cursor.bump();
-                PolicyKind::PIPE2
+                if self.cursor.current() == b'|' {
+                    self.cursor.bump();
+                    PolicySyntax::Pipe2
+                } else {
+                    PolicySyntax::Pipe
+                }
             }
             b'+' => {
                 self.cursor.bump();
-                PolicyKind::PLUS
+                PolicySyntax::Plus
             }
             b'-' => {
                 self.cursor.bump();
-                PolicyKind::MINUS
+                PolicySyntax::Minus
             }
             b'*' => {
                 self.cursor.bump();
-                PolicyKind::STAR
+                PolicySyntax::Asterisk
             }
             b'/' => {
                 self.cursor.bump();
-                PolicyKind::SLASH
+                if self.cursor.current() == b'/' {
+                    self.cursor.bump();
+                    self.cursor.skip_line();
+                    PolicySyntax::Comment
+                } else {
+                    PolicySyntax::Slash
+                }
             }
             b'%' => {
                 self.cursor.bump();
-                PolicyKind::PERCENT
+                PolicySyntax::Percent
             }
             _ => {
                 self.cursor.bump_char();
-                PolicyKind::ERROR
+                PolicySyntax::Unknown
             }
         };
 
         PolicyToken {
-            kind,
+            syntax,
             text: self.cursor.slice(start),
-            offset: start,
+            position: start,
         }
     }
 }
