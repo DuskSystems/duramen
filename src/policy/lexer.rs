@@ -8,6 +8,23 @@ pub struct PolicyToken<'a> {
     offset: usize,
 }
 
+impl<'a> PolicyToken<'a> {
+    #[must_use]
+    pub const fn kind(&self) -> PolicyKind {
+        self.kind
+    }
+
+    #[must_use]
+    pub const fn text(&self) -> &'a str {
+        self.text
+    }
+
+    #[must_use]
+    pub const fn offset(&self) -> usize {
+        self.offset
+    }
+}
+
 pub struct PolicyLexer<'a> {
     cursor: Cursor<'a>,
 }
@@ -116,17 +133,11 @@ impl<'a> PolicyLexer<'a> {
             }
             b'?' => {
                 self.cursor.bump();
-
-                let position = self.cursor.position();
-                let text = self.cursor.scan_ident();
-
-                match text {
-                    "principal" => PolicyKind::PRINCIPAL_SLOT,
-                    "resource" => PolicyKind::RESOURCE_SLOT,
-                    _ => {
-                        self.cursor.seek(position);
-                        PolicyKind::QUESTION
-                    }
+                if self.cursor.peek().is_some_and(Cursor::is_ident_start) {
+                    self.cursor.scan_ident();
+                    PolicyKind::SLOT
+                } else {
+                    PolicyKind::ERROR
                 }
             }
             b'=' => {
@@ -135,7 +146,7 @@ impl<'a> PolicyLexer<'a> {
                     self.cursor.bump();
                     PolicyKind::EQ2
                 } else {
-                    PolicyKind::ERROR
+                    PolicyKind::EQ
                 }
             }
             b'!' => {

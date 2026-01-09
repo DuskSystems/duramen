@@ -1,0 +1,130 @@
+// Cedar Policy Grammar.
+//
+// References:
+// - https://docs.cedarpolicy.com/policies/syntax-grammar.html
+// - https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/parser/grammar.lalrpop
+
+Policies =
+  Policy*
+
+Policy =
+  Annotation* effect:('permit' | 'forbid') '(' scope:Scope ')' conditions:Cond* ';'
+
+Annotation =
+  '@' key:Ident ('(' value:'@string' ')')?
+
+Scope =
+  (ScopeItem (',' ScopeItem)* ','?)?
+
+ScopeItem =
+  var:Ident
+  (':' type_name:NameExpr)?
+  ('is' entity_type:Expr)?
+  (op:('==' | 'in' | '!=' | '<' | '<=' | '>' | '>=' | '=') target:Expr)?
+
+Cond =
+  kind:('when' | 'unless') '{' body:Expr? '}'
+
+Expr =
+  Literal
+| NameExpr
+| RefExpr
+| SlotExpr
+| ParenExpr
+| ListExpr
+| RecordExpr
+| UnaryExpr
+| BinExpr
+| HasExpr
+| LikeExpr
+| IsExpr
+| IfExpr
+| FieldExpr
+| MethodCallExpr
+| CallExpr
+| IndexExpr
+
+Literal =
+  'true' | 'false' | '@int' | '@string'
+
+NameExpr =
+  path:(Ident '::')* name:Ident
+
+RefExpr =
+  path:NameExpr '::' eid:RefTail
+
+RefTail =
+  '@string'
+| '{' inits:RefInits? '}'
+
+RefInits =
+  RefInit (',' RefInit)* ','?
+
+RefInit =
+  key:Ident ':' value:Literal
+
+SlotExpr =
+  '@slot'
+
+ParenExpr =
+  '(' Expr ')'
+
+ListExpr =
+  '[' elems:ExprList? ']'
+
+ExprList =
+  Expr (',' Expr)* ','?
+
+RecordExpr =
+  '{' fields:RecordInits? '}'
+
+RecordInits =
+  RecordInit (',' RecordInit)* ','?
+
+RecordInit =
+  key:RecordKey ':' value:Expr
+
+RecordKey =
+  Ident | '@string'
+
+UnaryExpr =
+  op:('!' | '-') operand:Expr
+
+BinExpr =
+  lhs:Expr
+  op:('||' | '&&' | '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | '+' | '-' | '*' | '/' | '%')
+  rhs:Expr
+
+HasExpr =
+  base:Expr 'has' attr:Expr
+
+LikeExpr =
+  base:Expr 'like' pattern:Expr
+
+IsExpr =
+  base:Expr 'is' entity_type:Expr ('in' in_entity:Expr)?
+
+IfExpr =
+  'if' condition:Expr 'then' then_branch:Expr 'else' else_branch:Expr
+
+FieldExpr =
+  base:Expr '.' field:Ident
+
+MethodCallExpr =
+  receiver:Expr '.' method:Ident '(' args:ArgList? ')'
+
+CallExpr =
+  callee:NameExpr '(' args:ArgList? ')'
+
+IndexExpr =
+  base:Expr '[' index:Expr ']'
+
+ArgList =
+  Expr (',' Expr)* ','?
+
+Ident =
+  '@ident'
+| 'principal' | 'action' | 'resource' | 'context'
+| 'permit' | 'forbid' | 'when' | 'unless'
+| 'if' | 'then' | 'else' | 'in' | 'has' | 'like' | 'is'
+| 'true' | 'false'

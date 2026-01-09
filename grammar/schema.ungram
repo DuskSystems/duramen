@@ -1,102 +1,133 @@
 // Cedar Schema Grammar.
-// https://docs.cedarpolicy.com/schema/human-readable-schema-grammar.html
+//
+// References:
+// - https://docs.cedarpolicy.com/schema/human-readable-schema-grammar.html
+// - https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/validator/cedar_schema/grammar.lalrpop
 
-// Annotation
-Annotation = '@' IDENT '(' STR ')'
+Schema =
+  Namespace*
 
-// Annotations
-Annotations = Annotation*
-
-// Schema
-Schema = Namespace*
-
-// Namespace
 Namespace =
-  (Annotations 'namespace' Path '{' Decl* '}')
-  | Decl
+  Annotation* body:NamespaceBody
 
-// Decl
-Decl = Entity | Action | TypeDecl
+NamespaceBody =
+  NamespaceDecl
+| Decl
 
-// Entity
+NamespaceDecl =
+  'namespace' name:Path '{' decls:Decl* '}'
+
+Decl =
+  Entity
+| Action
+| TypeDecl
+
 Entity =
-  Annotations 'entity' Idents ('in' EntOrTyps)? ('='? RecType)? ('tags' Type)? ';'
-  | Annotations 'entity' Idents 'enum' '[' EnumVariants ']' ';'
+  EntityStandard
+| EntityEnum
 
-EnumVariants = STR (',' STR)*
+EntityStandard =
+  Annotation* 'entity' names:Idents member_of:MemberOf? attrs:EntityAttrs? tags:Tags? ';'
 
-// Action
-Action = Annotations 'action' Names ('in' RefOrRefs)? AppliesTo? ';'
+EntityEnum =
+  Annotation* 'entity' names:Idents 'enum' '[' variants:Strings ']' ';'
 
-// TypeDecl
-TypeDecl = Annotations 'type' TYPENAME '=' Type ';'
+MemberOf =
+  'in' types:EntTypes
 
-// Type
-Type = Path | SetType | RecType
+EntityAttrs =
+  '='? ty:RecType
 
-// EntType
-EntType = Path
+Tags =
+  'tags' ty:Type
 
-// SetType
-SetType = 'Set' '<' Type '>'
+Action =
+  Annotation* 'action' names:Names parents:ActionParents? applies:AppliesTo? attrs:ActionAttrs? ';'
 
-// RecType
-RecType = '{' AttrDecls? '}'
+ActionParents =
+  'in' refs:QualNameOrNames
 
-// AttrDecls
-AttrDecls = Annotations Name '?'? ':' Type (',' AttrDecls?)?
+QualNameOrNames =
+  QualName
+| '[' names:QualNameList ']'
 
-// AppliesTo
-AppliesTo = 'appliesTo' '{' AppDecls '}'
+QualName =
+  path:Path '::' eid:'@string'
+| Name
 
-// AppDecls
+QualNameList =
+  (QualName (',' QualName)* ','?)?
+
+ActionAttrs =
+  'attributes' '{' '}'
+
+AppliesTo =
+  'appliesTo' '{' decls:AppDecls? '}'
+
 AppDecls =
-  ('principal' | 'resource') ':' EntOrTyps (',' AppDecls?)?
-  | 'context' ':' (Path | RecType) (',' AppDecls?)?
+  AppDecl (',' AppDecl)* ','?
 
-// Path
-Path = IDENT ('::' IDENT)*
+AppDecl =
+  PrincipalOrResource
+| ContextDecl
 
-// Ref
-Ref = Path '::' STR | Name
+PrincipalOrResource =
+  kind:('principal' | 'resource') ':' types:EntTypes
 
-// RefOrRefs
-RefOrRefs = Ref | '[' RefOrRefs? ']'
+ContextDecl =
+  'context' ':' ty:ContextType
 
-// EntTypes
-EntTypes = Path (',' Path)*
+ContextType =
+  Path
+| RecType
 
-// EntOrTyps
-EntOrTyps = EntType | '[' EntTypes? ']'
+TypeDecl =
+  Annotation* 'type' name:Ident '=' def:Type ';'
 
-// Name
-Name = IDENT | STR
+Type =
+  Path
+| SetType
+| RecType
 
-// Names
-Names = Name (',' Name)*
+SetType =
+  'Set' '<' elem:Type '>'
 
-// Idents
-Idents = IDENT (',' IDENT)*
+RecType =
+  '{' attrs:AttrDecls? '}'
 
-// IDENT
-IDENT = 'ident'
+AttrDecls =
+  AttrDecl (',' AttrDecl)* ','?
 
-// TYPENAME
-TYPENAME = 'typename'
+AttrDecl =
+  Annotation* name:Name optional:'?'? ':' ty:Type
 
-// STR
-STR = 'str'
+EntTypes =
+  Path
+| '[' paths:PathList ']'
 
-// PRIMTYPE
-PRIMTYPE = 'Long' | 'String' | 'Bool'
+PathList =
+  (Path (',' Path)* ','?)?
 
-// WHITESPC
-// duramen: Removed
-// WHITESPC = 'whitespc'
+Annotation =
+  '@' key:Ident ('(' value:'@string' ')')?
 
-// COMMENT
-// duramen: Removed
-// COMMENT = 'comment'
+Path =
+  Ident ('::' Ident)*
 
-// RESERVED
-RESERVED = 'Bool' | 'Boolean' | 'Entity' | 'Extension' | 'Long' | 'Record' | 'Set' | 'String'
+Name =
+  Ident | '@string'
+
+Names =
+  Name (',' Name)* ','?
+
+Idents =
+  Ident (',' Ident)* ','?
+
+Strings =
+  '@string' (',' '@string')* ','?
+
+Ident =
+  '@ident'
+| 'namespace' | 'entity' | 'in' | 'type' | 'Set' | 'appliesTo'
+| 'principal' | 'action' | 'resource' | 'context' | 'attributes'
+| 'tags' | 'Long' | 'String' | 'Bool' | 'enum'
