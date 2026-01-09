@@ -8,6 +8,23 @@ pub struct SchemaToken<'a> {
     offset: usize,
 }
 
+impl<'a> SchemaToken<'a> {
+    #[must_use]
+    pub const fn kind(&self) -> SchemaKind {
+        self.kind
+    }
+
+    #[must_use]
+    pub const fn text(&self) -> &'a str {
+        self.text
+    }
+
+    #[must_use]
+    pub const fn offset(&self) -> usize {
+        self.offset
+    }
+}
+
 pub struct SchemaLexer<'a> {
     cursor: Cursor<'a>,
 }

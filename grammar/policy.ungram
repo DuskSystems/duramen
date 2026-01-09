@@ -1,0 +1,130 @@
+// Cedar Policy Grammar.
+//
+// References:
+// - https://docs.cedarpolicy.com/policies/syntax-grammar.html
+// - https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/parser/grammar.lalrpop
+
+Policies =
+  Policy*
+
+Policy =
+  Annotation* effect:('permit' | 'forbid') '(' Scope ')' Cond* ';'
+
+Annotation =
+  '@' Ident ('(' value:'@string' ')')?
+
+Scope =
+  (ScopeItem (',' ScopeItem)* ','?)?
+
+ScopeItem =
+  Ident
+  (':' type_name:NameExpr)?
+  ('is' entity_type:Expr)?
+  (op:('==' | 'in' | '!=' | '<' | '<=' | '>' | '>=' | '=') target:Expr)?
+
+Cond =
+  kind:('when' | 'unless') '{' Expr? '}'
+
+Expr =
+  Literal
+| NameExpr
+| RefExpr
+| SlotExpr
+| ParenExpr
+| ListExpr
+| RecordExpr
+| UnaryExpr
+| BinExpr
+| HasExpr
+| LikeExpr
+| IsExpr
+| IfExpr
+| FieldExpr
+| MethodCallExpr
+| CallExpr
+| IndexExpr
+
+Literal =
+  'true' | 'false' | '@int' | '@string'
+
+NameExpr =
+  (Ident '::')* Ident
+
+RefExpr =
+  NameExpr '::' RefTail
+
+RefTail =
+  '@string'
+| '{' RefInits? '}'
+
+RefInits =
+  RefInit (',' RefInit)* ','?
+
+RefInit =
+  Ident ':' Literal
+
+SlotExpr =
+  '@slot'
+
+ParenExpr =
+  '(' Expr ')'
+
+ListExpr =
+  '[' ExprList? ']'
+
+ExprList =
+  Expr (',' Expr)* ','?
+
+RecordExpr =
+  '{' RecordInits? '}'
+
+RecordInits =
+  RecordInit (',' RecordInit)* ','?
+
+RecordInit =
+  RecordKey ':' Expr
+
+RecordKey =
+  Ident | '@string'
+
+UnaryExpr =
+  op:('!' | '-') Expr
+
+BinExpr =
+  lhs:Expr
+  op:('||' | '&&' | '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | '+' | '-' | '*' | '/' | '%')
+  rhs:Expr
+
+HasExpr =
+  Expr 'has' attribute:Expr
+
+LikeExpr =
+  Expr 'like' pattern:Expr
+
+IsExpr =
+  Expr 'is' entity_type:Expr ('in' in_entity:Expr)?
+
+IfExpr =
+  'if' condition:Expr 'then' then_branch:Expr 'else' else_branch:Expr
+
+FieldExpr =
+  Expr '.' Ident
+
+MethodCallExpr =
+  Expr '.' Ident '(' ArgList? ')'
+
+CallExpr =
+  NameExpr '(' ArgList? ')'
+
+IndexExpr =
+  Expr '[' index:Expr ']'
+
+ArgList =
+  Expr (',' Expr)* ','?
+
+Ident =
+  '@ident'
+| 'principal' | 'action' | 'resource' | 'context'
+| 'permit' | 'forbid' | 'when' | 'unless'
+| 'if' | 'then' | 'else' | 'in' | 'has' | 'like' | 'is'
+| 'true' | 'false'

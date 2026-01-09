@@ -1,102 +1,133 @@
 // Cedar Schema Grammar.
-// https://docs.cedarpolicy.com/schema/human-readable-schema-grammar.html
+//
+// References:
+// - https://docs.cedarpolicy.com/schema/human-readable-schema-grammar.html
+// - https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/validator/cedar_schema/grammar.lalrpop
 
-// Annotation
-Annotation = '@' IDENT '(' STR ')'
+Schema =
+  Namespace*
 
-// Annotations
-Annotations = Annotation*
-
-// Schema
-Schema = Namespace*
-
-// Namespace
 Namespace =
-  (Annotations 'namespace' Path '{' Decl* '}')
-  | Decl
+  Annotation* body:NamespaceBody
 
-// Decl
-Decl = Entity | Action | TypeDecl
+NamespaceBody =
+  NamespaceDecl
+| Decl
 
-// Entity
+NamespaceDecl =
+  'namespace' name:Path '{' Decl* '}'
+
+Decl =
+  Entity
+| Action
+| TypeDecl
+
 Entity =
-  Annotations 'entity' Idents ('in' EntOrTyps)? ('='? RecType)? ('tags' Type)? ';'
-  | Annotations 'entity' Idents 'enum' '[' EnumVariants ']' ';'
+  EntityStandard
+| EntityEnum
 
-EnumVariants = STR (',' STR)*
+EntityStandard =
+  Annotation* 'entity' Idents MemberOf? EntityAttrs? Tags? ';'
 
-// Action
-Action = Annotations 'action' Names ('in' RefOrRefs)? AppliesTo? ';'
+EntityEnum =
+  Annotation* 'entity' Idents 'enum' '[' Strings ']' ';'
 
-// TypeDecl
-TypeDecl = Annotations 'type' TYPENAME '=' Type ';'
+MemberOf =
+  'in' EntTypes
 
-// Type
-Type = Path | SetType | RecType
+EntityAttrs =
+  '='? ty:RecType
 
-// EntType
-EntType = Path
+Tags =
+  'tags' ty:Type
 
-// SetType
-SetType = 'Set' '<' Type '>'
+Action =
+  Annotation* 'action' Names ActionParents? AppliesTo? ActionAttrs? ';'
 
-// RecType
-RecType = '{' AttrDecls? '}'
+ActionParents =
+  'in' QualNameOrNames
 
-// AttrDecls
-AttrDecls = Annotations Name '?'? ':' Type (',' AttrDecls?)?
+QualNameOrNames =
+  single:QualName
+| '[' QualNameList ']'
 
-// AppliesTo
-AppliesTo = 'appliesTo' '{' AppDecls '}'
+QualName =
+  Path '::' eid:'@string'
+| Name
 
-// AppDecls
+QualNameList =
+  (QualName (',' QualName)* ','?)?
+
+ActionAttrs =
+  'attributes' '{' '}'
+
+AppliesTo =
+  'appliesTo' '{' AppDecls? '}'
+
 AppDecls =
-  ('principal' | 'resource') ':' EntOrTyps (',' AppDecls?)?
-  | 'context' ':' (Path | RecType) (',' AppDecls?)?
+  AppDecl (',' AppDecl)* ','?
 
-// Path
-Path = IDENT ('::' IDENT)*
+AppDecl =
+  PrincipalOrResource
+| ContextDecl
 
-// Ref
-Ref = Path '::' STR | Name
+PrincipalOrResource =
+  kind:('principal' | 'resource') ':' EntTypes
 
-// RefOrRefs
-RefOrRefs = Ref | '[' RefOrRefs? ']'
+ContextDecl =
+  'context' ':' ty:ContextType
 
-// EntTypes
-EntTypes = Path (',' Path)*
+ContextType =
+  Path
+| RecType
 
-// EntOrTyps
-EntOrTyps = EntType | '[' EntTypes? ']'
+TypeDecl =
+  Annotation* 'type' Ident '=' def:Type ';'
 
-// Name
-Name = IDENT | STR
+Type =
+  Path
+| SetType
+| RecType
 
-// Names
-Names = Name (',' Name)*
+SetType =
+  'Set' '<' elem:Type '>'
 
-// Idents
-Idents = IDENT (',' IDENT)*
+RecType =
+  '{' AttrDecls? '}'
 
-// IDENT
-IDENT = 'ident'
+AttrDecls =
+  AttrDecl (',' AttrDecl)* ','?
 
-// TYPENAME
-TYPENAME = 'typename'
+AttrDecl =
+  Annotation* Name optional:'?'? ':' ty:Type
 
-// STR
-STR = 'str'
+EntTypes =
+  single:Path
+| '[' PathList ']'
 
-// PRIMTYPE
-PRIMTYPE = 'Long' | 'String' | 'Bool'
+PathList =
+  (Path (',' Path)* ','?)?
 
-// WHITESPC
-// duramen: Removed
-// WHITESPC = 'whitespc'
+Annotation =
+  '@' Ident ('(' value:'@string' ')')?
 
-// COMMENT
-// duramen: Removed
-// COMMENT = 'comment'
+Path =
+  Ident ('::' Ident)*
 
-// RESERVED
-RESERVED = 'Bool' | 'Boolean' | 'Entity' | 'Extension' | 'Long' | 'Record' | 'Set' | 'String'
+Name =
+  Ident | '@string'
+
+Names =
+  Name (',' Name)* ','?
+
+Idents =
+  Ident (',' Ident)* ','?
+
+Strings =
+  '@string' (',' '@string')* ','?
+
+Ident =
+  '@ident'
+| 'namespace' | 'entity' | 'in' | 'type' | 'Set' | 'appliesTo'
+| 'principal' | 'action' | 'resource' | 'context' | 'attributes'
+| 'tags' | 'Long' | 'String' | 'Bool' | 'enum'
