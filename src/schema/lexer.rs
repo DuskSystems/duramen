@@ -1,16 +1,16 @@
-use super::syntax::SchemaKind;
+use super::syntax::SchemaTokenKind;
 use crate::cursor::Cursor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SchemaToken<'a> {
-    kind: SchemaKind,
+    kind: SchemaTokenKind,
     text: &'a str,
-    offset: usize,
+    position: usize,
 }
 
 impl<'a> SchemaToken<'a> {
     #[must_use]
-    pub const fn kind(&self) -> SchemaKind {
+    pub const fn kind(&self) -> SchemaTokenKind {
         self.kind
     }
 
@@ -20,8 +20,8 @@ impl<'a> SchemaToken<'a> {
     }
 
     #[must_use]
-    pub const fn offset(&self) -> usize {
-        self.offset
+    pub const fn position(&self) -> usize {
+        self.position
     }
 }
 
@@ -37,122 +37,122 @@ impl<'a> SchemaLexer<'a> {
         }
     }
 
+    #[must_use]
+    pub const fn position(&self) -> usize {
+        self.cursor.position()
+    }
+
     pub fn next_token(&mut self) -> SchemaToken<'a> {
-        if self.cursor.is_eof() {
-            return SchemaToken {
-                kind: SchemaKind::EOF,
-                text: "",
-                offset: self.cursor.position(),
-            };
-        }
-
         let start = self.cursor.position();
-        let Some(byte) = self.cursor.peek() else {
-            return SchemaToken {
-                kind: SchemaKind::EOF,
-                text: "",
-                offset: self.cursor.position(),
-            };
-        };
+        let first = self.cursor.current();
 
-        let kind = match byte {
+        let kind = match first {
+            Cursor::END => SchemaTokenKind::Eof,
             byte if Cursor::is_whitespace(byte) => {
                 self.cursor.skip_whitespace();
-                SchemaKind::WHITESPACE
-            }
-            b'/' if self.cursor.peek_next() == Some(b'/') => {
-                self.cursor.bump();
-                self.cursor.bump();
-                self.cursor.skip_line();
-                SchemaKind::COMMENT
+                SchemaTokenKind::Whitespace
             }
             b'"' => {
                 self.cursor.bump();
                 if self.cursor.scan_string() {
-                    SchemaKind::STRING
+                    SchemaTokenKind::String
                 } else {
-                    SchemaKind::ERROR
+                    SchemaTokenKind::Unknown
                 }
             }
             byte if Cursor::is_ident_start(byte) => {
                 let text = self.cursor.scan_ident();
-                SchemaKind::from_keyword(text).unwrap_or(SchemaKind::IDENT)
-            }
-            b'@' => {
-                self.cursor.bump();
-                SchemaKind::AT
+                SchemaTokenKind::from_keyword(text).unwrap_or(SchemaTokenKind::Identifier)
             }
             b'(' => {
                 self.cursor.bump();
-                SchemaKind::L_PAREN
+                SchemaTokenKind::OpenParenthesis
             }
             b')' => {
                 self.cursor.bump();
-                SchemaKind::R_PAREN
+                SchemaTokenKind::CloseParenthesis
             }
             b'{' => {
                 self.cursor.bump();
-                SchemaKind::L_BRACE
+                SchemaTokenKind::OpenBrace
             }
             b'}' => {
                 self.cursor.bump();
-                SchemaKind::R_BRACE
+                SchemaTokenKind::CloseBrace
             }
             b'[' => {
                 self.cursor.bump();
-                SchemaKind::L_BRACKET
+                SchemaTokenKind::OpenBracket
             }
             b']' => {
                 self.cursor.bump();
-                SchemaKind::R_BRACKET
-            }
-            b';' => {
-                self.cursor.bump();
-                SchemaKind::SEMI
-            }
-            b':' => {
-                self.cursor.bump();
-                if self.cursor.peek() == Some(b':') {
-                    self.cursor.bump();
-                    SchemaKind::COLON2
-                } else {
-                    SchemaKind::COLON
-                }
+                SchemaTokenKind::CloseBracket
             }
             b',' => {
                 self.cursor.bump();
-                SchemaKind::COMMA
+                SchemaTokenKind::Comma
+            }
+            b';' => {
+                self.cursor.bump();
+                SchemaTokenKind::Semicolon
+            }
+            b':' => {
+                self.cursor.bump();
+                if self.cursor.current() == b':' {
+                    self.cursor.bump();
+                    SchemaTokenKind::Colon2
+                } else {
+                    SchemaTokenKind::Colon
+                }
+            }
+            b'@' => {
+                self.cursor.bump();
+                SchemaTokenKind::At
             }
             b'.' => {
                 self.cursor.bump();
-                SchemaKind::DOT
+                SchemaTokenKind::Dot
             }
             b'?' => {
                 self.cursor.bump();
-                SchemaKind::QUESTION
-            }
-            b'=' => {
-                self.cursor.bump();
-                SchemaKind::EQ
+                SchemaTokenKind::Question
             }
             b'<' => {
                 self.cursor.bump();
-                SchemaKind::LT
+                SchemaTokenKind::LessThan
             }
             b'>' => {
                 self.cursor.bump();
-                SchemaKind::GT
+                SchemaTokenKind::GreaterThan
+            }
+            b'=' => {
+                self.cursor.bump();
+                SchemaTokenKind::Equal
+            }
+            b'|' => {
+                self.cursor.bump();
+                SchemaTokenKind::Pipe
+            }
+            b'/' => {
+                self.cursor.bump();
+                if self.cursor.current() == b'/' {
+                    self.cursor.bump();
+                    self.cursor.skip_line();
+                    SchemaTokenKind::Comment
+                } else {
+                    SchemaTokenKind::Slash
+                }
             }
             _ => {
                 self.cursor.bump_char();
-                SchemaKind::ERROR
+                SchemaTokenKind::Unknown
             }
         };
 
         SchemaToken {
             kind,
             text: self.cursor.slice(start),
-            offset: start,
+            position: start,
         }
     }
 }

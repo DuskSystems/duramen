@@ -3,16 +3,11 @@
 use core::error::Error;
 use core::fmt;
 
-use syntree::{FlavorDefault, Node, Tree};
-
 mod lexer;
 pub use lexer::{PolicyLexer, PolicyToken};
 
 mod syntax;
-pub use syntax::PolicyKind;
-
-pub type PolicyTree = Tree<PolicyKind, FlavorDefault>;
-pub type PolicyNode<'a> = Node<'a, PolicyKind, FlavorDefault>;
+pub use syntax::PolicyTokenKind;
 
 #[derive(Debug)]
 pub struct PolicyErrors;

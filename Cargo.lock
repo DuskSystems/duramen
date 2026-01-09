@@ -445,13 +445,6 @@ dependencies = [
 [[package]]
 name = "duramen-xtask"
 version = "0.1.0"
-dependencies = [
- "heck",
- "prettyplease",
- "quote",
- "syn",
- "ungrammar",
-]
 
 [[package]]
 name = "dyn-clone"
@@ -1642,12 +1635,6 @@ name = "typenum"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb"
-
-[[package]]
-name = "ungrammar"
-version = "1.16.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3e5df347f0bf3ec1d670aad6ca5c6a1859cd9ea61d2113125794654ccced68f"
 
 [[package]]
 name = "unicode-ident"

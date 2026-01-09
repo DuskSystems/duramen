@@ -63,6 +63,7 @@
             })
             taplo
             cargo-nextest
+            cargo-shear
             vscode-extensions.vadimcn.vscode-lldb.adapter
 
             # Build

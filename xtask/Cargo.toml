@@ -11,15 +11,3 @@ license.workspace = true
 
 [lints]
 workspace = true
-
-[dependencies]
-# Grammar
-ungrammar = { workspace = true }
-
-# Code Generation
-quote = { workspace = true }
-syn = { workspace = true, features = ["parsing", "full"] }
-prettyplease = { workspace = true }
-
-# Text
-heck = { workspace = true }

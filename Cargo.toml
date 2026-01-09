@@ -116,17 +116,6 @@ cedar-policy-core = { version = "4.8", default-features = false }
 # Syntax
 syntree = { version = "0.18", default-features = false }
 
-# Grammar
-ungrammar = { version = "1.16", default-features = false }
-
-# Code Generation
-quote = { version = "1.0", default-features = false }
-syn = { version = "2.0", default-features = false }
-prettyplease = { version = "0.2", default-features = false }
-
-# Text
-heck = { version = "0.5", default-features = false }
-
 # SIMD
 memchr = { version = "2.7", default-features = false }
 

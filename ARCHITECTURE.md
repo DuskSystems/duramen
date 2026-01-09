@@ -6,7 +6,6 @@ This document describes the high-level architecture of `duramen`.
 graph TD
   Source --> Lexer
   Lexer --> Parser
-  Grammar -.->|Generates| AST
   Parser --> CST
   CST -->|Typed| AST
   AST -->|Normalized| EST
@@ -23,11 +22,11 @@ Terminology:
 
 Our lexer is hand-written, zero-copy, operating on byte offsets rather than copied strings.
 
+They operate on simple tokens, leaving expression handling to later layers.
+
 ## Grammar
 
-Our grammars are defined using [`ungrammar`](https://github.com/rust-analyzer/ungrammar). This allows us to generate our AST via an [`xtask`](https://github.com/matklad/cargo-xtask) workflow.
-
-They are based on the upstream Cedar grammars:
+Our token definitions are based on the upstream Cedar grammars:
 - [Policy](https://docs.cedarpolicy.com/policies/syntax-grammar.html)
 - [Schema](https://docs.cedarpolicy.com/schema/human-readable-schema-grammar.html)
 
@@ -51,7 +50,7 @@ Rich error messages are then rendered using [`annotate-snippets`](https://github
 
 ## AST
 
-The AST consists of typed wrappers generated from our grammar definitions.
+The AST consists of typed wrappers over CST nodes.
 
 It provides a high-level API for tooling such as formatters, linters, and language servers.
 
