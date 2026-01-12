@@ -3,6 +3,8 @@
 use core::error::Error;
 use core::fmt;
 
+pub mod ast;
+
 mod lexer;
 pub use lexer::{PolicyLexer, PolicyToken};
 

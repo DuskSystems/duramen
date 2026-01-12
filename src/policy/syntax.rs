@@ -381,6 +381,18 @@ pub enum PolicySyntax {
     /// ```
     RefInit,
 
+    /// Unknown expression for partial evaluation and symbolic analysis.
+    ///
+    /// This node type is not produced by parsing Cedar source code directly.
+    /// Instead, it is used during analysis phases to represent values that
+    /// are not yet known (e.g., unlinked template slots, symbolic values).
+    ///
+    /// ```cedar
+    /// // Not valid Cedar syntax - used internally for analysis
+    /// permit(principal, action, resource) when { unknown("x") };
+    /// ```
+    UnknownExpression,
+
     /// Error recovery node wrapping invalid tokens during parsing.
     Error,
 }
