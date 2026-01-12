@@ -1,33 +1,59 @@
 #![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
+use alloc::string::String;
 use core::error::Error;
 use core::fmt;
+
+use syntree::{FlavorDefault, Tree};
 
 pub mod ast;
 
 mod lexer;
 pub use lexer::{SchemaLexer, SchemaToken};
 
+mod parser;
+pub use parser::SchemaParser;
+
 mod syntax;
 pub use syntax::SchemaSyntax;
+
+type SchemaTree = Tree<SchemaSyntax, FlavorDefault>;
 
 #[derive(Debug)]
 pub struct SchemaErrors;
 
 impl fmt::Display for SchemaErrors {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "schema error")
+        write!(f, "TODO")
     }
 }
 
 impl Error for SchemaErrors {}
 
 #[derive(Debug)]
-pub struct Schema;
+pub struct Schema {
+    source: String,
+    tree: SchemaTree,
+}
 
 impl Schema {
-    pub fn parse(_source: &str) -> Result<Self, SchemaErrors> {
-        todo!()
+    pub fn parse(source: &str) -> Result<Self, SchemaErrors> {
+        let parser = SchemaParser::new(source);
+        let tree = parser.parse().map_err(|_err| SchemaErrors)?;
+        Ok(Self {
+            source: String::from(source),
+            tree,
+        })
+    }
+
+    #[must_use]
+    pub fn source(&self) -> &str {
+        &self.source
+    }
+
+    #[must_use]
+    pub const fn tree(&self) -> &SchemaTree {
+        &self.tree
     }
 
     #[cfg(feature = "serde")]
@@ -36,7 +62,7 @@ impl Schema {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, SchemaErrors> {
+    pub fn to_serde_json(&self) -> Result<String, SchemaErrors> {
         todo!()
     }
 
@@ -46,7 +72,7 @@ impl Schema {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, SchemaErrors> {
+    pub fn to_facet_json(&self) -> Result<String, SchemaErrors> {
         todo!()
     }
 
@@ -57,7 +83,13 @@ impl Schema {
 }
 
 impl fmt::Display for Schema {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for node in self.tree.walk() {
+            if node.value().is_token() {
+                f.write_str(&self.source[node.range()])?;
+            }
+        }
+
+        Ok(())
     }
 }

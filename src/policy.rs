@@ -1,15 +1,23 @@
 #![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
+use alloc::string::String;
 use core::error::Error;
 use core::fmt;
+
+use syntree::{FlavorDefault, Tree};
 
 pub mod ast;
 
 mod lexer;
 pub use lexer::{PolicyLexer, PolicyToken};
 
+mod parser;
+pub use parser::PolicyParser;
+
 mod syntax;
 pub use syntax::PolicySyntax;
+
+type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
 
 #[derive(Debug)]
 pub struct PolicyErrors;
@@ -23,11 +31,29 @@ impl fmt::Display for PolicyErrors {
 impl Error for PolicyErrors {}
 
 #[derive(Debug)]
-pub struct PolicySet;
+pub struct PolicySet {
+    source: String,
+    tree: PolicyTree,
+}
 
 impl PolicySet {
-    pub fn parse(_source: &str) -> Result<Self, PolicyErrors> {
-        todo!()
+    pub fn parse(source: &str) -> Result<Self, PolicyErrors> {
+        let parser = PolicyParser::new(source);
+        let tree = parser.parse().map_err(|_err| PolicyErrors)?;
+        Ok(Self {
+            source: String::from(source),
+            tree,
+        })
+    }
+
+    #[must_use]
+    pub fn source(&self) -> &str {
+        &self.source
+    }
+
+    #[must_use]
+    pub const fn tree(&self) -> &PolicyTree {
+        &self.tree
     }
 
     #[cfg(feature = "serde")]
@@ -36,7 +62,7 @@ impl PolicySet {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -46,7 +72,7 @@ impl PolicySet {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -67,8 +93,14 @@ impl PolicySet {
 }
 
 impl fmt::Display for PolicySet {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for node in self.tree.walk() {
+            if node.value().is_token() {
+                f.write_str(&self.source[node.range()])?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -86,7 +118,7 @@ impl Policy {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -96,7 +128,7 @@ impl Policy {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -125,7 +157,7 @@ impl Template {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -135,7 +167,7 @@ impl Template {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
