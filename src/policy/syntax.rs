@@ -423,4 +423,115 @@ impl PolicySyntax {
             _ => None,
         }
     }
+
+    #[must_use]
+    pub const fn is_trivial(self) -> bool {
+        matches!(self, Self::Whitespace | Self::Comment)
+    }
+
+    #[must_use]
+    pub const fn is_literal(self) -> bool {
+        matches!(
+            self,
+            Self::TrueKeyword | Self::FalseKeyword | Self::Integer | Self::String
+        )
+    }
+
+    #[must_use]
+    pub const fn is_keyword(self) -> bool {
+        matches!(
+            self,
+            Self::PermitKeyword
+                | Self::ForbidKeyword
+                | Self::PrincipalKeyword
+                | Self::ActionKeyword
+                | Self::ResourceKeyword
+                | Self::ContextKeyword
+                | Self::WhenKeyword
+                | Self::UnlessKeyword
+                | Self::TrueKeyword
+                | Self::FalseKeyword
+                | Self::LikeKeyword
+                | Self::IfKeyword
+                | Self::ThenKeyword
+                | Self::ElseKeyword
+                | Self::InKeyword
+                | Self::HasKeyword
+                | Self::IsKeyword
+                | Self::TemplateKeyword
+        )
+    }
+
+    #[must_use]
+    pub const fn is_primitive(self) -> bool {
+        matches!(self, Self::Identifier | Self::Integer | Self::String)
+    }
+
+    #[must_use]
+    pub const fn is_token(self) -> bool {
+        matches!(
+            self,
+            Self::Integer
+                | Self::String
+                | Self::Identifier
+                | Self::PermitKeyword
+                | Self::ForbidKeyword
+                | Self::PrincipalKeyword
+                | Self::ActionKeyword
+                | Self::ResourceKeyword
+                | Self::ContextKeyword
+                | Self::WhenKeyword
+                | Self::UnlessKeyword
+                | Self::TrueKeyword
+                | Self::FalseKeyword
+                | Self::LikeKeyword
+                | Self::IfKeyword
+                | Self::ThenKeyword
+                | Self::ElseKeyword
+                | Self::InKeyword
+                | Self::HasKeyword
+                | Self::IsKeyword
+                | Self::TemplateKeyword
+                | Self::OpenParenthesis
+                | Self::CloseParenthesis
+                | Self::OpenBrace
+                | Self::CloseBrace
+                | Self::OpenBracket
+                | Self::CloseBracket
+                | Self::Comma
+                | Self::Semicolon
+                | Self::Colon
+                | Self::Colon2
+                | Self::At
+                | Self::Dot
+                | Self::Question
+                | Self::Equal
+                | Self::Equal2
+                | Self::FatArrow
+                | Self::Not
+                | Self::NotEqual
+                | Self::LessThan
+                | Self::LessEqual
+                | Self::GreaterThan
+                | Self::GreaterEqual
+                | Self::Ampersand
+                | Self::Ampersand2
+                | Self::Pipe
+                | Self::Pipe2
+                | Self::Plus
+                | Self::Minus
+                | Self::Asterisk
+                | Self::Slash
+                | Self::Percent
+                | Self::Comment
+                | Self::Whitespace
+                | Self::Eof
+                | Self::Unknown
+        )
+    }
+
+    #[must_use]
+    pub const fn is_node(self) -> bool {
+        !self.is_token()
+    }
 }

@@ -163,7 +163,7 @@ prost = ["dep:prost"]
 
 [dependencies]
 # Syntax
-syntree = { workspace = true }
+syntree = { workspace = true, features = ["alloc"] }
 
 # SIMD
 memchr = { workspace = true }
