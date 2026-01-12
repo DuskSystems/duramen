@@ -253,7 +253,7 @@ impl<'a> AstNode<'a> for ListExpression<'a> {
 }
 
 impl<'a> ListExpression<'a> {
-    pub fn elements(&self) -> impl Iterator<Item = Expression<'a>> + 'a {
+    pub fn elements(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
         self.node.children().filter_map(Expression::cast)
     }
 }
@@ -278,7 +278,7 @@ impl<'a> AstNode<'a> for RecordExpression<'a> {
 }
 
 impl<'a> RecordExpression<'a> {
-    pub fn entries(&self) -> impl Iterator<Item = RecordEntry<'a>> + 'a {
+    pub fn entries(&self) -> impl Iterator<Item = RecordEntry<'a>> + use<'a> {
         self.node.children().filter_map(RecordEntry::cast)
     }
 }
@@ -644,7 +644,7 @@ impl<'a> MethodCallExpression<'a> {
             .and_then(IdentifierToken::cast)
     }
 
-    pub fn arguments(&self) -> impl Iterator<Item = Expression<'a>> + 'a {
+    pub fn arguments(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
         self.node
             .children()
             .find(|node| node.value() == PolicySyntax::ArgumentList)
