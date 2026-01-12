@@ -49,6 +49,9 @@
           env = {
             # Nix
             NIX_PATH = "nixpkgs=${nixpkgs.outPath}";
+
+            # Rust
+            INSTA_TEST_RUNNER = "nextest";
           };
 
           buildInputs = with pkgs; [
@@ -62,7 +65,9 @@
               ];
             })
             taplo
+            cargo-insta
             cargo-nextest
+            cargo-outdated
             cargo-shear
             vscode-extensions.vadimcn.vscode-lldb.adapter
 

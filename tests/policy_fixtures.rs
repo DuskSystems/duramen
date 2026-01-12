@@ -23,9 +23,20 @@ datatest_stable::harness! {
 
 fn roundtrip_policy(path: &Path) -> datatest_stable::Result<()> {
     let source = std::fs::read_to_string(path)?;
+    let parsed = PolicySet::parse(&source);
 
-    let parsed = PolicySet::parse(&source)?;
+    if parsed.has_errors() {
+        let path = path.display().to_string();
+        let rendered: Vec<_> = parsed
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| diagnostic.render(&path, &source))
+            .collect();
+
+        let error = rendered.join("\n");
+        return Err(error.into());
+    }
+
     assert_eq!(source, parsed.to_string());
-
     Ok(())
 }

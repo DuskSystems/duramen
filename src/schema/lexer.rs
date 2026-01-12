@@ -1,5 +1,8 @@
+use smallvec::SmallVec;
+
 use super::syntax::SchemaSyntax;
 use crate::cursor::Cursor;
+use crate::diagnostics::Diagnostic;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SchemaToken<'a> {
@@ -27,6 +30,7 @@ impl<'a> SchemaToken<'a> {
 
 pub struct SchemaLexer<'a> {
     cursor: Cursor<'a>,
+    diagnostics: SmallVec<[Diagnostic; 4]>,
 }
 
 impl<'a> SchemaLexer<'a> {
@@ -34,12 +38,17 @@ impl<'a> SchemaLexer<'a> {
     pub const fn new(source: &'a str) -> Self {
         Self {
             cursor: Cursor::new(source),
+            diagnostics: SmallVec::new_const(),
         }
     }
 
     #[must_use]
     pub const fn position(&self) -> usize {
         self.cursor.position()
+    }
+
+    pub fn take_diagnostics(&mut self) -> SmallVec<[Diagnostic; 4]> {
+        core::mem::take(&mut self.diagnostics)
     }
 
     pub fn next_token(&mut self) -> SchemaToken<'a> {
@@ -57,6 +66,12 @@ impl<'a> SchemaLexer<'a> {
                 if self.cursor.scan_string() {
                     SchemaSyntax::String
                 } else {
+                    let end = self.cursor.position();
+                    self.diagnostics.push(
+                        Diagnostic::error("unterminated string")
+                            .with_label(start..end, "string is not closed"),
+                    );
+
                     SchemaSyntax::Unknown
                 }
             }
@@ -149,6 +164,12 @@ impl<'a> SchemaLexer<'a> {
             }
             _ => {
                 self.cursor.bump_char();
+                let end = self.cursor.position();
+                self.diagnostics.push(
+                    Diagnostic::error("unexpected character")
+                        .with_label(start..end, "not recognized"),
+                );
+
                 SchemaSyntax::Unknown
             }
         };
