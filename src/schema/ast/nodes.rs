@@ -1,7 +1,8 @@
 use core::fmt::{self, Write};
 
 use super::{
-    AstNode, AstToken as _, Decl, IdentifierToken, IntegerToken, SchemaNode, StringToken, TypeExpr,
+    AstNode, AstToken as _, Declaration, IdentifierToken, IntegerToken, SchemaNode, StringToken,
+    TypeExpr,
 };
 use crate::schema::SchemaSyntax;
 
@@ -37,13 +38,13 @@ impl<'a> AstNode<'a> for Schema<'a> {
 
 impl<'a> Schema<'a> {
     /// Returns an iterator over namespace declarations in this schema.
-    pub fn namespaces(&self) -> impl Iterator<Item = Namespace<'a>> + 'a {
+    pub fn namespaces(&self) -> impl Iterator<Item = Namespace<'a>> + use<'a> {
         self.node.children().filter_map(Namespace::cast)
     }
 
     /// Returns an iterator over top-level declarations (outside namespaces).
-    pub fn declarations(&self) -> impl Iterator<Item = Decl<'a>> + 'a {
-        self.node.children().filter_map(Decl::cast)
+    pub fn declarations(&self) -> impl Iterator<Item = Declaration<'a>> + use<'a> {
+        self.node.children().filter_map(Declaration::cast)
     }
 }
 
@@ -79,7 +80,7 @@ impl<'a> AstNode<'a> for Namespace<'a> {
 
 impl<'a> Namespace<'a> {
     /// Returns an iterator over annotations on this namespace.
-    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + 'a {
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
 
@@ -95,8 +96,8 @@ impl<'a> Namespace<'a> {
     }
 
     /// Returns an iterator over declarations within this namespace.
-    pub fn declarations(&self) -> impl Iterator<Item = Decl<'a>> + 'a {
-        self.node.children().filter_map(Decl::cast)
+    pub fn declarations(&self) -> impl Iterator<Item = Declaration<'a>> + use<'a> {
+        self.node.children().filter_map(Declaration::cast)
     }
 }
 
@@ -187,7 +188,7 @@ impl<'a> Name<'a> {
     /// entity User in [Acme::Corp::Group];
     /// //              ^^^^ ^^^^ ^^^^^ segments: ["Acme", "Corp", "Group"]
     /// ```
-    pub fn segments(&self) -> impl Iterator<Item = IdentifierToken<'a>> + 'a {
+    pub fn segments(&self) -> impl Iterator<Item = IdentifierToken<'a>> + use<'a> {
         self.node
             .children()
             .filter(|node| node.value() == SchemaSyntax::Identifier)
@@ -243,11 +244,11 @@ impl<'a> Name<'a> {
 /// entity Status = ["active", "inactive", "pending"];
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct EntityDecl<'a> {
+pub struct EntityDeclaration<'a> {
     node: SchemaNode<'a>,
 }
 
-impl<'a> AstNode<'a> for EntityDecl<'a> {
+impl<'a> AstNode<'a> for EntityDeclaration<'a> {
     fn can_cast(kind: SchemaSyntax) -> bool {
         kind == SchemaSyntax::EntityDeclaration
     }
@@ -261,16 +262,16 @@ impl<'a> AstNode<'a> for EntityDecl<'a> {
     }
 }
 
-impl<'a> EntityDecl<'a> {
+impl<'a> EntityDeclaration<'a> {
     /// Returns an iterator over annotations on this entity declaration.
-    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + 'a {
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
 
     /// Returns an iterator over entity type names being declared.
     ///
     /// Multiple names can be declared together: `entity User, Admin, Guest;`
-    pub fn names(&self) -> impl Iterator<Item = IdentifierToken<'a>> + 'a {
+    pub fn names(&self) -> impl Iterator<Item = IdentifierToken<'a>> + use<'a> {
         self.node
             .children()
             .filter(|node| node.value() == SchemaSyntax::Identifier)
@@ -456,7 +457,7 @@ impl<'a> EnumType<'a> {
     /// entity Status = ["active", "inactive"];
     /// //               ^^^^^^^^  ^^^^^^^^^^ variants
     /// ```
-    pub fn variants(&self) -> impl Iterator<Item = StringToken<'a>> + 'a {
+    pub fn variants(&self) -> impl Iterator<Item = StringToken<'a>> + use<'a> {
         self.node
             .children()
             .filter(|node| node.value() == SchemaSyntax::String)
@@ -474,11 +475,11 @@ impl<'a> EnumType<'a> {
 /// };
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct ActionDecl<'a> {
+pub struct ActionDeclaration<'a> {
     node: SchemaNode<'a>,
 }
 
-impl<'a> AstNode<'a> for ActionDecl<'a> {
+impl<'a> AstNode<'a> for ActionDeclaration<'a> {
     fn can_cast(kind: SchemaSyntax) -> bool {
         kind == SchemaSyntax::ActionDeclaration
     }
@@ -492,16 +493,16 @@ impl<'a> AstNode<'a> for ActionDecl<'a> {
     }
 }
 
-impl<'a> ActionDecl<'a> {
+impl<'a> ActionDeclaration<'a> {
     /// Returns an iterator over annotations on this action declaration.
-    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + 'a {
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
 
     /// Returns an iterator over action names being declared.
     ///
     /// Multiple actions can be declared together: `action read, write, delete;`
-    pub fn names(&self) -> impl Iterator<Item = IdentifierToken<'a>> + 'a {
+    pub fn names(&self) -> impl Iterator<Item = IdentifierToken<'a>> + use<'a> {
         self.node
             .children()
             .filter(|node| node.value() == SchemaSyntax::Identifier)
@@ -559,7 +560,7 @@ impl<'a> AstNode<'a> for ActionParents<'a> {
 
 impl<'a> ActionParents<'a> {
     /// Returns an iterator over parent action names.
-    pub fn names(&self) -> impl Iterator<Item = Name<'a>> + 'a {
+    pub fn names(&self) -> impl Iterator<Item = Name<'a>> + use<'a> {
         self.node.children().filter_map(Name::cast)
     }
 }
@@ -740,7 +741,7 @@ impl<'a> AstNode<'a> for ActionAttributes<'a> {
 
 impl<'a> ActionAttributes<'a> {
     /// Returns an iterator over attribute entries.
-    pub fn entries(&self) -> impl Iterator<Item = AttributeEntry<'a>> + 'a {
+    pub fn entries(&self) -> impl Iterator<Item = AttributeEntry<'a>> + use<'a> {
         self.node.children().filter_map(AttributeEntry::cast)
     }
 }
@@ -837,11 +838,11 @@ impl<'a> LiteralValue<'a> {
 /// type UserInfo = { name: String, email?: EmailAddress };
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct TypeDecl<'a> {
+pub struct TypeDeclaration<'a> {
     node: SchemaNode<'a>,
 }
 
-impl<'a> AstNode<'a> for TypeDecl<'a> {
+impl<'a> AstNode<'a> for TypeDeclaration<'a> {
     fn can_cast(kind: SchemaSyntax) -> bool {
         kind == SchemaSyntax::CommonTypeDeclaration
     }
@@ -855,9 +856,9 @@ impl<'a> AstNode<'a> for TypeDecl<'a> {
     }
 }
 
-impl<'a> TypeDecl<'a> {
+impl<'a> TypeDeclaration<'a> {
     /// Returns an iterator over annotations on this type declaration.
-    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + 'a {
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
 
@@ -914,7 +915,7 @@ impl<'a> AstNode<'a> for TypeList<'a> {
 
 impl<'a> TypeList<'a> {
     /// Returns an iterator over the type names in this list.
-    pub fn types(&self) -> impl Iterator<Item = Name<'a>> + 'a {
+    pub fn types(&self) -> impl Iterator<Item = Name<'a>> + use<'a> {
         self.node.children().filter_map(Name::cast)
     }
 }
@@ -928,11 +929,11 @@ impl<'a> TypeList<'a> {
 /// };
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct AttributeDecl<'a> {
+pub struct AttributeDeclaration<'a> {
     node: SchemaNode<'a>,
 }
 
-impl<'a> AstNode<'a> for AttributeDecl<'a> {
+impl<'a> AstNode<'a> for AttributeDeclaration<'a> {
     fn can_cast(kind: SchemaSyntax) -> bool {
         kind == SchemaSyntax::AttributeDeclaration
     }
@@ -946,9 +947,9 @@ impl<'a> AstNode<'a> for AttributeDecl<'a> {
     }
 }
 
-impl<'a> AttributeDecl<'a> {
+impl<'a> AttributeDeclaration<'a> {
     /// Returns an iterator over annotations on this attribute.
-    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + 'a {
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
 
@@ -978,7 +979,7 @@ impl<'a> AttributeDecl<'a> {
 
     /// Returns the attribute's type.
     #[must_use]
-    pub fn attr_type(&self) -> Option<TypeExpr<'a>> {
+    pub fn attribute_type(&self) -> Option<TypeExpr<'a>> {
         self.node.children().find_map(TypeExpr::cast)
     }
 }
@@ -1045,7 +1046,7 @@ impl<'a> AstNode<'a> for RecordType<'a> {
 
 impl<'a> RecordType<'a> {
     /// Returns an iterator over attribute declarations in this record type.
-    pub fn attrs(&self) -> impl Iterator<Item = AttributeDecl<'a>> + 'a {
-        self.node.children().filter_map(AttributeDecl::cast)
+    pub fn attributes(&self) -> impl Iterator<Item = AttributeDeclaration<'a>> + use<'a> {
+        self.node.children().filter_map(AttributeDeclaration::cast)
     }
 }

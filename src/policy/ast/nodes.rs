@@ -26,7 +26,7 @@ impl<'a> AstNode<'a> for Policies<'a> {
 }
 
 impl<'a> Policies<'a> {
-    pub fn policies(&self) -> impl Iterator<Item = Policy<'a>> + 'a {
+    pub fn policies(&self) -> impl Iterator<Item = Policy<'a>> + use<'a> {
         self.node.children().filter_map(Policy::cast)
     }
 }
@@ -51,7 +51,7 @@ impl<'a> AstNode<'a> for Policy<'a> {
 }
 
 impl<'a> Policy<'a> {
-    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + 'a {
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
 
@@ -76,11 +76,11 @@ impl<'a> Policy<'a> {
         })
     }
 
-    pub fn variables(&self) -> impl Iterator<Item = VariableDefinition<'a>> + 'a {
+    pub fn variables(&self) -> impl Iterator<Item = VariableDefinition<'a>> + use<'a> {
         self.node.children().filter_map(VariableDefinition::cast)
     }
 
-    pub fn conditions(&self) -> impl Iterator<Item = Condition<'a>> + 'a {
+    pub fn conditions(&self) -> impl Iterator<Item = Condition<'a>> + use<'a> {
         self.node.children().filter_map(Condition::cast)
     }
 }
@@ -249,7 +249,7 @@ impl<'a> Name<'a> {
     /// permit(principal == Namespace::User::"alice", action, resource);
     /// //                  ^^^^^^^^^ ^^^^ segments: ["Namespace", "User"]
     /// ```
-    pub fn segments(&self) -> impl Iterator<Item = IdentifierToken<'a>> + 'a {
+    pub fn segments(&self) -> impl Iterator<Item = IdentifierToken<'a>> + use<'a> {
         self.node
             .children()
             .filter(|node| node.value() == PolicySyntax::Identifier)

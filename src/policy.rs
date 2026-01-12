@@ -7,6 +7,7 @@ use core::fmt;
 use syntree::{FlavorDefault, Tree};
 
 pub mod ast;
+use ast::{AstNode as _, Policies, Policy as PolicyAst};
 
 mod lexer;
 pub use lexer::{PolicyLexer, PolicyToken};
@@ -54,6 +55,15 @@ impl PolicySet {
     #[must_use]
     pub const fn tree(&self) -> &PolicyTree {
         &self.tree
+    }
+
+    #[must_use]
+    pub fn root(&self) -> Option<Policies<'_>> {
+        self.tree.first().and_then(Policies::cast)
+    }
+
+    pub fn policies(&self) -> impl Iterator<Item = PolicyAst<'_>> {
+        self.root().into_iter().flat_map(|root| root.policies())
     }
 
     #[cfg(feature = "serde")]

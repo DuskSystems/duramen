@@ -1,4 +1,6 @@
-use super::{ActionDecl, AstNode, EntityDecl, Name, RecordType, SchemaNode, TypeDecl};
+use super::{
+    ActionDeclaration, AstNode, EntityDeclaration, Name, RecordType, SchemaNode, TypeDeclaration,
+};
 use crate::schema::SchemaSyntax;
 
 /// A set type expression representing a collection of values.
@@ -100,36 +102,36 @@ impl<'a> EntityTypeRef<'a> {
 ///
 /// ```cedarschema
 /// namespace App {
-///     entity User { };              // Decl::Entity
-///     type Email = String;          // Decl::Type
-///     action view appliesTo { ... } // Decl::Action
+///     entity User { };              // Declaration::Entity
+///     type Email = String;          // Declaration::Type
+///     action view appliesTo { ... } // Declaration::Action
 /// }
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub enum Decl<'a> {
+pub enum Declaration<'a> {
     /// An entity type declaration.
     ///
     /// ```cedarschema
     /// entity User { name: String };
     /// ```
-    Entity(EntityDecl<'a>),
+    Entity(EntityDeclaration<'a>),
 
     /// An action declaration.
     ///
     /// ```cedarschema
     /// action view appliesTo { principal: User, resource: Document };
     /// ```
-    Action(ActionDecl<'a>),
+    Action(ActionDeclaration<'a>),
 
     /// A common type alias declaration.
     ///
     /// ```cedarschema
     /// type Email = String;
     /// ```
-    Type(TypeDecl<'a>),
+    Type(TypeDeclaration<'a>),
 }
 
-impl<'a> AstNode<'a> for Decl<'a> {
+impl<'a> AstNode<'a> for Declaration<'a> {
     fn can_cast(kind: SchemaSyntax) -> bool {
         matches!(
             kind,
@@ -141,9 +143,9 @@ impl<'a> AstNode<'a> for Decl<'a> {
 
     fn cast(node: SchemaNode<'a>) -> Option<Self> {
         match node.value() {
-            SchemaSyntax::EntityDeclaration => EntityDecl::cast(node).map(Self::Entity),
-            SchemaSyntax::ActionDeclaration => ActionDecl::cast(node).map(Self::Action),
-            SchemaSyntax::CommonTypeDeclaration => TypeDecl::cast(node).map(Self::Type),
+            SchemaSyntax::EntityDeclaration => EntityDeclaration::cast(node).map(Self::Entity),
+            SchemaSyntax::ActionDeclaration => ActionDeclaration::cast(node).map(Self::Action),
+            SchemaSyntax::CommonTypeDeclaration => TypeDeclaration::cast(node).map(Self::Type),
             _ => None,
         }
     }

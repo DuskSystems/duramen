@@ -7,6 +7,7 @@ use core::fmt;
 use syntree::{FlavorDefault, Tree};
 
 pub mod ast;
+use ast::{AstNode as _, Declaration, Namespace, Schema as SchemaAst};
 
 mod lexer;
 pub use lexer::{SchemaLexer, SchemaToken};
@@ -54,6 +55,19 @@ impl Schema {
     #[must_use]
     pub const fn tree(&self) -> &SchemaTree {
         &self.tree
+    }
+
+    #[must_use]
+    pub fn root(&self) -> Option<SchemaAst<'_>> {
+        self.tree.first().and_then(SchemaAst::cast)
+    }
+
+    pub fn namespaces(&self) -> impl Iterator<Item = Namespace<'_>> {
+        self.root().into_iter().flat_map(|root| root.namespaces())
+    }
+
+    pub fn declarations(&self) -> impl Iterator<Item = Declaration<'_>> {
+        self.root().into_iter().flat_map(|root| root.declarations())
     }
 
     #[cfg(feature = "serde")]
