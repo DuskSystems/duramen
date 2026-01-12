@@ -1,14 +1,19 @@
-use syntree::{Builder, FlavorDefault, Tree};
+use alloc::string::ToString as _;
 
+use smallvec::SmallVec;
+use syntree::{Builder, Tree};
+
+use super::Schema;
 use super::lexer::{SchemaLexer, SchemaToken};
 use super::syntax::SchemaSyntax;
-
-type SchemaTree = Tree<SchemaSyntax, FlavorDefault>;
+use crate::diagnostics::Diagnostic;
 
 pub struct SchemaParser<'a> {
+    source: &'a str,
     lexer: SchemaLexer<'a>,
     current: SchemaToken<'a>,
     builder: Builder<SchemaSyntax>,
+    diagnostics: SmallVec<[Diagnostic; 4]>,
 }
 
 impl<'a> SchemaParser<'a> {
@@ -18,15 +23,32 @@ impl<'a> SchemaParser<'a> {
         let current = lexer.next_token();
 
         Self {
+            source,
             lexer,
             current,
             builder: Builder::new(),
+            diagnostics: SmallVec::new_const(),
         }
     }
 
-    pub fn parse(mut self) -> Result<SchemaTree, syntree::Error> {
-        self.schema()?;
-        self.builder.build()
+    #[must_use]
+    pub fn parse(mut self) -> Schema<'a> {
+        if let Err(err) = self.schema() {
+            self.diagnostics.push(Diagnostic::error(err.to_string()));
+        }
+
+        let mut diagnostics = self.lexer.take_diagnostics();
+        diagnostics.extend(self.diagnostics);
+
+        let tree = match self.builder.build() {
+            Ok(tree) => tree,
+            Err(err) => {
+                diagnostics.push(Diagnostic::error(err.to_string()));
+                Tree::default()
+            }
+        };
+
+        Schema::new(self.source, tree, diagnostics)
     }
 
     const fn current(&self) -> SchemaSyntax {

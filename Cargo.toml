@@ -118,6 +118,9 @@ syntree = { version = "0.18", default-features = false }
 # SIMD
 memchr = { version = "2.7", default-features = false }
 
+# Collections
+smallvec = { version = "1.15", default-features = false }
+
 # Serialization
 serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false }
@@ -125,7 +128,11 @@ facet = { version = "0.42", default-features = false }
 facet-json = { version = "0.42", default-features = false }
 prost = { version = "0.14", default-features = false }
 
+# Diagnostics
+annotate-snippets = { version = "0.12", default-features = false }
+
 # Testing
+insta = { version = "1.46", default-features = false }
 datatest-stable = { version = "0.3", default-features = false }
 similar-asserts = { version = "1.7", default-features = false }
 
@@ -156,7 +163,14 @@ workspace = true
 
 [features]
 default = ["std"]
-std = ["syntree/std", "serde_json?/std", "facet?/std", "facet-json?/std", "prost?/std"]
+std = [
+  "dep:annotate-snippets",
+  "syntree/std",
+  "serde_json?/std",
+  "facet?/std",
+  "facet-json?/std",
+  "prost?/std",
+]
 serde = ["dep:serde", "dep:serde_json"]
 facet = ["dep:facet", "dep:facet-json"]
 prost = ["dep:prost"]
@@ -168,6 +182,12 @@ syntree = { workspace = true, features = ["alloc"] }
 # SIMD
 memchr = { workspace = true }
 
+# Collections
+smallvec = { workspace = true, features = ["const_new", "union"] }
+
+# Diagnostics
+annotate-snippets = { workspace = true, optional = true, features = ["simd"] }
+
 # Serialization
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
@@ -178,12 +198,17 @@ prost = { workspace = true, optional = true }
 [dev-dependencies]
 # Upstream
 cedar-policy = { workspace = true, features = ["protobufs"] }
-cedar-policy-core = { workspace = true, features = ["ipaddr", "decimal", "datetime"] }
+cedar-policy-core = { workspace = true, features = [
+  "ipaddr",
+  "decimal",
+  "datetime",
+] }
 
 # Serialization
 serde_json = { workspace = true }
 
 # Testing
+insta = { workspace = true }
 datatest-stable = { workspace = true }
 similar-asserts = { workspace = true }
 

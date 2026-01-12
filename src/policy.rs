@@ -1,10 +1,12 @@
 #![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
-use alloc::string::String;
 use core::error::Error;
 use core::fmt;
 
+use smallvec::SmallVec;
 use syntree::{FlavorDefault, Tree};
+
+use crate::diagnostics::Diagnostic;
 
 pub mod ast;
 use ast::{AstNode as _, Policies, Policy as PolicyAst};
@@ -13,7 +15,7 @@ mod lexer;
 pub use lexer::{PolicyLexer, PolicyToken};
 
 mod parser;
-pub use parser::PolicyParser;
+use parser::PolicyParser;
 
 mod syntax;
 pub use syntax::PolicySyntax;
@@ -32,24 +34,33 @@ impl fmt::Display for PolicyErrors {
 impl Error for PolicyErrors {}
 
 #[derive(Debug)]
-pub struct PolicySet {
-    source: String,
+pub struct PolicySet<'a> {
+    source: &'a str,
     tree: PolicyTree,
+    diagnostics: SmallVec<[Diagnostic; 4]>,
 }
 
-impl PolicySet {
-    pub fn parse(source: &str) -> Result<Self, PolicyErrors> {
-        let parser = PolicyParser::new(source);
-        let tree = parser.parse().map_err(|_err| PolicyErrors)?;
-        Ok(Self {
-            source: String::from(source),
+impl<'a> PolicySet<'a> {
+    pub(crate) const fn new(
+        source: &'a str,
+        tree: PolicyTree,
+        diagnostics: SmallVec<[Diagnostic; 4]>,
+    ) -> Self {
+        Self {
+            source,
             tree,
-        })
+            diagnostics,
+        }
     }
 
     #[must_use]
-    pub fn source(&self) -> &str {
-        &self.source
+    pub fn parse(source: &'a str) -> Self {
+        PolicyParser::new(source).parse()
+    }
+
+    #[must_use]
+    pub const fn source(&self) -> &'a str {
+        self.source
     }
 
     #[must_use]
@@ -58,11 +69,21 @@ impl PolicySet {
     }
 
     #[must_use]
+    pub fn diagnostics(&self) -> &[Diagnostic] {
+        &self.diagnostics
+    }
+
+    #[must_use]
+    pub fn has_errors(&self) -> bool {
+        self.diagnostics.iter().any(Diagnostic::is_error)
+    }
+
+    #[must_use]
     pub fn root(&self) -> Option<Policies<'_>> {
         self.tree.first().and_then(Policies::cast)
     }
 
-    pub fn policies(&self) -> impl Iterator<Item = PolicyAst<'_>> {
+    pub fn policies(&self) -> impl Iterator<Item = PolicyAst<'_>> + use<'_> {
         self.root().into_iter().flat_map(|root| root.policies())
     }
 
@@ -72,7 +93,7 @@ impl PolicySet {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
         todo!()
     }
 
@@ -82,7 +103,7 @@ impl PolicySet {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
         todo!()
     }
 
@@ -102,7 +123,7 @@ impl PolicySet {
     }
 }
 
-impl fmt::Display for PolicySet {
+impl fmt::Display for PolicySet<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for node in self.tree.walk() {
             if node.value().is_token() {
@@ -128,7 +149,7 @@ impl Policy {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
         todo!()
     }
 
@@ -138,7 +159,7 @@ impl Policy {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
         todo!()
     }
 
@@ -167,7 +188,7 @@ impl Template {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
         todo!()
     }
 
@@ -177,7 +198,7 @@ impl Template {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
         todo!()
     }
 

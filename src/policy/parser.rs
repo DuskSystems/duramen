@@ -1,15 +1,21 @@
+use alloc::string::ToString as _;
+
+use smallvec::SmallVec;
 use syntree::{Builder, Checkpoint, Flavor, FlavorDefault, Tree};
 
+use super::PolicySet;
 use super::lexer::{PolicyLexer, PolicyToken};
 use super::syntax::PolicySyntax;
+use crate::diagnostics::Diagnostic;
 
-type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
 type PolicyCheckpoint = Checkpoint<<FlavorDefault as Flavor>::Pointer>;
 
 pub struct PolicyParser<'a> {
+    source: &'a str,
     lexer: PolicyLexer<'a>,
     current: PolicyToken<'a>,
     builder: Builder<PolicySyntax>,
+    diagnostics: SmallVec<[Diagnostic; 4]>,
 }
 
 impl<'a> PolicyParser<'a> {
@@ -19,15 +25,32 @@ impl<'a> PolicyParser<'a> {
         let current = lexer.next_token();
 
         Self {
+            source,
             lexer,
             current,
             builder: Builder::new(),
+            diagnostics: SmallVec::new_const(),
         }
     }
 
-    pub fn parse(mut self) -> Result<PolicyTree, syntree::Error> {
-        self.policy_set()?;
-        self.builder.build()
+    #[must_use]
+    pub fn parse(mut self) -> PolicySet<'a> {
+        if let Err(err) = self.policy_set() {
+            self.diagnostics.push(Diagnostic::error(err.to_string()));
+        }
+
+        let mut diagnostics = self.lexer.take_diagnostics();
+        diagnostics.extend(self.diagnostics);
+
+        let tree = match self.builder.build() {
+            Ok(tree) => tree,
+            Err(err) => {
+                diagnostics.push(Diagnostic::error(err.to_string()));
+                Tree::default()
+            }
+        };
+
+        PolicySet::new(self.source, tree, diagnostics)
     }
 
     const fn current(&self) -> PolicySyntax {

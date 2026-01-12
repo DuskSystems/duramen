@@ -534,4 +534,29 @@ impl PolicySyntax {
     pub const fn is_node(self) -> bool {
         !self.is_token()
     }
+
+    #[must_use]
+    pub const fn expected_message(self) -> &'static str {
+        match self {
+            Self::OpenParenthesis => "expected `(`",
+            Self::CloseParenthesis => "expected `)`",
+            Self::OpenBrace => "expected `{`",
+            Self::CloseBrace => "expected `}`",
+            Self::OpenBracket => "expected `[`",
+            Self::CloseBracket => "expected `]`",
+            Self::Comma => "expected `,`",
+            Self::Semicolon => "expected `;`",
+            Self::Colon => "expected `:`",
+            Self::Colon2 => "expected `::`",
+            Self::At => "expected `@`",
+            Self::Equal => "expected `=`",
+            Self::Equal2 => "expected `==`",
+            Self::ThenKeyword => "expected `then`",
+            Self::ElseKeyword => "expected `else`",
+            Self::Identifier => "expected identifier",
+            Self::String => "expected string",
+            Self::Integer => "expected integer",
+            _ => "unexpected token",
+        }
+    }
 }

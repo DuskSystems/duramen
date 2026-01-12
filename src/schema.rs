@@ -1,10 +1,12 @@
 #![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
-use alloc::string::String;
 use core::error::Error;
 use core::fmt;
 
+use smallvec::SmallVec;
 use syntree::{FlavorDefault, Tree};
+
+use crate::diagnostics::Diagnostic;
 
 pub mod ast;
 use ast::{AstNode as _, Declaration, Namespace, Schema as SchemaAst};
@@ -13,7 +15,7 @@ mod lexer;
 pub use lexer::{SchemaLexer, SchemaToken};
 
 mod parser;
-pub use parser::SchemaParser;
+use parser::SchemaParser;
 
 mod syntax;
 pub use syntax::SchemaSyntax;
@@ -32,24 +34,33 @@ impl fmt::Display for SchemaErrors {
 impl Error for SchemaErrors {}
 
 #[derive(Debug)]
-pub struct Schema {
-    source: String,
+pub struct Schema<'a> {
+    source: &'a str,
     tree: SchemaTree,
+    diagnostics: SmallVec<[Diagnostic; 4]>,
 }
 
-impl Schema {
-    pub fn parse(source: &str) -> Result<Self, SchemaErrors> {
-        let parser = SchemaParser::new(source);
-        let tree = parser.parse().map_err(|_err| SchemaErrors)?;
-        Ok(Self {
-            source: String::from(source),
+impl<'a> Schema<'a> {
+    pub(crate) const fn new(
+        source: &'a str,
+        tree: SchemaTree,
+        diagnostics: SmallVec<[Diagnostic; 4]>,
+    ) -> Self {
+        Self {
+            source,
             tree,
-        })
+            diagnostics,
+        }
     }
 
     #[must_use]
-    pub fn source(&self) -> &str {
-        &self.source
+    pub fn parse(source: &'a str) -> Self {
+        SchemaParser::new(source).parse()
+    }
+
+    #[must_use]
+    pub const fn source(&self) -> &'a str {
+        self.source
     }
 
     #[must_use]
@@ -58,15 +69,25 @@ impl Schema {
     }
 
     #[must_use]
+    pub fn diagnostics(&self) -> &[Diagnostic] {
+        &self.diagnostics
+    }
+
+    #[must_use]
+    pub fn has_errors(&self) -> bool {
+        self.diagnostics.iter().any(Diagnostic::is_error)
+    }
+
+    #[must_use]
     pub fn root(&self) -> Option<SchemaAst<'_>> {
         self.tree.first().and_then(SchemaAst::cast)
     }
 
-    pub fn namespaces(&self) -> impl Iterator<Item = Namespace<'_>> {
+    pub fn namespaces(&self) -> impl Iterator<Item = Namespace<'_>> + use<'_> {
         self.root().into_iter().flat_map(|root| root.namespaces())
     }
 
-    pub fn declarations(&self) -> impl Iterator<Item = Declaration<'_>> {
+    pub fn declarations(&self) -> impl Iterator<Item = Declaration<'_>> + use<'_> {
         self.root().into_iter().flat_map(|root| root.declarations())
     }
 
@@ -76,7 +97,7 @@ impl Schema {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<String, SchemaErrors> {
+    pub fn to_serde_json(&self) -> Result<alloc::string::String, SchemaErrors> {
         todo!()
     }
 
@@ -86,7 +107,7 @@ impl Schema {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<String, SchemaErrors> {
+    pub fn to_facet_json(&self) -> Result<alloc::string::String, SchemaErrors> {
         todo!()
     }
 
@@ -96,7 +117,7 @@ impl Schema {
     }
 }
 
-impl fmt::Display for Schema {
+impl fmt::Display for Schema<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for node in self.tree.walk() {
             if node.value().is_token() {

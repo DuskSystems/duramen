@@ -29,8 +29,8 @@ fn compare_schema(path: &Path) -> datatest_stable::Result<()> {
     let duramen = Schema::parse(&source);
     let cedar = CedarSchema::from_cedarschema_str(&source);
 
-    match (duramen, cedar) {
-        (Ok(duramen), Ok((cedar, _warnings))) => {
+    match (duramen.has_errors(), cedar) {
+        (false, Ok((cedar, _warnings))) => {
             let cedar: Value = cedar.to_json_value()?;
 
             let duramen = duramen.to_facet_json()?;
@@ -38,17 +38,23 @@ fn compare_schema(path: &Path) -> datatest_stable::Result<()> {
 
             assert_eq!(cedar, duramen);
         }
-        (Ok(_), Err(err)) => {
+        (false, Err(err)) => {
             let path = path.display();
             let err = format!("Duramen succeeded but Cedar failed for {path}: {err:?}");
             return Err(err.into());
         }
-        (Err(err), Ok(_)) => {
-            let path = path.display();
-            let err = format!("Cedar succeeded but Duramen failed for {path}: {err:?}");
-            return Err(err.into());
+        (true, Ok(_)) => {
+            let path = path.display().to_string();
+            let rendered: Vec<_> = duramen
+                .diagnostics()
+                .iter()
+                .map(|diagnostic| diagnostic.render(&path, &source))
+                .collect();
+
+            let error = rendered.join("\n");
+            return Err(error.into());
         }
-        (Err(_), Err(_)) => {
+        (true, Err(_)) => {
             // Both failed
         }
     }
