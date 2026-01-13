@@ -2,39 +2,11 @@ use core::fmt::{self, Write};
 
 use super::{
     AstNode, AstToken as _, Declaration, IdentifierToken, IntegerToken, SchemaNode, StringToken,
-    TypeExpr,
+    TypeExpr, ast_node,
 };
 use crate::schema::SchemaSyntax;
 
-/// Root node of a Cedar schema.
-///
-/// A schema can contain namespace declarations and/or top-level declarations.
-///
-/// ```cedarschema
-/// namespace Acme {
-///     entity User;
-/// }
-///
-/// entity GlobalAdmin;
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Schema<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Schema<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::Schema
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Schema, SchemaSyntax::Schema);
 
 impl<'a> Schema<'a> {
     /// Returns an iterator over namespace declarations in this schema.
@@ -48,35 +20,7 @@ impl<'a> Schema<'a> {
     }
 }
 
-/// Namespace declaration containing entity, action, and type declarations.
-///
-/// ```cedarschema
-/// namespace Acme::Corp {
-///     entity User in [Group] {
-///         name: String,
-///         email?: String,
-///     };
-///     entity Group;
-/// }
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Namespace<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Namespace<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::Namespace
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Namespace, SchemaSyntax::Namespace);
 
 impl<'a> Namespace<'a> {
     /// Returns an iterator over annotations on this namespace.
@@ -101,30 +45,7 @@ impl<'a> Namespace<'a> {
     }
 }
 
-/// Annotation on a declaration.
-///
-/// ```cedarschema
-/// @doc("User accounts in the system")
-/// entity User;
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Annotation<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Annotation<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::Annotation
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Annotation, SchemaSyntax::Annotation);
 
 impl<'a> Annotation<'a> {
     /// Returns the annotation name (identifier after `@`).
@@ -156,30 +77,7 @@ impl<'a> Annotation<'a> {
     }
 }
 
-/// Qualified name consisting of one or more `::` separated segments.
-///
-/// ```cedarschema
-/// entity User in [Acme::Corp::Group];
-/// //              ^^^^^^^^^^^^^^^^ Name with segments [Acme, Corp, Group]
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Name<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Name<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::Name
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Name, SchemaSyntax::Name);
 
 impl<'a> Name<'a> {
     /// Returns an iterator over the identifier segments of this name.
@@ -229,38 +127,7 @@ impl<'a> Name<'a> {
     }
 }
 
-/// Entity type declaration.
-///
-/// ```cedarschema
-/// entity User in [Group] {
-///     name: String,
-///     email?: String,
-/// };
-/// ```
-///
-/// Entities can also be declared as enums:
-///
-/// ```cedarschema
-/// entity Status = ["active", "inactive", "pending"];
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct EntityDeclaration<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EntityDeclaration<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::EntityDeclaration
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EntityDeclaration, SchemaSyntax::EntityDeclaration);
 
 impl<'a> EntityDeclaration<'a> {
     /// Returns an iterator over annotations on this entity declaration.
@@ -324,30 +191,7 @@ impl<'a> EntityDeclaration<'a> {
     }
 }
 
-/// Entity parent types clause.
-///
-/// ```cedarschema
-/// entity User in [Group, Team];
-/// //          ^^^^^^^^^^^^^^^^ EntityParents
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct EntityParents<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EntityParents<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::EntityParents
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EntityParents, SchemaSyntax::EntityParents);
 
 impl<'a> EntityParents<'a> {
     /// Returns the list of parent entity types.
@@ -357,32 +201,7 @@ impl<'a> EntityParents<'a> {
     }
 }
 
-/// Entity attributes block.
-///
-/// ```cedarschema
-/// entity User {
-///     name: String,
-///     email?: String,
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct EntityAttributes<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EntityAttributes<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::EntityAttributes
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EntityAttributes, SchemaSyntax::EntityAttributes);
 
 impl<'a> EntityAttributes<'a> {
     /// Returns the record type defining the attributes.
@@ -392,30 +211,7 @@ impl<'a> EntityAttributes<'a> {
     }
 }
 
-/// Entity tags type specification.
-///
-/// ```cedarschema
-/// entity Document tags String;
-/// //              ^^^^^^^^^^^ EntityTags
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct EntityTags<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EntityTags<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::EntityTags
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EntityTags, SchemaSyntax::EntityTags);
 
 impl<'a> EntityTags<'a> {
     /// Returns the type of tag values.
@@ -425,30 +221,7 @@ impl<'a> EntityTags<'a> {
     }
 }
 
-/// Enum type definition for entity types.
-///
-/// ```cedarschema
-/// entity Status = ["active", "inactive", "pending"];
-/// //            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ EnumType
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct EnumType<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EnumType<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::EnumType
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EnumType, SchemaSyntax::EnumType);
 
 impl<'a> EnumType<'a> {
     /// Returns an iterator over enum variant strings.
@@ -465,33 +238,7 @@ impl<'a> EnumType<'a> {
     }
 }
 
-/// Action declaration.
-///
-/// ```cedarschema
-/// action read, write appliesTo {
-///     principal: [User, Admin],
-///     resource: [Document, Folder],
-///     context: { ip?: ipaddr },
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ActionDeclaration<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ActionDeclaration<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::ActionDeclaration
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ActionDeclaration, SchemaSyntax::ActionDeclaration);
 
 impl<'a> ActionDeclaration<'a> {
     /// Returns an iterator over annotations on this action declaration.
@@ -533,30 +280,7 @@ impl<'a> ActionDeclaration<'a> {
     }
 }
 
-/// Action parent actions clause.
-///
-/// ```cedarschema
-/// action read in [access, view];
-/// //          ^^^^^^^^^^^^^^^^^ ActionParents
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ActionParents<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ActionParents<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::ActionParents
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ActionParents, SchemaSyntax::ActionParents);
 
 impl<'a> ActionParents<'a> {
     /// Returns an iterator over parent action names.
@@ -565,33 +289,7 @@ impl<'a> ActionParents<'a> {
     }
 }
 
-/// Action `appliesTo` clause specifying principal, resource, and context types.
-///
-/// ```cedarschema
-/// action read appliesTo {
-///     principal: [User, Admin],
-///     resource: [Document],
-///     context: { ip?: ipaddr },
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct AppliesTo<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for AppliesTo<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::AppliesTo
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(AppliesTo, SchemaSyntax::AppliesTo);
 
 impl<'a> AppliesTo<'a> {
     /// Returns the principal types specification.
@@ -618,29 +316,7 @@ impl<'a> AppliesTo<'a> {
     }
 }
 
-/// Principal types in an `appliesTo` clause.
-///
-/// ```cedarschema
-/// principal: [User, Admin]
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct PrincipalTypes<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for PrincipalTypes<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::PrincipalTypes
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(PrincipalTypes, SchemaSyntax::PrincipalTypes);
 
 impl<'a> PrincipalTypes<'a> {
     /// Returns the list of principal entity types.
@@ -650,29 +326,7 @@ impl<'a> PrincipalTypes<'a> {
     }
 }
 
-/// Resource types in an `appliesTo` clause.
-///
-/// ```cedarschema
-/// resource: [Document, Folder]
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ResourceTypes<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ResourceTypes<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::ResourceTypes
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ResourceTypes, SchemaSyntax::ResourceTypes);
 
 impl<'a> ResourceTypes<'a> {
     /// Returns the list of resource entity types.
@@ -682,29 +336,7 @@ impl<'a> ResourceTypes<'a> {
     }
 }
 
-/// Context type in an `appliesTo` clause.
-///
-/// ```cedarschema
-/// context: { ip?: ipaddr, authenticated: Bool }
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ContextType<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ContextType<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::ContextType
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ContextType, SchemaSyntax::ContextType);
 
 impl<'a> ContextType<'a> {
     /// Returns the context type expression (typically a record type).
@@ -714,30 +346,7 @@ impl<'a> ContextType<'a> {
     }
 }
 
-/// Action attributes block.
-///
-/// ```cedarschema
-/// action read attributes { priority: 1 };
-/// //          ^^^^^^^^^^^^^^^^^^^^^^^^^ ActionAttributes
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct ActionAttributes<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ActionAttributes<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::ActionAttributes
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ActionAttributes, SchemaSyntax::ActionAttributes);
 
 impl<'a> ActionAttributes<'a> {
     /// Returns an iterator over attribute entries.
@@ -746,30 +355,7 @@ impl<'a> ActionAttributes<'a> {
     }
 }
 
-/// Key-value entry in action attributes.
-///
-/// ```cedarschema
-/// action read attributes { priority: 1, enabled: true };
-/// //                       ^^^^^^^^^^^  ^^^^^^^^^^^^^ entries
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct AttributeEntry<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for AttributeEntry<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::AttributeEntry
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(AttributeEntry, SchemaSyntax::AttributeEntry);
 
 impl<'a> AttributeEntry<'a> {
     /// Returns the attribute key (identifier).
@@ -831,30 +417,7 @@ impl<'a> LiteralValue<'a> {
     }
 }
 
-/// Common type declaration (type alias).
-///
-/// ```cedarschema
-/// type EmailAddress = String;
-/// type UserInfo = { name: String, email?: EmailAddress };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct TypeDeclaration<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for TypeDeclaration<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::CommonTypeDeclaration
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(TypeDeclaration, SchemaSyntax::CommonTypeDeclaration);
 
 impl<'a> TypeDeclaration<'a> {
     /// Returns an iterator over annotations on this type declaration.
@@ -888,30 +451,7 @@ impl<'a> TypeDeclaration<'a> {
     }
 }
 
-/// List of type references.
-///
-/// ```cedarschema
-/// entity User in [Group, Team, Organization];
-/// //             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ TypeList
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct TypeList<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for TypeList<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::TypeList
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(TypeList, SchemaSyntax::TypeList);
 
 impl<'a> TypeList<'a> {
     /// Returns an iterator over the type names in this list.
@@ -920,32 +460,7 @@ impl<'a> TypeList<'a> {
     }
 }
 
-/// Attribute declaration in a record type.
-///
-/// ```cedarschema
-/// entity User {
-///     name: String,
-///     email?: String,  // optional attribute
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct AttributeDeclaration<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for AttributeDeclaration<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::AttributeDeclaration
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(AttributeDeclaration, SchemaSyntax::AttributeDeclaration);
 
 impl<'a> AttributeDeclaration<'a> {
     /// Returns an iterator over annotations on this attribute.
@@ -1016,33 +531,7 @@ impl<'a> AttrKey<'a> {
     }
 }
 
-/// Record type definition with named attributes.
-///
-/// ```cedarschema
-/// type UserInfo = {
-///     name: String,
-///     email?: String,
-///     age: Long,
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct RecordType<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for RecordType<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::RecordType
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(RecordType, SchemaSyntax::RecordType);
 
 impl<'a> RecordType<'a> {
     /// Returns an iterator over attribute declarations in this record type.

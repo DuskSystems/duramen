@@ -179,6 +179,11 @@ impl<'a> PolicyParser<'a> {
         self.builder.open(PolicySyntax::Condition)?;
 
         if self.at(PolicySyntax::Identifier) {
+            if self.current.text() == "advice" {
+                self.diagnostics.push(Diagnostic::error(
+                    "the `advice` clause is deprecated; it was removed in Cedar 3.0",
+                ));
+            }
             self.bump()?;
         }
 
@@ -280,7 +285,10 @@ impl<'a> PolicyParser<'a> {
         self.expect(PolicySyntax::Question)?;
 
         self.skip_trivia()?;
-        if self.at(PolicySyntax::Identifier) {
+        if self.at(PolicySyntax::Identifier)
+            || self.at(PolicySyntax::PrincipalKeyword)
+            || self.at(PolicySyntax::ResourceKeyword)
+        {
             self.bump()?;
         }
 

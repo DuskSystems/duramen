@@ -1,42 +1,17 @@
 use super::{
-    AstNode, AstToken as _, BinaryOperator, IdentifierToken, IntegerToken, LiteralKind, Name,
-    PolicyNode, SlotKind, StringToken, UnaryOperator, Variable,
+    AstNode, AstToken as _, BinaryOperator, IdentifierToken, IntegerToken, Name, PolicyNode,
+    SlotKind, StringToken, UnaryOperator, Variable, ast_node,
 };
 use crate::policy::PolicySyntax;
 
-/// Literal value expression (`true`, `false`, integers, strings).
-///
-/// ```cedar
-/// permit(principal, action, resource)
-/// when { context.count == 42 && context.enabled == true };
-/// //                      ^^ integer literal
-/// //                                               ^^^^ boolean literal
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct LiteralExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for LiteralExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::LiteralExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(LiteralExpression, PolicySyntax::LiteralExpression);
 
 impl<'a> LiteralExpression<'a> {
     /// Returns the kind of literal (boolean, integer, or string).
     #[must_use]
-    pub fn kind(&self) -> Option<LiteralKind> {
+    pub fn kind(&self) -> Option<super::LiteralKind> {
         let token = self.token()?;
-        LiteralKind::from_kind(token.value())
+        super::LiteralKind::from_kind(token.value())
     }
 
     /// Returns the underlying token node.
@@ -103,24 +78,7 @@ impl<'a> LiteralExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct EntityRefExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EntityRefExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::EntityReference
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EntityRefExpression, PolicySyntax::EntityReference);
 
 impl<'a> EntityRefExpression<'a> {
     #[must_use]
@@ -137,33 +95,7 @@ impl<'a> EntityRefExpression<'a> {
     }
 }
 
-/// Template slot placeholder (`?principal` or `?resource`).
-///
-/// Slots are used in policy templates to create parameterized policies.
-///
-/// ```cedar
-/// permit(principal == ?principal, action, resource == ?resource);
-/// //                  ^^^^^^^^^^ slot for principal entity
-/// //                                                  ^^^^^^^^^ slot for resource entity
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct SlotExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for SlotExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::SlotExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(SlotExpression, PolicySyntax::SlotExpression);
 
 impl<'a> SlotExpression<'a> {
     /// Returns the identifier token following the `?`.
@@ -196,8 +128,19 @@ impl<'a> SlotExpression<'a> {
     /// ```
     #[must_use]
     pub fn slot_kind(&self, source: &str) -> Option<SlotKind> {
-        let id = self.slot_id()?;
-        SlotKind::from_text(id.text(source))
+        if let Some(id) = self.slot_id() {
+            return SlotKind::from_text(id.text(source));
+        }
+
+        for child in self.node.children() {
+            match child.value() {
+                PolicySyntax::PrincipalKeyword => return Some(SlotKind::Principal),
+                PolicySyntax::ResourceKeyword => return Some(SlotKind::Resource),
+                _ => {}
+            }
+        }
+
+        None
     }
 
     /// Returns `true` if this is a valid Cedar slot (`?principal` or `?resource`).
@@ -207,24 +150,7 @@ impl<'a> SlotExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct ParenExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ParenExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::ParenExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ParenExpression, PolicySyntax::ParenExpression);
 
 impl<'a> ParenExpression<'a> {
     #[must_use]
@@ -233,24 +159,7 @@ impl<'a> ParenExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct ListExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for ListExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::ListExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(ListExpression, PolicySyntax::ListExpression);
 
 impl<'a> ListExpression<'a> {
     pub fn elements(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
@@ -258,24 +167,7 @@ impl<'a> ListExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct RecordExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for RecordExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::RecordExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(RecordExpression, PolicySyntax::RecordExpression);
 
 impl<'a> RecordExpression<'a> {
     pub fn entries(&self) -> impl Iterator<Item = RecordEntry<'a>> + use<'a> {
@@ -283,24 +175,7 @@ impl<'a> RecordExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct RecordEntry<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for RecordEntry<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::RecordEntry
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(RecordEntry, PolicySyntax::RecordEntry);
 
 impl<'a> RecordEntry<'a> {
     #[must_use]
@@ -314,24 +189,7 @@ impl<'a> RecordEntry<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct UnaryExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for UnaryExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::UnaryExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(UnaryExpression, PolicySyntax::UnaryExpression);
 
 impl<'a> UnaryExpression<'a> {
     #[must_use]
@@ -353,24 +211,7 @@ impl<'a> UnaryExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct BinaryExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for BinaryExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::BinaryExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(BinaryExpression, PolicySyntax::BinaryExpression);
 
 impl<'a> BinaryExpression<'a> {
     #[must_use]
@@ -416,24 +257,7 @@ impl<'a> BinaryExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct HasExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for HasExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::HasExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(HasExpression, PolicySyntax::HasExpression);
 
 impl<'a> HasExpression<'a> {
     #[must_use]
@@ -471,24 +295,7 @@ impl<'a> AttrKey<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct LikeExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for LikeExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::LikeExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(LikeExpression, PolicySyntax::LikeExpression);
 
 impl<'a> LikeExpression<'a> {
     #[must_use]
@@ -505,24 +312,7 @@ impl<'a> LikeExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct IsExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for IsExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::IsExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(IsExpression, PolicySyntax::IsExpression);
 
 impl<'a> IsExpression<'a> {
     #[must_use]
@@ -541,24 +331,7 @@ impl<'a> IsExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct IfExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for IfExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::IfExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(IfExpression, PolicySyntax::IfExpression);
 
 impl<'a> IfExpression<'a> {
     #[must_use]
@@ -577,24 +350,7 @@ impl<'a> IfExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct FieldExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for FieldExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::FieldAccess
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(FieldExpression, PolicySyntax::FieldAccess);
 
 impl<'a> FieldExpression<'a> {
     #[must_use]
@@ -611,24 +367,7 @@ impl<'a> FieldExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct MethodCallExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for MethodCallExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::MethodCall
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(MethodCallExpression, PolicySyntax::MethodCall);
 
 impl<'a> MethodCallExpression<'a> {
     #[must_use]
@@ -653,24 +392,7 @@ impl<'a> MethodCallExpression<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct IndexExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for IndexExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::IndexAccess
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(IndexExpression, PolicySyntax::IndexAccess);
 
 impl<'a> IndexExpression<'a> {
     #[must_use]
@@ -682,26 +404,22 @@ impl<'a> IndexExpression<'a> {
     pub fn index(&self) -> Option<Expression<'a>> {
         self.node.children().filter_map(Expression::cast).nth(1)
     }
-}
 
-#[derive(Debug, Clone, Copy)]
-pub struct PathExpression<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for PathExpression<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::PathExpression
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
+    #[must_use]
+    pub fn index_string(&self) -> Option<StringToken<'a>> {
+        let mut found_bracket = false;
+        for child in self.node.children() {
+            if child.value() == PolicySyntax::OpenBracket {
+                found_bracket = true;
+            } else if found_bracket && child.value() == PolicySyntax::String {
+                return StringToken::cast(child);
+            }
+        }
+        None
     }
 }
+
+ast_node!(PathExpression, PolicySyntax::PathExpression);
 
 impl<'a> PathExpression<'a> {
     /// Returns the qualified name path.
@@ -727,6 +445,12 @@ impl<'a> PathExpression<'a> {
     /// ```
     #[must_use]
     pub fn as_variable(&self, source: &str) -> Option<Variable> {
+        for child in self.node.children() {
+            if let Some(variable) = Variable::from_kind(child.value()) {
+                return Some(variable);
+            }
+        }
+
         let name = self.path()?;
         let mut segments = name.segments();
         let first = segments.next()?;
@@ -753,34 +477,49 @@ impl<'a> PathExpression<'a> {
     }
 }
 
-/// Unknown expression for partial evaluation and symbolic analysis.
-///
-/// This node type is not produced by parsing Cedar source code directly.
-/// Instead, it is used during analysis phases to represent values that
-/// are not yet known (e.g., unlinked template slots, symbolic values).
-///
-/// Use cases:
-/// - **Type checking**: Propagating unknown types through expressions
-/// - **Symbolic analysis**: Reasoning about policies with unbound variables
-/// - **IDE features**: Representing incomplete expressions during editing
 #[derive(Debug, Clone, Copy)]
-pub struct UnknownExpression<'a> {
+pub struct FunctionCallExpression<'a> {
     node: PolicyNode<'a>,
 }
 
-impl<'a> AstNode<'a> for UnknownExpression<'a> {
+impl<'a> AstNode<'a> for FunctionCallExpression<'a> {
     fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::UnknownExpression
+        kind == PolicySyntax::MemberExpression
     }
 
     fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
+        if node.value() != PolicySyntax::MemberExpression {
+            return None;
+        }
+        let first = node.children().find(|child| !child.value().is_trivial())?;
+        if first.value() == PolicySyntax::Name {
+            Some(Self { node })
+        } else {
+            None
+        }
     }
 
     fn syntax(&self) -> &PolicyNode<'a> {
         &self.node
     }
 }
+
+impl<'a> FunctionCallExpression<'a> {
+    #[must_use]
+    pub fn name(&self) -> Option<Name<'a>> {
+        self.node.children().find_map(Name::cast)
+    }
+
+    pub fn arguments(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
+        self.node
+            .children()
+            .find(|node| node.value() == PolicySyntax::ArgumentList)
+            .into_iter()
+            .flat_map(|args| args.children().filter_map(Expression::cast))
+    }
+}
+
+ast_node!(UnknownExpression, PolicySyntax::UnknownExpression);
 
 impl<'a> UnknownExpression<'a> {
     /// Returns the name identifying this unknown, if present.
@@ -813,6 +552,7 @@ pub enum Expression<'a> {
     Field(FieldExpression<'a>),
     MethodCall(MethodCallExpression<'a>),
     Index(IndexExpression<'a>),
+    FunctionCall(FunctionCallExpression<'a>),
     Path(PathExpression<'a>),
     Unknown(UnknownExpression<'a>),
 }
@@ -836,6 +576,7 @@ impl<'a> AstNode<'a> for Expression<'a> {
                 | PolicySyntax::FieldAccess
                 | PolicySyntax::MethodCall
                 | PolicySyntax::IndexAccess
+                | PolicySyntax::MemberExpression
                 | PolicySyntax::PathExpression
                 | PolicySyntax::UnknownExpression
         )
@@ -858,6 +599,7 @@ impl<'a> AstNode<'a> for Expression<'a> {
             PolicySyntax::FieldAccess => FieldExpression::cast(node).map(Self::Field),
             PolicySyntax::MethodCall => MethodCallExpression::cast(node).map(Self::MethodCall),
             PolicySyntax::IndexAccess => IndexExpression::cast(node).map(Self::Index),
+            PolicySyntax::MemberExpression => cast_member_expression(node),
             PolicySyntax::PathExpression => PathExpression::cast(node).map(Self::Path),
             PolicySyntax::UnknownExpression => UnknownExpression::cast(node).map(Self::Unknown),
             _ => None,
@@ -881,9 +623,38 @@ impl<'a> AstNode<'a> for Expression<'a> {
             Self::Field(inner) => inner.syntax(),
             Self::MethodCall(inner) => inner.syntax(),
             Self::Index(inner) => inner.syntax(),
+            Self::FunctionCall(inner) => inner.syntax(),
             Self::Path(inner) => inner.syntax(),
             Self::Unknown(inner) => inner.syntax(),
         }
+    }
+}
+
+fn cast_member_expression(node: PolicyNode<'_>) -> Option<Expression<'_>> {
+    let first = node.children().find(|child| !child.value().is_trivial())?;
+
+    if first.value() == PolicySyntax::Name {
+        return Some(Expression::FunctionCall(FunctionCallExpression { node }));
+    }
+
+    let has_args = node
+        .children()
+        .any(|child| child.value() == PolicySyntax::ArgumentList);
+    let has_identifier = node
+        .children()
+        .any(|child| child.value() == PolicySyntax::Identifier);
+    let has_bracket = node
+        .children()
+        .any(|child| child.value() == PolicySyntax::OpenBracket);
+
+    if has_bracket {
+        Some(Expression::Index(IndexExpression { node }))
+    } else if has_args && has_identifier {
+        Some(Expression::MethodCall(MethodCallExpression { node }))
+    } else if has_identifier {
+        Some(Expression::Field(FieldExpression { node }))
+    } else {
+        None
     }
 }
 

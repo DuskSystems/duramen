@@ -20,6 +20,9 @@ use parser::PolicyParser;
 mod syntax;
 pub use syntax::PolicySyntax;
 
+#[cfg(any(feature = "serde", feature = "facet"))]
+mod est;
+
 type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
 
 #[derive(Debug)]
@@ -94,7 +97,8 @@ impl<'a> PolicySet<'a> {
 
     #[cfg(feature = "serde")]
     pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
-        todo!()
+        let policy_set = self.to_policy_set_json()?;
+        serde_json::to_string(&policy_set).map_err(|_serialize_error| PolicyErrors)
     }
 
     #[cfg(feature = "facet")]
@@ -104,7 +108,8 @@ impl<'a> PolicySet<'a> {
 
     #[cfg(feature = "facet")]
     pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
-        todo!()
+        let policy_set = self.to_policy_set_json()?;
+        facet_json::to_string(&policy_set).map_err(|_serialize_error| PolicyErrors)
     }
 
     #[cfg(feature = "prost")]
@@ -119,7 +124,24 @@ impl<'a> PolicySet<'a> {
 
     #[cfg(feature = "serde")]
     pub fn to_serde_json_value(&self) -> Result<serde_json::Value, PolicyErrors> {
-        todo!()
+        let policy_set = self.to_policy_set_json()?;
+        serde_json::to_value(&policy_set).map_err(|_serialize_error| PolicyErrors)
+    }
+
+    #[cfg(any(feature = "serde", feature = "facet"))]
+    fn to_policy_set_json(&self) -> Result<est::json::PolicySetJson, PolicyErrors> {
+        let Some(root) = self.root() else {
+            return Ok(est::json::PolicySetJson {
+                static_policies: alloc::collections::BTreeMap::new(),
+                templates: alloc::collections::BTreeMap::new(),
+                template_links: alloc::vec![],
+            });
+        };
+
+        let est_policies =
+            est::convert_policies(&root, self.source).map_err(|_convert_error| PolicyErrors)?;
+
+        Ok(est::policies_to_json(&est_policies))
     }
 }
 

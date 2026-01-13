@@ -16,6 +16,56 @@ pub use tokens::*;
 
 pub type PolicyNode<'a> = Node<'a, PolicySyntax, FlavorDefault>;
 
+macro_rules! ast_node {
+    ($(#[$meta:meta])* $name:ident, $kind:expr) => {
+        $(#[$meta])*
+        #[derive(Debug, Clone, Copy)]
+        pub struct $name<'a> {
+            node: PolicyNode<'a>,
+        }
+
+        impl<'a> AstNode<'a> for $name<'a> {
+            fn can_cast(kind: PolicySyntax) -> bool {
+                kind == $kind
+            }
+
+            fn cast(node: PolicyNode<'a>) -> Option<Self> {
+                Self::can_cast(node.value()).then_some(Self { node })
+            }
+
+            fn syntax(&self) -> &PolicyNode<'a> {
+                &self.node
+            }
+        }
+    };
+}
+
+macro_rules! ast_token {
+    ($(#[$meta:meta])* $name:ident, $kind:expr) => {
+        $(#[$meta])*
+        #[derive(Debug, Clone, Copy)]
+        pub struct $name<'a> {
+            node: PolicyNode<'a>,
+        }
+
+        impl<'a> AstToken<'a> for $name<'a> {
+            fn can_cast(kind: PolicySyntax) -> bool {
+                kind == $kind
+            }
+
+            fn cast(node: PolicyNode<'a>) -> Option<Self> {
+                Self::can_cast(node.value()).then_some(Self { node })
+            }
+
+            fn syntax(&self) -> &PolicyNode<'a> {
+                &self.node
+            }
+        }
+    };
+}
+
+pub(crate) use {ast_node, ast_token};
+
 pub trait AstNode<'a>: Sized {
     fn can_cast(kind: PolicySyntax) -> bool;
     fn cast(node: PolicyNode<'a>) -> Option<Self>;

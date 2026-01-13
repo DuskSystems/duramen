@@ -1,36 +1,10 @@
 use super::{
     ActionDeclaration, AstNode, EntityDeclaration, Name, RecordType, SchemaNode, TypeDeclaration,
+    ast_node,
 };
 use crate::schema::SchemaSyntax;
 
-/// A set type expression representing a collection of values.
-///
-/// ```cedarschema
-/// entity Document {
-///     readers: Set<User>,
-/// //           ^^^^^^^^^^ SetType with element User
-///     tags: Set<String>,
-/// //        ^^^^^^^^^^^ SetType with element String
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct SetType<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for SetType<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::SetType
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(SetType, SchemaSyntax::SetType);
 
 impl<'a> SetType<'a> {
     /// Returns the element type of this set.
@@ -47,38 +21,7 @@ impl<'a> SetType<'a> {
     }
 }
 
-/// A reference to an entity type used in type expressions.
-///
-/// Entity type references are used when a type expression needs to refer to
-/// an entity rather than a primitive type. They include the `entity` keyword
-/// wrapper when used in attribute types.
-///
-/// ```cedarschema
-/// entity Document {
-///     owner: User,
-/// //         ^^^^ EntityTypeRef (implicit entity reference)
-///     reviewers: Set<User>,
-/// //                 ^^^^ element could be EntityTypeRef
-/// };
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct EntityTypeRef<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> AstNode<'a> for EntityTypeRef<'a> {
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::EntityType
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &SchemaNode<'a> {
-        &self.node
-    }
-}
+ast_node!(EntityTypeRef, SchemaSyntax::EntityType);
 
 impl<'a> EntityTypeRef<'a> {
     /// Returns the qualified name of the referenced entity type.
