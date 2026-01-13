@@ -20,8 +20,8 @@ use parser::PolicyParser;
 mod syntax;
 pub use syntax::PolicySyntax;
 
-#[cfg(any(feature = "serde", feature = "facet"))]
-mod est;
+#[cfg(any(feature = "serde", feature = "facet", feature = "prost"))]
+pub mod est;
 
 type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
 
@@ -119,7 +119,24 @@ impl<'a> PolicySet<'a> {
 
     #[cfg(feature = "prost")]
     pub fn to_prost_bytes(&self) -> Result<prost::bytes::Bytes, PolicyErrors> {
-        todo!()
+        use prost::Message as _;
+        let policy_set = self.to_policy_set_proto()?;
+        Ok(prost::bytes::Bytes::from(policy_set.encode_to_vec()))
+    }
+
+    #[cfg(feature = "prost")]
+    fn to_policy_set_proto(&self) -> Result<est::proto::PolicySet, PolicyErrors> {
+        let Some(root) = self.root() else {
+            return Ok(est::proto::PolicySet {
+                templates: alloc::vec![],
+                links: alloc::vec![],
+            });
+        };
+
+        let est_policies =
+            est::convert_policies(&root, self.source).map_err(|_convert_error| PolicyErrors)?;
+
+        Ok(est::policies_to_proto(&est_policies))
     }
 
     #[cfg(feature = "serde")]

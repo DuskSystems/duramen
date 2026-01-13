@@ -6,6 +6,7 @@ use alloc::string::String;
 use super::types as json;
 use crate::policy::est::types as est;
 
+#[must_use]
 pub fn policies_to_json(policies: &[est::Policy]) -> json::PolicySetJson {
     let mut templates = BTreeMap::new();
     let mut static_policies = BTreeMap::new();
