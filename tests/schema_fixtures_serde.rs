@@ -32,7 +32,7 @@ fn compare_schema(path: &Path) -> datatest_stable::Result<()> {
     match (duramen.has_errors(), cedar) {
         (false, Ok((cedar, _warnings))) => {
             let cedar: Value = cedar.to_json_value()?;
-            let duramen: Value = duramen.to_serde_json_value()?;
+            let duramen: Value = duramen.to_serde_json_value();
             assert_eq!(cedar, duramen);
         }
         (false, Err(err)) => {

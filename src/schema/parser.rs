@@ -162,7 +162,7 @@ impl<'a> SchemaParser<'a> {
         self.expect(SchemaSyntax::At)?;
 
         self.skip_trivia()?;
-        if self.at(SchemaSyntax::Identifier) {
+        if self.at(SchemaSyntax::Identifier) || self.current().is_keyword() {
             self.bump()?;
         }
 
@@ -512,7 +512,10 @@ impl<'a> SchemaParser<'a> {
                 self.skip_trivia()?;
             }
 
-            if self.at(SchemaSyntax::Identifier) || self.at(SchemaSyntax::String) {
+            if self.at(SchemaSyntax::Identifier)
+                || self.at(SchemaSyntax::String)
+                || self.current().is_keyword()
+            {
                 self.attr_decl()?;
             } else {
                 self.builder.open(SchemaSyntax::Error)?;
@@ -535,7 +538,10 @@ impl<'a> SchemaParser<'a> {
     fn attr_decl(&mut self) -> Result<(), syntree::Error> {
         self.builder.open(SchemaSyntax::AttributeDeclaration)?;
 
-        if self.at(SchemaSyntax::Identifier) || self.at(SchemaSyntax::String) {
+        if self.at(SchemaSyntax::Identifier)
+            || self.at(SchemaSyntax::String)
+            || self.current().is_keyword()
+        {
             self.bump()?;
         }
 
@@ -570,7 +576,12 @@ impl<'a> SchemaParser<'a> {
             if self.at(SchemaSyntax::Colon2) {
                 self.bump()?;
                 self.skip_trivia()?;
-                if self.at(SchemaSyntax::Identifier) {
+                if self.at_any(&[
+                    SchemaSyntax::Identifier,
+                    SchemaSyntax::BoolKeyword,
+                    SchemaSyntax::LongKeyword,
+                    SchemaSyntax::StringKeyword,
+                ]) {
                     self.bump()?;
                 } else if self.at(SchemaSyntax::String) {
                     self.bump()?;
