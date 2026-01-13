@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use cedar_policy::PolicySet as CedarPolicySet;
-use cedar_policy::proto::traits::Protobuf as _;
 use duramen::policy::PolicySet;
 use serde_json::Value;
 use similar_asserts::assert_eq;
@@ -32,13 +31,9 @@ fn compare_policy(path: &Path) -> datatest_stable::Result<()> {
 
     match (duramen.has_errors(), cedar) {
         (false, Ok(cedar)) => {
-            let cedar = cedar.encode();
-            let cedar = CedarPolicySet::decode(cedar.as_slice())?;
             let cedar: Value = cedar.to_json()?;
-
             let duramen = duramen.to_facet_json()?;
             let duramen: Value = serde_json::from_str(&duramen)?;
-
             assert_eq!(cedar, duramen);
         }
         (false, Err(err)) => {

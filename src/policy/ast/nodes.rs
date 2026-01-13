@@ -1,29 +1,12 @@
 use core::fmt::{self, Write};
 
 use super::{
-    AstNode, AstToken as _, ConditionKind, Effect, Expression, IdentifierToken, PolicyNode,
-    StringToken, Variable,
+    AstNode, AstToken, BinaryOperator, ConditionKind, Effect, Expression, IdentifierToken,
+    PolicyNode, StringToken, Variable, ast_node,
 };
 use crate::policy::PolicySyntax;
 
-#[derive(Debug, Clone, Copy)]
-pub struct Policies<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Policies<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::PolicySet
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Policies, PolicySyntax::PolicySet);
 
 impl<'a> Policies<'a> {
     pub fn policies(&self) -> impl Iterator<Item = Policy<'a>> + use<'a> {
@@ -31,24 +14,7 @@ impl<'a> Policies<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Policy<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Policy<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::Policy
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Policy, PolicySyntax::Policy);
 
 impl<'a> Policy<'a> {
     pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
@@ -85,32 +51,14 @@ impl<'a> Policy<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Annotation<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Annotation<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::Annotation
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Annotation, PolicySyntax::Annotation);
 
 impl<'a> Annotation<'a> {
     #[must_use]
-    pub fn name(&self) -> Option<IdentifierToken<'a>> {
+    pub fn name(&self) -> Option<IdentifierOrKeywordToken<'a>> {
         self.node
             .children()
-            .find(|node| node.value() == PolicySyntax::Identifier)
-            .and_then(IdentifierToken::cast)
+            .find_map(IdentifierOrKeywordToken::cast)
     }
 
     #[must_use]
@@ -123,13 +71,13 @@ impl<'a> Annotation<'a> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct VariableDefinition<'a> {
+pub struct IdentifierOrKeywordToken<'a> {
     node: PolicyNode<'a>,
 }
 
-impl<'a> AstNode<'a> for VariableDefinition<'a> {
+impl<'a> AstToken<'a> for IdentifierOrKeywordToken<'a> {
     fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::VariableDefinition
+        kind == PolicySyntax::Identifier || kind.is_keyword()
     }
 
     fn cast(node: PolicyNode<'a>) -> Option<Self> {
@@ -140,6 +88,8 @@ impl<'a> AstNode<'a> for VariableDefinition<'a> {
         &self.node
     }
 }
+
+ast_node!(VariableDefinition, PolicySyntax::VariableDefinition);
 
 impl<'a> VariableDefinition<'a> {
     #[must_use]
@@ -165,29 +115,57 @@ impl<'a> VariableDefinition<'a> {
     }
 
     #[must_use]
+    pub fn relation(&self) -> Option<BinaryOperator> {
+        let node = self
+            .node
+            .children()
+            .find(|node| matches!(node.value(), PolicySyntax::Equal2 | PolicySyntax::InKeyword))?;
+        BinaryOperator::from_kind(node.value())
+    }
+
+    #[must_use]
     pub fn constraint(&self) -> Option<Expression<'a>> {
+        self.node.children().find_map(Expression::cast)
+    }
+
+    #[must_use]
+    pub fn has_is_constraint(&self) -> bool {
+        self.node
+            .children()
+            .any(|node| node.value() == PolicySyntax::IsKeyword)
+    }
+
+    #[must_use]
+    pub fn is_type_name(&self) -> Option<Name<'a>> {
+        if !self.has_is_constraint() {
+            return None;
+        }
+        self.node.children().find_map(Name::cast)
+    }
+
+    #[must_use]
+    pub fn has_is_in_constraint(&self) -> bool {
+        let mut found_is = false;
+        for child in self.node.children() {
+            if child.value() == PolicySyntax::IsKeyword {
+                found_is = true;
+            } else if found_is && child.value() == PolicySyntax::InKeyword {
+                return true;
+            }
+        }
+        false
+    }
+
+    #[must_use]
+    pub fn is_in_entity(&self) -> Option<Expression<'a>> {
+        if !self.has_is_in_constraint() {
+            return None;
+        }
         self.node.children().find_map(Expression::cast)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Condition<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Condition<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::Condition
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Condition, PolicySyntax::Condition);
 
 impl<'a> Condition<'a> {
     #[must_use]
@@ -212,35 +190,19 @@ impl<'a> Condition<'a> {
     }
 
     #[must_use]
+    pub fn clause_name(&self) -> Option<IdentifierOrKeywordToken<'a>> {
+        self.node
+            .children()
+            .find_map(IdentifierOrKeywordToken::cast)
+    }
+
+    #[must_use]
     pub fn expr(&self) -> Option<Expression<'a>> {
         self.node.children().find_map(Expression::cast)
     }
 }
 
-/// Qualified name consisting of one or more `::` separated segments.
-///
-/// ```cedar
-/// permit(principal == Namespace::User::"alice", action, resource);
-/// //                  ^^^^^^^^^^^^^^^ Name with segments [Namespace, User]
-/// ```
-#[derive(Debug, Clone, Copy)]
-pub struct Name<'a> {
-    node: PolicyNode<'a>,
-}
-
-impl<'a> AstNode<'a> for Name<'a> {
-    fn can_cast(kind: PolicySyntax) -> bool {
-        kind == PolicySyntax::Name
-    }
-
-    fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        Self::can_cast(node.value()).then_some(Self { node })
-    }
-
-    fn syntax(&self) -> &PolicyNode<'a> {
-        &self.node
-    }
-}
+ast_node!(Name, PolicySyntax::Name);
 
 impl<'a> Name<'a> {
     /// Returns an iterator over the identifier segments of this name.

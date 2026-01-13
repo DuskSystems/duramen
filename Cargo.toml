@@ -110,7 +110,6 @@ too_many_lines = "allow"
 [workspace.dependencies]
 # Upstream
 cedar-policy = { version = "4.8", default-features = false }
-cedar-policy-core = { version = "4.8", default-features = false }
 
 # Syntax
 syntree = { version = "0.18", default-features = false }
@@ -193,7 +192,7 @@ smallvec = { workspace = true, features = ["const_new", "union"] }
 annotate-snippets = { workspace = true, optional = true, features = ["simd"] }
 
 # Serialization
-serde = { workspace = true, optional = true }
+serde = { workspace = true, optional = true, features = ["derive", "alloc"] }
 serde_json = { workspace = true, optional = true }
 facet = { workspace = true, optional = true }
 facet-json = { workspace = true, optional = true }
@@ -202,14 +201,10 @@ prost = { workspace = true, optional = true }
 [dev-dependencies]
 # Upstream
 cedar-policy = { workspace = true, features = ["protobufs"] }
-cedar-policy-core = { workspace = true, features = [
-  "ipaddr",
-  "decimal",
-  "datetime",
-] }
 
 # Serialization
 serde_json = { workspace = true }
+facet-json = { workspace = true, features = ["fast", "jit"] }
 
 # Diagnostics
 annotate-snippets = { workspace = true }
