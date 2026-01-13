@@ -223,6 +223,7 @@ impl<'a> PolicyLexer<'a> {
             }
             _ => {
                 self.cursor.bump_char();
+
                 let end = self.cursor.position();
                 self.diagnostics.push(
                     Diagnostic::error("unexpected character")
@@ -238,5 +239,112 @@ impl<'a> PolicyLexer<'a> {
             text: self.cursor.slice(start),
             position: start,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloc::string::String;
+    use alloc::vec::Vec;
+
+    use super::*;
+
+    fn render(source: &str, lexer: &mut PolicyLexer<'_>) -> String {
+        let outputs: Vec<_> = lexer
+            .take_diagnostics()
+            .iter()
+            .map(|diagnostic| diagnostic.render("<test>", source))
+            .collect();
+
+        outputs
+            .iter()
+            .map(|output| anstream::adapter::strip_str(output).to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    #[test]
+    fn unterminated_string() {
+        let source = r#""hello"#;
+
+        let mut lexer = PolicyLexer::new(source);
+        while lexer.next_token().syntax() != PolicySyntax::Eof {}
+
+        insta::assert_snapshot!(render(source, &mut lexer), @r#"
+        error: unterminated string
+          ╭▸ <test>:1:1
+          │
+        1 │ "hello
+          ╰╴━━━━━━ string is not closed
+        "#);
+    }
+
+    #[test]
+    fn unterminated_string_with_escape() {
+        let source = r#""hello\""#;
+
+        let mut lexer = PolicyLexer::new(source);
+        while lexer.next_token().syntax() != PolicySyntax::Eof {}
+
+        insta::assert_snapshot!(render(source, &mut lexer), @r#"
+        error: unterminated string
+          ╭▸ <test>:1:1
+          │
+        1 │ "hello\"
+          ╰╴━━━━━━━━ string is not closed
+        "#);
+    }
+
+    #[test]
+    fn unexpected_character() {
+        let source = "permit # forbid";
+
+        let mut lexer = PolicyLexer::new(source);
+        while lexer.next_token().syntax() != PolicySyntax::Eof {}
+
+        insta::assert_snapshot!(render(source, &mut lexer), @"
+        error: unexpected character
+          ╭▸ <test>:1:8
+          │
+        1 │ permit # forbid
+          ╰╴       ━ not recognized
+        ");
+    }
+
+    #[test]
+    fn unexpected_character_emoji() {
+        let source = "permit 🦀 forbid";
+
+        let mut lexer = PolicyLexer::new(source);
+        while lexer.next_token().syntax() != PolicySyntax::Eof {}
+
+        insta::assert_snapshot!(render(source, &mut lexer), @"
+        error: unexpected character
+          ╭▸ <test>:1:8
+          │
+        1 │ permit 🦀 forbid
+          ╰╴       ━━ not recognized
+        ");
+    }
+
+    #[test]
+    fn multiple_errors() {
+        let source = r#"permit # "unterminated"#;
+
+        let mut lexer = PolicyLexer::new(source);
+        while lexer.next_token().syntax() != PolicySyntax::Eof {}
+
+        insta::assert_snapshot!(render(source, &mut lexer), @r#"
+        error: unexpected character
+          ╭▸ <test>:1:8
+          │
+        1 │ permit # "unterminated
+          ╰╴       ━ not recognized
+        error: unterminated string
+          ╭▸ <test>:1:10
+          │
+        1 │ permit # "unterminated
+          ╰╴         ━━━━━━━━━━━━━ string is not closed
+        "#);
     }
 }
