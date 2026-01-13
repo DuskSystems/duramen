@@ -2,6 +2,10 @@
 target
 *.rs.bk
 
+# Fuzz
+artifacts
+corpus
+
 # Nix
 result
 result-*
