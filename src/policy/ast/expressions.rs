@@ -889,8 +889,7 @@ impl<'a> AstNode<'a> for Expression<'a> {
 
 /// An accessor in a member access chain (field, method call, or index).
 ///
-/// This enum is returned by [`Expression::as_accessor`] and [`AccessorChain`] to
-/// provide a unified view of the different accessor types.
+/// This enum is returned by [`Expression::as_accessor`] to provide a unified view of the different accessor types.
 #[derive(Debug, Clone, Copy)]
 pub enum Accessor<'a> {
     /// Field access (`.identifier`).

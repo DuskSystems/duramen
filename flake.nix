@@ -51,6 +51,7 @@
             NIX_PATH = "nixpkgs=${nixpkgs.outPath}";
 
             # Rust
+            RUSTDOCFLAGS = "--html-in-header docs/arborium.html";
             INSTA_TEST_RUNNER = "nextest";
           };
 
