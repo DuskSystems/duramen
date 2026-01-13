@@ -48,7 +48,7 @@ impl<'a> Namespace<'a> {
 ast_node!(Annotation, SchemaSyntax::Annotation);
 
 impl<'a> Annotation<'a> {
-    /// Returns the annotation name (identifier after `@`).
+    /// Returns the annotation name (identifier or keyword after `@`).
     ///
     /// ```cedarschema
     /// @doc("description")
@@ -58,7 +58,7 @@ impl<'a> Annotation<'a> {
     pub fn name(&self) -> Option<IdentifierToken<'a>> {
         self.node
             .children()
-            .find(|node| node.value() == SchemaSyntax::Identifier)
+            .find(|node| node.value() == SchemaSyntax::Identifier || node.value().is_keyword())
             .and_then(IdentifierToken::cast)
     }
 
@@ -499,18 +499,20 @@ impl<'a> AttributeDeclaration<'a> {
     }
 }
 
-/// Attribute key (name) which can be an identifier or a quoted string.
+/// Attribute key (name) which can be an identifier, a quoted string, or a keyword.
 ///
 /// ```cedarschema
 /// entity User {
 ///     name: String,           // identifier key
 ///     "special-attr": Long,   // string key (for reserved words or special chars)
+///     String?: __cedar::String, // keyword key (reserved word used as attribute name)
 /// };
 /// ```
 #[derive(Debug, Clone, Copy)]
 pub enum AttrKey<'a> {
     Identifier(IdentifierToken<'a>),
     String(StringToken<'a>),
+    Keyword(SchemaNode<'a>),
 }
 
 impl<'a> AttrKey<'a> {
@@ -518,6 +520,7 @@ impl<'a> AttrKey<'a> {
         match node.value() {
             SchemaSyntax::Identifier => IdentifierToken::cast(node).map(Self::Identifier),
             SchemaSyntax::String => StringToken::cast(node).map(Self::String),
+            kind if kind.is_keyword() => Some(Self::Keyword(node)),
             _ => None,
         }
     }
@@ -527,6 +530,7 @@ impl<'a> AttrKey<'a> {
         match self {
             Self::Identifier(token) => token.syntax(),
             Self::String(token) => token.syntax(),
+            Self::Keyword(node) => node,
         }
     }
 }

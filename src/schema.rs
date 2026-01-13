@@ -11,6 +11,9 @@ use crate::diagnostics::Diagnostic;
 pub mod ast;
 use ast::{AstNode as _, Declaration, Namespace, Schema as SchemaAst};
 
+#[cfg(any(feature = "serde", feature = "facet"))]
+pub mod est;
+
 mod lexer;
 pub use lexer::{SchemaLexer, SchemaToken};
 
@@ -98,7 +101,8 @@ impl<'a> Schema<'a> {
 
     #[cfg(feature = "serde")]
     pub fn to_serde_json(&self) -> Result<alloc::string::String, SchemaErrors> {
-        todo!()
+        let json = self.to_schema_fragment_json();
+        serde_json::to_string(&json).map_err(|_err| SchemaErrors)
     }
 
     #[cfg(feature = "facet")]
@@ -108,12 +112,21 @@ impl<'a> Schema<'a> {
 
     #[cfg(feature = "facet")]
     pub fn to_facet_json(&self) -> Result<alloc::string::String, SchemaErrors> {
-        todo!()
+        let json = self.to_schema_fragment_json();
+        facet_json::to_string(&json).map_err(|_err| SchemaErrors)
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json_value(&self) -> Result<serde_json::Value, SchemaErrors> {
-        todo!()
+    #[must_use]
+    pub fn to_serde_json_value(&self) -> serde_json::Value {
+        let json = self.to_schema_fragment_json();
+        serde_json::to_value(&json).unwrap_or(serde_json::Value::Null)
+    }
+
+    #[cfg(any(feature = "serde", feature = "facet"))]
+    fn to_schema_fragment_json(&self) -> est::json::SchemaFragmentJson {
+        let fragment = est::convert_schema(self);
+        est::json::convert_to_json(&fragment)
     }
 }
 
