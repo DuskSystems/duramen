@@ -3,6 +3,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use core::ops::Range;
 
+use annotate_snippets::renderer::DecorStyle;
 use annotate_snippets::{AnnotationKind, Group, Level, Renderer, Snippet};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -110,7 +111,11 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn with_secondary_label<M: Into<String>>(mut self, range: Range<usize>, message: M) -> Self {
+    pub fn with_secondary_label<M: Into<String>>(
+        mut self,
+        range: Range<usize>,
+        message: M,
+    ) -> Self {
         self.labels.push(Label::secondary(range, message));
         self
     }
@@ -168,7 +173,7 @@ impl Diagnostic {
             report.push(Group::with_title(Level::NOTE.secondary_title(note)));
         }
 
-        let renderer = Renderer::styled();
+        let renderer = Renderer::styled().decor_style(DecorStyle::Unicode);
         renderer.render(&report)
     }
 }

@@ -130,6 +130,7 @@ prost = { version = "0.14", default-features = false }
 
 # Diagnostics
 annotate-snippets = { version = "0.12", default-features = false }
+anstream = { version = "0.6", default-features = false }
 
 # Testing
 insta = { version = "1.46", default-features = false }
@@ -206,6 +207,10 @@ cedar-policy-core = { workspace = true, features = [
 
 # Serialization
 serde_json = { workspace = true }
+
+# Diagnostics
+annotate-snippets = { workspace = true }
+anstream = { workspace = true }
 
 # Testing
 insta = { workspace = true }
