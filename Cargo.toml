@@ -126,6 +126,7 @@ serde_json = { version = "1.0", default-features = false }
 facet = { version = "0.42", default-features = false }
 facet-json = { version = "0.42", default-features = false }
 prost = { version = "0.14", default-features = false }
+prost-build = { version = "0.14" }
 
 # Diagnostics
 annotate-snippets = { version = "0.12", default-features = false }
@@ -176,7 +177,7 @@ std = [
 ]
 serde = ["dep:serde", "dep:serde_json"]
 facet = ["dep:facet", "dep:facet-json"]
-prost = ["dep:prost"]
+prost = ["std", "dep:prost"]
 
 [dependencies]
 # Syntax
