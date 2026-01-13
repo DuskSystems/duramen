@@ -662,6 +662,9 @@ dependencies = [
 [[package]]
 name = "duramen-xtask"
 version = "0.1.0"
+dependencies = [
+ "prost-build",
+]
 
 [[package]]
 name = "dyn-clone"
