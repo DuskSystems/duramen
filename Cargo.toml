@@ -252,3 +252,7 @@ required-features = ["serde"]
 name = "schema_fixtures_facet"
 harness = false
 required-features = ["facet"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--html-in-header", "docs/arborium.html"]
