@@ -56,15 +56,17 @@
 
           buildInputs = with pkgs; [
             # Rust
-            rust-bin.nightly.latest.rustfmt
-            (rust-bin.stable.latest.minimal.override {
+            (rust-bin.nightly.latest.minimal.override {
               extensions = [
                 "clippy"
+                "llvm-tools"
                 "rust-analyzer"
                 "rust-src"
+                "rustfmt"
               ];
             })
             taplo
+            cargo-fuzz
             cargo-insta
             cargo-nextest
             cargo-outdated

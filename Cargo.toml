@@ -1,7 +1,7 @@
 # https://doc.rust-lang.org/cargo/reference/workspaces.html
 [workspace]
 resolver = "3"
-members = [".", "xtask"]
+members = [".", "fuzz", "xtask"]
 
 [workspace.package]
 version = "0.1.0"
@@ -136,6 +136,9 @@ anstream = { version = "0.6", default-features = false }
 insta = { version = "1.46", default-features = false }
 datatest-stable = { version = "0.3", default-features = false }
 similar-asserts = { version = "1.7", default-features = false }
+
+# Fuzzing
+libfuzzer-sys = { version = "0.4", default-features = false, features = ["link_libfuzzer"] }
 
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
