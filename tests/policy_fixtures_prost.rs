@@ -31,9 +31,17 @@ fn compare_policy(path: &Path) -> datatest_stable::Result<()> {
 
     match (duramen.has_errors(), cedar) {
         (false, Ok(cedar)) => {
-            let cedar = cedar.encode();
-            let duramen = duramen.to_prost_bytes()?;
-            assert_eq!(cedar.as_slice(), duramen.as_ref());
+            // Can't compare the raw Protobuf bytes here, since ordering of types isn't guaranteed.
+
+            let duramen_bytes = duramen.to_prost_bytes()?;
+            let duramen_decoded = CedarPolicySet::decode(duramen_bytes.as_ref())?;
+            let duramen_json = duramen_decoded.to_json()?;
+
+            let cedar_bytes = cedar.encode();
+            let cedar_decoded = CedarPolicySet::decode(cedar_bytes.as_slice())?;
+            let cedar_json = cedar_decoded.to_json()?;
+
+            assert_eq!(duramen_json, cedar_json);
         }
         (false, Err(err)) => {
             let path = path.display();

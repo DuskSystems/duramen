@@ -1,3 +1,6 @@
+mod convert;
+pub use convert::policies_to_proto;
+
 #[expect(
     clippy::doc_markdown,
     clippy::missing_const_for_fn,
@@ -9,3 +12,4 @@
     reason = "Generated code"
 )]
 mod types;
+pub use types::*;

@@ -1,5 +1,5 @@
 mod convert;
-mod types;
-
 pub use convert::convert_to_json;
+
+mod types;
 pub use types::*;
