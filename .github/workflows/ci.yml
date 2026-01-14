@@ -1,0 +1,179 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  ACTIONS_CACHE_SERVICE_V2: "on"
+  SCCACHE_GHA_ENABLED: "true"
+  SCCACHE_GHA_VERSION: "1"
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+          tools: cargo-nextest,cargo-hack,cargo-deny,typos-cli,zizmor
+          protobuf: true
+
+      - name: Run checks
+        run: |
+          set -euxo pipefail
+          cargo fmt --all --check
+          cargo clippy --workspace --all-targets --all-features
+          typos
+          cargo deny check
+          zizmor .github
+          cargo xtask fixtures
+          cargo hack build --workspace --feature-powerset --optional-deps
+          cargo nextest run --workspace --all-features
+          cargo test --workspace --doc --all-features
+
+  targets:
+    name: Targets
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          toolchain: "1.89"
+          targets: thumbv7m-none-eabi, wasm32-unknown-unknown
+
+      - name: Build no-std
+        run: cargo build --lib --package duramen --target thumbv7m-none-eabi
+
+      - name: Build wasm
+        run: cargo build --lib --package duramen --target wasm32-unknown-unknown
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          toolchain: nightly
+          components: llvm-tools
+          tools: cargo-llvm-cov
+          protobuf: true
+
+      - name: Generate coverage
+        run: |
+          cargo xtask fixtures
+          cargo llvm-cov --workspace --all-features
+
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          toolchain: "1.89"
+          protobuf: true
+
+      - name: Build and test
+        run: |
+          cargo xtask fixtures
+          cargo build --workspace --all-features
+          cargo test --workspace --all-features
+
+  codegen:
+    name: Codegen
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          toolchain: stable
+          components: rustfmt
+          protobuf: true
+
+      - name: Run codegen
+        run: |
+          cargo xtask fixtures
+          cargo xtask prost
+          cargo fmt
+
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code; then
+            echo "Generated code is out of date."
+            exit 1
+          fi
+
+  benches:
+    name: Benchmarks
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          toolchain: nightly
+          protobuf: true
+
+      - name: Run benchmarks
+        run: |
+          cargo xtask fixtures
+          cargo bench --all-features

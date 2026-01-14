@@ -49,15 +49,16 @@
           env = {
             # Nix
             NIX_PATH = "nixpkgs=${nixpkgs.outPath}";
-
-            # Rust
-            RUSTDOCFLAGS = "--html-in-header docs/arborium.html";
-            INSTA_TEST_RUNNER = "nextest";
           };
 
           buildInputs = with pkgs; [
             # Rust
             (rust-bin.nightly.latest.minimal.override {
+              targets = [
+                "thumbv7m-none-eabi"
+                "wasm32-unknown-unknown"
+              ];
+
               extensions = [
                 "clippy"
                 "llvm-tools"
@@ -66,11 +67,18 @@
                 "rustfmt"
               ];
             })
+            sccache
+            wild
             taplo
+            cargo-deny
             cargo-fuzz
+            cargo-hack
             cargo-insta
+            cargo-llvm-cov
             cargo-nextest
             cargo-outdated
+            # FIXME: https://github.com/NixOS/nixpkgs/pull/480054
+            # cargo-semver-checks
             cargo-shear
             vscode-extensions.vadimcn.vscode-lldb.adapter
 

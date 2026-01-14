@@ -1,0 +1,47 @@
+name: Setup
+description: Common setup steps
+
+inputs:
+  toolchain:
+    description: Rust toolchain
+    required: true
+  components:
+    description: Rust components
+    required: false
+  targets:
+    description: Rust targets
+    required: false
+  tools:
+    description: Tools to install
+    required: false
+  protobuf:
+    description: Install Protobuf
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+      with:
+        toolchain: ${{ inputs.toolchain }}
+        components: ${{ inputs.components }}
+        targets: ${{ inputs.targets }}
+
+    - name: Setup sccache
+      uses: Mozilla-Actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+
+    - name: Setup cache
+      uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+
+    - name: Install tools
+      if: inputs.tools != ''
+      uses: taiki-e/install-action@90558ad1e179036f31467972b00dec6cb80701fa # v2.66.3
+      with:
+        tool: ${{ inputs.tools }}
+
+    - name: Install protobuf
+      if: inputs.protobuf == 'true'
+      shell: bash
+      run: sudo apt-get install --yes protobuf-compiler

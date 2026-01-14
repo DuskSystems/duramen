@@ -1,4 +1,32 @@
 # https://doc.rust-lang.org/cargo/reference/config.html
 
+# https://doc.rust-lang.org/cargo/reference/config.html#alias
 [alias]
 xtask = "run --package duramen-xtask --"
+
+# https://doc.rust-lang.org/cargo/reference/config.html#build
+[build]
+incremental = false
+rustc-wrapper = "sccache"
+rustflags = ["-C", "target-cpu=native"]
+rustdocflags = ["--html-in-header", "docs/arborium.html"]
+
+# https://doc.rust-lang.org/cargo/reference/config.html#env
+[env]
+INSTA_TEST_RUNNER = "nextest"
+
+# https://doc.rust-lang.org/cargo/reference/profiles.html#dev
+[profile.dev.package]
+insta.opt-level = 3
+similar.opt-level = 3
+
+# https://doc.rust-lang.org/cargo/reference/profiles.html#release
+[profile.release]
+lto = "fat"
+overflow-checks = true
+panic = "abort"
+codegen-units = 1
+
+[profile.profiling]
+inherits = "release"
+debug = true
