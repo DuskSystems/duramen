@@ -11,7 +11,7 @@ datatest_stable::harness! {
     },
     {
         test = roundtrip_schema,
-        root = "cedar-integration-tests/cedar",
+        root = "cedar",
         pattern = r".*[.]cedarschema$"
     },
     {

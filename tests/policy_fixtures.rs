@@ -12,7 +12,7 @@ datatest_stable::harness! {
     },
     {
         test = roundtrip_policy,
-        root = "cedar-integration-tests/cedar",
+        root = "cedar",
         pattern = r".*[.]cedar$"
     },
     {

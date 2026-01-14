@@ -13,7 +13,7 @@ datatest_stable::harness! {
     },
     {
         test = compare_schema,
-        root = "cedar-integration-tests/cedar",
+        root = "cedar",
         pattern = r".*[.]cedarschema$"
     },
     {
