@@ -98,7 +98,7 @@ fn policy_to_template_body(id: &str, policy: &est::Policy) -> proto::TemplateBod
 fn build_non_scope_constraints(conditions: &[est::Condition]) -> Option<proto::Expr> {
     let mut result: Option<proto::Expr> = None;
 
-    for condition in conditions {
+    for condition in conditions.iter().rev() {
         let condition_expr = expression_to_proto(&condition.body);
         let expr = match condition.kind {
             est::ConditionKind::When => condition_expr,
@@ -114,10 +114,10 @@ fn build_non_scope_constraints(conditions: &[est::Condition]) -> Option<proto::E
 
         result = Some(match result {
             None => expr,
-            Some(left) => proto::Expr {
+            Some(right) => proto::Expr {
                 expr_kind: Some(proto::expr::ExprKind::And(Box::new(proto::expr::And {
-                    left: Some(Box::new(left)),
-                    right: Some(Box::new(expr)),
+                    left: Some(Box::new(expr)),
+                    right: Some(Box::new(right)),
                 }))),
             },
         });

@@ -17,13 +17,9 @@ pub struct NamespaceDefinitionJson {
     pub common_types: BTreeMap<String, TypeDefJson>,
 
     #[cfg_attr(feature = "serde", serde(rename = "entityTypes"))]
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "BTreeMap::is_empty"))]
     #[cfg_attr(feature = "facet", facet(rename = "entityTypes"))]
-    #[cfg_attr(feature = "facet", facet(skip_serializing_if = BTreeMap::is_empty))]
     pub entity_types: BTreeMap<String, EntityTypeJson>,
 
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "BTreeMap::is_empty"))]
-    #[cfg_attr(feature = "facet", facet(skip_serializing_if = BTreeMap::is_empty))]
     pub actions: BTreeMap<String, ActionTypeJson>,
 
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "BTreeMap::is_empty"))]
@@ -140,6 +136,8 @@ pub struct EntityOrCommonJson {
     #[cfg_attr(feature = "facet", facet(rename = "type"))]
     pub type_name: String,
 
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
+    #[cfg_attr(feature = "facet", facet(skip_serializing_if = String::is_empty))]
     pub name: String,
 
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "BTreeMap::is_empty"))]
