@@ -8,6 +8,7 @@ macro_rules! json_struct {
         #[derive(Debug, Clone)]
         #[cfg_attr(feature = "serde", derive(serde::Serialize))]
         #[cfg_attr(feature = "facet", derive(facet::Facet))]
+        #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
         pub struct $name {
             pub $field: $ty,
         }
@@ -17,6 +18,7 @@ macro_rules! json_struct {
         #[derive(Debug, Clone)]
         #[cfg_attr(feature = "serde", derive(serde::Serialize))]
         #[cfg_attr(feature = "facet", derive(facet::Facet))]
+        #[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
         pub struct $name {
             #[cfg_attr(feature = "serde", serde(rename = $rename))]
             #[cfg_attr(feature = "facet", facet(rename = $rename))]
@@ -48,6 +50,7 @@ macro_rules! unary_operation {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "facet", facet(rename_all = "camelCase"))]
 pub struct PolicySetJson {
@@ -59,11 +62,13 @@ pub struct PolicySetJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct TemplateLinkJson {}
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct PolicyJson {
     pub effect: String,
     pub principal: ScopeJson,
@@ -78,6 +83,7 @@ pub struct PolicyJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ScopeJson {
     pub op: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
@@ -107,6 +113,7 @@ json_struct!(ScopeInJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct EntityUidJson {
     #[cfg_attr(feature = "serde", serde(rename = "type"))]
     #[cfg_attr(feature = "facet", facet(rename = "type"))]
@@ -117,6 +124,7 @@ pub struct EntityUidJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ConditionJson {
     pub kind: String,
     pub body: ExpressionJson,
@@ -125,6 +133,7 @@ pub struct ConditionJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
@@ -173,6 +182,7 @@ json_struct!(ExpressionValueJson { value: ValueJson => "Value" });
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
@@ -196,6 +206,7 @@ json_struct!(ExpressionRecordJson { record: BTreeMap<String, ExpressionJson> => 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct UnaryArgumentJson {
     pub arg: Box<ExpressionJson>,
 }
@@ -203,6 +214,7 @@ pub struct UnaryArgumentJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct BinaryArgumentJson {
     pub left: Box<ExpressionJson>,
     pub right: Box<ExpressionJson>,
@@ -233,6 +245,7 @@ binary_operation!(ExpressionGetTagJson, get_tag, "getTag");
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct AttributeArgumentJson {
     pub left: Box<ExpressionJson>,
     pub attr: String,
@@ -246,6 +259,7 @@ json_struct!(ExpressionHasAttributeJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct IndexArgumentJson {
     pub left: Box<ExpressionJson>,
     pub index: Box<ExpressionJson>,
@@ -256,6 +270,7 @@ json_struct!(ExpressionIndexJson { index: IndexArgumentJson => "[]" });
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct LikeArgumentJson {
     pub left: Box<ExpressionJson>,
     pub pattern: Vec<PatternElementJson>,
@@ -264,6 +279,7 @@ pub struct LikeArgumentJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
@@ -284,6 +300,7 @@ json_struct!(ExpressionLikeJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct IsArgumentJson {
     pub left: Box<ExpressionJson>,
     pub entity_type: String,
@@ -300,6 +317,7 @@ json_struct!(ExpressionIsJson { is: IsArgumentJson });
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct IfArgumentJson {
     #[cfg_attr(feature = "serde", serde(rename = "if"))]
     #[cfg_attr(feature = "facet", facet(rename = "if"))]
@@ -317,6 +335,7 @@ json_struct!(ExpressionIfJson { if_then_else: IfArgumentJson => "if-then-else" }
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 #[cfg_attr(feature = "facet", facet(transparent))]
 pub struct ExpressionExtensionMethodJson(pub BTreeMap<String, Vec<ExpressionJson>>);
@@ -324,6 +343,7 @@ pub struct ExpressionExtensionMethodJson(pub BTreeMap<String, Vec<ExpressionJson
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 #[cfg_attr(feature = "facet", facet(transparent))]
 pub struct ExpressionExtensionFunctionJson(pub BTreeMap<String, Vec<ExpressionJson>>);

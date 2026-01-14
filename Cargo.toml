@@ -108,7 +108,6 @@ new_without_default = "allow"
 too_many_lines = "allow"
 
 [workspace.dependencies]
-# Upstream
 cedar-policy = { version = "4.8", default-features = false }
 
 # Syntax
@@ -126,7 +125,7 @@ serde_json = { version = "1.0", default-features = false }
 facet = { version = "0.42", default-features = false }
 facet-json = { version = "0.42", default-features = false }
 prost = { version = "0.14", default-features = false }
-prost-build = { version = "0.14" }
+prost-build = { version = "0.14", default-features = false }
 
 # Diagnostics
 annotate-snippets = { version = "0.12", default-features = false }
@@ -138,7 +137,8 @@ datatest-stable = { version = "0.3", default-features = false }
 similar-asserts = { version = "1.7", default-features = false }
 
 # Fuzzing
-libfuzzer-sys = { version = "0.4", default-features = false, features = ["link_libfuzzer"] }
+arbitrary = { version = "1.4", features = ["derive"] }
+libfuzzer-sys = { version = "0.4", default-features = false }
 
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
@@ -178,6 +178,7 @@ std = [
 serde = ["dep:serde", "dep:serde_json"]
 facet = ["dep:facet", "dep:facet-json"]
 prost = ["std", "dep:prost"]
+arbitrary = ["std", "dep:arbitrary", "smallvec/arbitrary"]
 
 [dependencies]
 # Syntax
@@ -198,6 +199,9 @@ serde_json = { workspace = true, optional = true }
 facet = { workspace = true, optional = true }
 facet-json = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
+
+# Fuzzing
+arbitrary = { workspace = true, optional = true }
 
 [dev-dependencies]
 # Upstream
