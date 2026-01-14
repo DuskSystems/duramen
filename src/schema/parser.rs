@@ -14,6 +14,8 @@ pub struct SchemaParser<'a> {
     current: SchemaToken<'a>,
     builder: Builder<SchemaSyntax>,
     diagnostics: SmallVec<[Diagnostic; 4]>,
+    #[cfg(debug_assertions)]
+    advances: SmallVec<[usize; 4]>,
 }
 
 impl<'a> SchemaParser<'a> {
@@ -28,6 +30,8 @@ impl<'a> SchemaParser<'a> {
             current,
             builder: Builder::new(),
             diagnostics: SmallVec::new_const(),
+            #[cfg(debug_assertions)]
+            advances: SmallVec::new_const(),
         }
     }
 
@@ -88,9 +92,11 @@ impl<'a> SchemaParser<'a> {
         self.builder.open(SchemaSyntax::Schema)?;
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
@@ -105,6 +111,7 @@ impl<'a> SchemaParser<'a> {
                 self.bump()?;
                 self.builder.close()?;
             }
+            self.advance_pop();
         }
 
         self.builder.close()?;
@@ -121,9 +128,11 @@ impl<'a> SchemaParser<'a> {
         self.expect(SchemaSyntax::OpenBrace)?;
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::CloseBrace) || self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
@@ -136,6 +145,8 @@ impl<'a> SchemaParser<'a> {
                 self.bump()?;
                 self.builder.close()?;
             }
+
+            self.advance_pop();
         }
 
         self.expect(SchemaSyntax::CloseBrace)?;
@@ -146,8 +157,10 @@ impl<'a> SchemaParser<'a> {
 
     fn annotated_decl(&mut self) -> Result<(), syntree::Error> {
         while self.at(SchemaSyntax::At) {
+            self.advance_push();
             self.annotation()?;
             self.skip_trivia()?;
+            self.advance_pop();
         }
 
         if self.at_decl_start() {
@@ -325,9 +338,11 @@ impl<'a> SchemaParser<'a> {
 
     fn app_decls(&mut self) -> Result<(), syntree::Error> {
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::CloseBrace) || self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
@@ -352,6 +367,8 @@ impl<'a> SchemaParser<'a> {
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         Ok(())
@@ -399,9 +416,11 @@ impl<'a> SchemaParser<'a> {
         self.expect(SchemaSyntax::OpenBrace)?;
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::CloseBrace) || self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
@@ -417,6 +436,8 @@ impl<'a> SchemaParser<'a> {
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         self.expect(SchemaSyntax::CloseBrace)?;
@@ -501,15 +522,19 @@ impl<'a> SchemaParser<'a> {
         self.expect(SchemaSyntax::OpenBrace)?;
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::CloseBrace) || self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
             while self.at(SchemaSyntax::At) {
+                self.advance_push();
                 self.annotation()?;
                 self.skip_trivia()?;
+                self.advance_pop();
             }
 
             if self.at(SchemaSyntax::Identifier)
@@ -527,6 +552,8 @@ impl<'a> SchemaParser<'a> {
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         self.expect(SchemaSyntax::CloseBrace)?;
@@ -572,6 +599,7 @@ impl<'a> SchemaParser<'a> {
         }
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
             if self.at(SchemaSyntax::Colon2) {
                 self.bump()?;
@@ -585,9 +613,12 @@ impl<'a> SchemaParser<'a> {
                     self.bump()?;
                 } else if self.at(SchemaSyntax::String) {
                     self.bump()?;
+                    self.advance_pop();
                     break;
                 }
+                self.advance_pop();
             } else {
+                self.advance_drop();
                 break;
             }
         }
@@ -603,9 +634,11 @@ impl<'a> SchemaParser<'a> {
             self.bump()?;
 
             loop {
+                self.advance_push();
                 self.skip_trivia()?;
 
                 if self.at(SchemaSyntax::CloseBracket) || self.at(SchemaSyntax::Eof) {
+                    self.advance_drop();
                     break;
                 }
 
@@ -615,6 +648,8 @@ impl<'a> SchemaParser<'a> {
                 if self.at(SchemaSyntax::Comma) {
                     self.bump()?;
                 }
+
+                self.advance_pop();
             }
 
             self.expect(SchemaSyntax::CloseBracket)?;
@@ -632,6 +667,7 @@ impl<'a> SchemaParser<'a> {
         }
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
@@ -639,7 +675,9 @@ impl<'a> SchemaParser<'a> {
                 if self.at(SchemaSyntax::Identifier) {
                     self.bump()?;
                 }
+                self.advance_pop();
             } else {
+                self.advance_drop();
                 break;
             }
         }
@@ -653,6 +691,7 @@ impl<'a> SchemaParser<'a> {
         }
 
         loop {
+            self.advance_push();
             self.skip_trivia()?;
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
@@ -660,7 +699,9 @@ impl<'a> SchemaParser<'a> {
                 if self.at(SchemaSyntax::Identifier) || self.at(SchemaSyntax::String) {
                     self.bump()?;
                 }
+                self.advance_pop();
             } else {
+                self.advance_drop();
                 break;
             }
         }
@@ -670,9 +711,11 @@ impl<'a> SchemaParser<'a> {
 
     fn qual_names(&mut self) -> Result<(), syntree::Error> {
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::CloseBracket) || self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
@@ -682,6 +725,8 @@ impl<'a> SchemaParser<'a> {
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         Ok(())
@@ -689,9 +734,11 @@ impl<'a> SchemaParser<'a> {
 
     fn string_list(&mut self) -> Result<(), syntree::Error> {
         loop {
+            self.advance_push();
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::CloseBracket) || self.at(SchemaSyntax::Eof) {
+                self.advance_drop();
                 break;
             }
 
@@ -707,6 +754,8 @@ impl<'a> SchemaParser<'a> {
             if self.at(SchemaSyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         Ok(())
@@ -719,4 +768,40 @@ impl<'a> SchemaParser<'a> {
             SchemaSyntax::TypeKeyword,
         ])
     }
+
+    #[cfg(debug_assertions)]
+    fn advance_push(&mut self) {
+        self.advances.push(self.current.position());
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn advance_push(&mut self) {}
+
+    #[expect(clippy::panic, reason = "Debug only")]
+    #[cfg(debug_assertions)]
+    fn advance_pop(&mut self) {
+        let Some(start) = self.advances.pop() else {
+            panic!("`advance_pop` called without prior `advance_push`");
+        };
+
+        assert!(
+            self.current.position() > start,
+            "schema parser did not advance: stuck at position {start} (token {:?})",
+            self.current.syntax()
+        );
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn advance_pop(&mut self) {}
+
+    #[expect(clippy::panic, reason = "Debug only")]
+    #[cfg(debug_assertions)]
+    fn advance_drop(&mut self) {
+        let Some(_) = self.advances.pop() else {
+            panic!("`advance_drop` called without prior `advance_push`");
+        };
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn advance_drop(&mut self) {}
 }
