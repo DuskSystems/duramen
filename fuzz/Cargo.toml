@@ -23,7 +23,6 @@ cedar-policy = { workspace = true, features = ["protobufs"] }
 
 # Serialization
 serde_json = { workspace = true }
-prost = { workspace = true }
 
 # Testing
 similar-asserts = { workspace = true }

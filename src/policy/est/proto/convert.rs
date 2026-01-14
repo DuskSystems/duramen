@@ -1,8 +1,8 @@
 use alloc::boxed::Box;
+use alloc::collections::BTreeMap;
 use alloc::format;
 use alloc::string::String;
 use alloc::vec::Vec;
-use std::collections::HashMap;
 
 use super::types as proto;
 use crate::policy::est::types as est;
@@ -76,7 +76,7 @@ fn policy_to_template_body(id: &str, policy: &est::Policy) -> proto::TemplateBod
         est::Effect::Forbid => proto::Effect::Forbid as i32,
     };
 
-    let annotations: HashMap<String, String> = policy
+    let annotations: BTreeMap<String, String> = policy
         .annotations
         .iter()
         .map(|(key, value)| (key.clone(), value.clone().unwrap_or_default()))

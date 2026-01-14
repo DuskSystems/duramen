@@ -1,0 +1,167 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  ACTIONS_CACHE_SERVICE_V2: "on"
+  SCCACHE_GHA_ENABLED: "true"
+  SCCACHE_GHA_VERSION: "1"
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          save-cache: "true"
+
+  checks:
+    name: Checks
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run checks
+        run: ./scripts/checks.sh
+
+  msrv:
+    name: MSRV
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: ./scripts/msrv.sh
+
+  coverage:
+    name: Coverage
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Generate coverage
+        run: ./scripts/coverage.sh
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage
+          path: target/llvm-cov/html
+
+  docs:
+    name: Docs
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build docs
+        run: ./scripts/docs.sh
+
+      - name: Upload docs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: docs
+          path: target/doc
+
+  fuzz:
+    name: Fuzz
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run fuzzing
+        run: ./scripts/fuzz.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts
+
+  benches:
+    name: Benchmarks
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run benchmarks
+        run: ./scripts/bench.sh

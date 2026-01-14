@@ -7,8 +7,8 @@ pub struct Request {
     pub action: ::core::option::Option<EntityUid>,
     #[prost(message, optional, tag = "3")]
     pub resource: ::core::option::Option<EntityUid>,
-    #[prost(map = "string, message", tag = "4")]
-    pub context: ::std::collections::HashMap<::prost::alloc::string::String, Expr>,
+    #[prost(btree_map = "string, message", tag = "4")]
+    pub context: ::prost::alloc::collections::BTreeMap<::prost::alloc::string::String, Expr>,
 }
 /// the protobuf PolicySet message describes a complete policy set, including
 /// templates, static policies, and/or template-linked policies.
@@ -71,9 +71,11 @@ pub struct Policy {
 pub struct TemplateBody {
     #[prost(string, tag = "1")]
     pub id: ::prost::alloc::string::String,
-    #[prost(map = "string, string", tag = "3")]
-    pub annotations:
-        ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
+    #[prost(btree_map = "string, string", tag = "3")]
+    pub annotations: ::prost::alloc::collections::BTreeMap<
+        ::prost::alloc::string::String,
+        ::prost::alloc::string::String,
+    >,
     #[prost(enumeration = "Effect", tag = "4")]
     pub effect: i32,
     #[prost(message, optional, tag = "5")]
@@ -506,8 +508,9 @@ pub mod expr {
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Record {
-        #[prost(map = "string, message", tag = "1")]
-        pub items: ::std::collections::HashMap<::prost::alloc::string::String, super::Expr>,
+        #[prost(btree_map = "string, message", tag = "1")]
+        pub items:
+            ::prost::alloc::collections::BTreeMap<::prost::alloc::string::String, super::Expr>,
     }
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
@@ -580,12 +583,12 @@ pub mod expr {
 pub struct Entity {
     #[prost(message, optional, tag = "1")]
     pub uid: ::core::option::Option<EntityUid>,
-    #[prost(map = "string, message", tag = "2")]
-    pub attrs: ::std::collections::HashMap<::prost::alloc::string::String, Expr>,
+    #[prost(btree_map = "string, message", tag = "2")]
+    pub attrs: ::prost::alloc::collections::BTreeMap<::prost::alloc::string::String, Expr>,
     #[prost(message, repeated, tag = "3")]
     pub ancestors: ::prost::alloc::vec::Vec<EntityUid>,
-    #[prost(map = "string, message", tag = "4")]
-    pub tags: ::std::collections::HashMap<::prost::alloc::string::String, Expr>,
+    #[prost(btree_map = "string, message", tag = "4")]
+    pub tags: ::prost::alloc::collections::BTreeMap<::prost::alloc::string::String, Expr>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

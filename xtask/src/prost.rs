@@ -15,6 +15,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     prost_build::Config::new()
         .out_dir(&out)
+        .btree_map(["."])
         .compile_protos(&[protobuf.join("core.proto")], &[&protobuf])?;
 
     fs::rename(out.join("cedar_policy_core.rs"), out.join("types.rs"))?;

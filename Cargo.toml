@@ -7,7 +7,7 @@ members = [".", "fuzz", "xtask"]
 version = "0.1.0"
 authors = ["Cathal Mullan <contact@cathal.dev>"]
 edition = "2024"
-rust-version = "1.92"
+rust-version = "1.89"
 repository = "https://github.com/DuskSystems/duramen"
 license = "MIT OR Apache-2.0"
 keywords = ["cedar", "policy"]
@@ -129,7 +129,8 @@ prost = { version = "0.14", default-features = false }
 prost-build = { version = "0.14", default-features = false }
 
 # Diagnostics
-annotate-snippets = { version = "0.12", default-features = false }
+# FIXME: https://github.com/rust-lang/annotate-snippets-rs/issues/359
+annotate-snippets = { git = "https://github.com/CathalMullan/annotate-snippets-rs", branch = "main", default-features = false }
 anstream = { version = "0.6", default-features = false }
 
 # Testing
@@ -173,7 +174,7 @@ workspace = true
 [features]
 default = ["std"]
 std = [
-  "dep:annotate-snippets",
+  "annotate-snippets/std",
   "syntree/std",
   "serde_json?/std",
   "facet?/std",
@@ -182,7 +183,7 @@ std = [
 ]
 serde = ["dep:serde", "dep:serde_json"]
 facet = ["dep:facet", "dep:facet-json"]
-prost = ["std", "dep:prost"]
+prost = ["dep:prost"]
 arbitrary = ["std", "dep:arbitrary", "smallvec/arbitrary"]
 
 [dependencies]
@@ -196,12 +197,12 @@ memchr = { workspace = true }
 smallvec = { workspace = true, features = ["const_new", "union"] }
 
 # Diagnostics
-annotate-snippets = { workspace = true, optional = true, features = ["simd"] }
+annotate-snippets = { workspace = true, features = ["simd"] }
 
 # Serialization
 serde = { workspace = true, optional = true, features = ["derive", "alloc"] }
-serde_json = { workspace = true, optional = true }
-facet = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true, features = ["alloc"] }
+facet = { workspace = true, optional = true, features = ["alloc"] }
 facet-json = { workspace = true, optional = true }
 prost = { workspace = true, optional = true, features = ["derive"] }
 

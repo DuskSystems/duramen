@@ -5,6 +5,7 @@ target
 # Fuzz
 artifacts
 corpus
+fuzz-*.log
 
 # Nix
 result
