@@ -8,6 +8,7 @@ pub type SchemaFragmentJson = BTreeMap<String, NamespaceDefinitionJson>;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct NamespaceDefinitionJson {
     #[cfg_attr(feature = "serde", serde(rename = "commonTypes"))]
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "BTreeMap::is_empty"))]
@@ -33,6 +34,7 @@ pub struct NamespaceDefinitionJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct EntityTypeJson {
     #[cfg_attr(feature = "serde", serde(rename = "enum"))]
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
@@ -62,6 +64,7 @@ pub struct EntityTypeJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ActionTypeJson {
     #[cfg_attr(feature = "serde", serde(rename = "appliesTo"))]
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
@@ -83,6 +86,7 @@ pub struct ActionTypeJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct AppliesToJson {
     #[cfg_attr(feature = "serde", serde(rename = "resourceTypes"))]
     #[cfg_attr(feature = "facet", facet(rename = "resourceTypes"))]
@@ -100,6 +104,7 @@ pub struct AppliesToJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ActionRefJson {
     pub id: String,
     #[cfg_attr(feature = "serde", serde(rename = "type"))]
@@ -112,6 +117,7 @@ pub struct ActionRefJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
@@ -128,6 +134,7 @@ pub enum TypeDefJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct EntityOrCommonJson {
     #[cfg_attr(feature = "serde", serde(rename = "type"))]
     #[cfg_attr(feature = "facet", facet(rename = "type"))]
@@ -147,6 +154,7 @@ pub struct EntityOrCommonJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SetTypeJson {
     #[cfg_attr(feature = "serde", serde(rename = "type"))]
     #[cfg_attr(feature = "facet", facet(rename = "type"))]
@@ -166,6 +174,7 @@ pub struct SetTypeJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct RecordTypeDefJson {
     #[cfg_attr(feature = "serde", serde(rename = "type"))]
     #[cfg_attr(feature = "facet", facet(rename = "type"))]
@@ -185,6 +194,7 @@ pub struct RecordTypeDefJson {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[cfg_attr(feature = "facet", derive(facet::Facet))]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct RecordTypeJson {
     #[cfg_attr(feature = "serde", serde(rename = "type"))]
     #[cfg_attr(feature = "facet", facet(rename = "type"))]

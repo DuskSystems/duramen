@@ -18,10 +18,18 @@ cargo-fuzz = true
 workspace = true
 
 [dependencies]
-duramen = { path = ".." }
+duramen = { path = "..", features = ["serde", "prost", "arbitrary"] }
+cedar-policy = { workspace = true, features = ["protobufs"] }
+
+# Serialization
+serde_json = { workspace = true }
+prost = { workspace = true }
+
+# Testing
+similar-asserts = { workspace = true }
 
 # Fuzzing
-libfuzzer-sys = { workspace = true }
+libfuzzer-sys = { workspace = true, features = ["link_libfuzzer"] }
 
 [[bin]]
 name = "policy"
@@ -31,8 +39,29 @@ doc = false
 bench = false
 
 [[bin]]
+name = "policy_arbitrary"
+path = "fuzz_targets/policy_arbitrary.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "policy_prost"
+path = "fuzz_targets/policy_prost.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
 name = "schema"
 path = "fuzz_targets/schema.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "schema_arbitrary"
+path = "fuzz_targets/schema_arbitrary.rs"
 test = false
 doc = false
 bench = false
