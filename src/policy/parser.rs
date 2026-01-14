@@ -501,7 +501,27 @@ impl<'a> PolicyParser<'a> {
                 self.bump()?;
                 self.skip_trivia()?;
 
-                if self.at(PolicySyntax::Identifier) || self.at(PolicySyntax::String) {
+                if self.at(PolicySyntax::Identifier) {
+                    self.bump()?;
+
+                    loop {
+                        self.skip_trivia()?;
+                        if self.at(PolicySyntax::Dot) {
+                            self.advance_push();
+                            self.bump()?;
+                            self.skip_trivia()?;
+                            if self.at(PolicySyntax::Identifier) {
+                                self.bump()?;
+                                self.advance_pop();
+                            } else {
+                                self.advance_drop();
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                } else if self.at(PolicySyntax::String) {
                     self.bump()?;
                 }
 

@@ -269,6 +269,13 @@ impl<'a> HasExpression<'a> {
     pub fn attribute(&self) -> Option<AttrKey<'a>> {
         self.node.children().find_map(AttrKey::cast)
     }
+
+    pub fn attributes(&self) -> impl Iterator<Item = IdentifierToken<'a>> + use<'a> {
+        self.node
+            .children()
+            .filter(|node| node.value() == PolicySyntax::Identifier)
+            .filter_map(IdentifierToken::cast)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

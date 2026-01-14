@@ -370,17 +370,58 @@ fn convert_has(has: &ast::HasExpression<'_>, source: &str) -> Result<est::Expres
     let target = has
         .target()
         .ok_or(ConvertError::MissingNode("has target"))?;
-    let attr_key = has
-        .attribute()
-        .ok_or(ConvertError::MissingNode("has attribute"))?;
 
     let target_expression = convert_expression(&target, source)?;
-    let attribute = extract_attr_key(attr_key, source);
 
-    Ok(est::Expression::HasAttribute {
-        expression: Box::new(target_expression),
-        attribute,
-    })
+    let attributes: Vec<String> = has
+        .attributes()
+        .map(|attr| attr.text(source).to_owned())
+        .collect();
+
+    if attributes.is_empty() {
+        let attr_key = has
+            .attribute()
+            .ok_or(ConvertError::MissingNode("has attribute"))?;
+
+        let attribute = extract_attr_key(attr_key, source);
+        return Ok(est::Expression::HasAttribute {
+            expression: Box::new(target_expression),
+            attribute,
+        });
+    }
+
+    if attributes.len() == 1 {
+        let Some(attribute) = attributes.into_iter().next() else {
+            return Err(ConvertError::MissingNode("has attribute"));
+        };
+
+        return Ok(est::Expression::HasAttribute {
+            expression: Box::new(target_expression),
+            attribute,
+        });
+    }
+
+    let mut result: Option<est::Expression> = None;
+    let mut current_path = target_expression;
+
+    for attribute in attributes {
+        let has_expr = est::Expression::HasAttribute {
+            expression: Box::new(current_path.clone()),
+            attribute: attribute.clone(),
+        };
+
+        result = Some(match result {
+            Some(prev) => est::Expression::And(Box::new(prev), Box::new(has_expr)),
+            None => has_expr,
+        });
+
+        current_path = est::Expression::GetAttribute {
+            expression: Box::new(current_path),
+            attribute,
+        };
+    }
+
+    result.ok_or(ConvertError::MissingNode("has attribute"))
 }
 
 fn convert_like(like: &ast::LikeExpression<'_>, source: &str) -> Result<est::Expression> {

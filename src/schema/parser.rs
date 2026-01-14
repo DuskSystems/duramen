@@ -719,7 +719,13 @@ impl<'a> SchemaParser<'a> {
                 break;
             }
 
-            self.path()?;
+            if self.at(SchemaSyntax::String) {
+                self.builder.open(SchemaSyntax::Name)?;
+                self.bump()?;
+                self.builder.close()?;
+            } else {
+                self.path()?;
+            }
             self.skip_trivia()?;
 
             if self.at(SchemaSyntax::Comma) {

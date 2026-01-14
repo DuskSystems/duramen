@@ -42,11 +42,19 @@ fn convert_namespace_def(def: &NamespaceDefinition) -> NamespaceDefinitionJson {
 }
 
 fn convert_entity_type(entity: &EntityType) -> EntityTypeJson {
+    let shape = entity.shape.as_ref().and_then(|record| {
+        if record.attributes.is_empty() {
+            None
+        } else {
+            Some(convert_record_type(record))
+        }
+    });
+
     EntityTypeJson {
         enum_values: entity.enum_values.clone(),
         annotations: entity.annotations.clone(),
         member_of_types: entity.member_of_types.clone(),
-        shape: entity.shape.as_ref().map(convert_record_type),
+        shape,
         tags: entity.tags.as_ref().map(convert_type_def),
     }
 }
@@ -66,13 +74,29 @@ fn convert_applies_to(applies_to: &AppliesTo) -> AppliesToJson {
         {
             return None;
         }
-        Some(convert_type_def(ctx))
+        Some(convert_context_type_def(ctx))
     });
 
     AppliesToJson {
         resource_types: applies_to.resource_types.clone(),
         principal_types: applies_to.principal_types.clone(),
         context,
+    }
+}
+
+fn convert_context_type_def(type_def: &TypeDef) -> TypeDefJson {
+    match type_def {
+        TypeDef::EntityOrCommon {
+            name,
+            required,
+            annotations,
+        } => TypeDefJson::EntityOrCommon(EntityOrCommonJson {
+            type_name: name.clone(),
+            name: String::new(),
+            annotations: annotations.clone(),
+            required: *required,
+        }),
+        _ => convert_type_def(type_def),
     }
 }
 
