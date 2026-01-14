@@ -109,7 +109,7 @@ too_many_lines = "allow"
 
 [workspace.dependencies]
 cedar-policy = { version = "4.8", default-features = false }
-cedar-policy-core = { version = "4.8", default-features = false, features = ["ipaddr", "decimal", "datetime"] }
+cedar-policy-core = { version = "4.8", default-features = false }
 
 # Syntax
 syntree = { version = "0.18", default-features = false }
@@ -138,12 +138,12 @@ datatest-stable = { version = "0.3", default-features = false }
 similar-asserts = { version = "1.7", default-features = false }
 
 # Fuzzing
-arbitrary = { version = "1.4", features = ["derive"] }
+arbitrary = { version = "1.4", default-features = false }
 libfuzzer-sys = { version = "0.4", default-features = false }
 
 # Benchmarking
 divan = { version = "0.1", default-features = false }
-gungraun = { version = "0.17", default-features = false, features = ["default"] }
+gungraun = { version = "0.17", default-features = false }
 
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
@@ -203,15 +203,15 @@ serde = { workspace = true, optional = true, features = ["derive", "alloc"] }
 serde_json = { workspace = true, optional = true }
 facet = { workspace = true, optional = true }
 facet-json = { workspace = true, optional = true }
-prost = { workspace = true, optional = true }
+prost = { workspace = true, optional = true, features = ["derive"] }
 
 # Fuzzing
-arbitrary = { workspace = true, optional = true }
+arbitrary = { workspace = true, optional = true, features = ["derive"] }
 
 [dev-dependencies]
 # Upstream
 cedar-policy = { workspace = true, features = ["protobufs"] }
-cedar-policy-core = { workspace = true }
+cedar-policy-core = { workspace = true, features = ["ipaddr", "decimal", "datetime"] }
 
 # Serialization
 serde_json = { workspace = true }
@@ -228,7 +228,7 @@ similar-asserts = { workspace = true }
 
 # Benchmarking
 divan = { workspace = true }
-gungraun = { workspace = true }
+gungraun = { workspace = true, features = ["default"] }
 
 [[test]]
 name = "policy_fixtures"

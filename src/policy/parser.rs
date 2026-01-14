@@ -16,6 +16,8 @@ pub struct PolicyParser<'a> {
     current: PolicyToken<'a>,
     builder: Builder<PolicySyntax>,
     diagnostics: SmallVec<[Diagnostic; 4]>,
+    #[cfg(debug_assertions)]
+    advances: SmallVec<[usize; 4]>,
 }
 
 impl<'a> PolicyParser<'a> {
@@ -30,6 +32,8 @@ impl<'a> PolicyParser<'a> {
             current,
             builder: Builder::new(),
             diagnostics: SmallVec::new_const(),
+            #[cfg(debug_assertions)]
+            advances: SmallVec::new_const(),
         }
     }
 
@@ -109,7 +113,9 @@ impl<'a> PolicyParser<'a> {
                 break;
             }
 
+            self.advance_push();
             self.policy()?;
+            self.advance_pop();
         }
 
         self.builder.close()?;
@@ -136,9 +142,13 @@ impl<'a> PolicyParser<'a> {
 
         loop {
             if self.at_condition_start() {
+                self.advance_push();
                 self.condition()?;
+                self.advance_pop();
             } else if self.at(PolicySyntax::Identifier) {
+                self.advance_push();
                 self.extension_clause()?;
+                self.advance_pop();
             } else {
                 break;
             }
@@ -307,12 +317,15 @@ impl<'a> PolicyParser<'a> {
                 break;
             }
 
+            self.advance_push();
             self.entity_ref()?;
             self.skip_trivia()?;
 
             if self.at(PolicySyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         self.expect(PolicySyntax::CloseBracket)?;
@@ -352,12 +365,15 @@ impl<'a> PolicyParser<'a> {
             self.skip_trivia()?;
 
             if self.at(PolicySyntax::Colon2) {
+                self.advance_push();
                 self.bump()?;
                 self.skip_trivia()?;
 
                 if self.at(PolicySyntax::Identifier) {
                     self.bump()?;
+                    self.advance_pop();
                 } else {
+                    self.advance_drop();
                     break;
                 }
             } else {
@@ -427,10 +443,12 @@ impl<'a> PolicyParser<'a> {
         loop {
             self.skip_trivia()?;
             if self.at(PolicySyntax::Pipe2) {
+                self.advance_push();
                 self.bump()?;
                 self.skip_trivia()?;
                 self.expr_and()?;
                 self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.advance_pop();
             } else {
                 break;
             }
@@ -446,10 +464,12 @@ impl<'a> PolicyParser<'a> {
         loop {
             self.skip_trivia()?;
             if self.at(PolicySyntax::Ampersand2) {
+                self.advance_push();
                 self.bump()?;
                 self.skip_trivia()?;
                 self.expr_relation()?;
                 self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.advance_pop();
             } else {
                 break;
             }
@@ -526,10 +546,12 @@ impl<'a> PolicyParser<'a> {
             self.skip_trivia()?;
 
             if self.at_any(&[PolicySyntax::Plus, PolicySyntax::Minus]) {
+                self.advance_push();
                 self.bump()?;
                 self.skip_trivia()?;
                 self.expr_mul()?;
                 self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.advance_pop();
             } else {
                 break;
             }
@@ -546,10 +568,12 @@ impl<'a> PolicyParser<'a> {
             self.skip_trivia()?;
 
             if self.at(PolicySyntax::Asterisk) {
+                self.advance_push();
                 self.bump()?;
                 self.skip_trivia()?;
                 self.expr_unary()?;
                 self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.advance_pop();
             } else {
                 break;
             }
@@ -584,6 +608,7 @@ impl<'a> PolicyParser<'a> {
 
             match self.current() {
                 PolicySyntax::Dot => {
+                    self.advance_push();
                     self.bump()?;
                     self.skip_trivia()?;
 
@@ -597,8 +622,10 @@ impl<'a> PolicyParser<'a> {
                     }
 
                     self.wrap_at(&checkpoint, PolicySyntax::MemberExpression)?;
+                    self.advance_pop();
                 }
                 PolicySyntax::OpenBracket => {
+                    self.advance_push();
                     self.bump()?;
                     self.skip_trivia()?;
 
@@ -608,6 +635,7 @@ impl<'a> PolicyParser<'a> {
 
                     self.expect(PolicySyntax::CloseBracket)?;
                     self.wrap_at(&checkpoint, PolicySyntax::MemberExpression)?;
+                    self.advance_pop();
                 }
                 _ => break,
             }
@@ -627,12 +655,15 @@ impl<'a> PolicyParser<'a> {
                 break;
             }
 
+            self.advance_push();
             self.expression()?;
 
             self.skip_trivia()?;
             if self.at(PolicySyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         self.expect(PolicySyntax::CloseParenthesis)?;
@@ -743,12 +774,15 @@ impl<'a> PolicyParser<'a> {
                 break;
             }
 
+            self.advance_push();
             self.expression()?;
 
             self.skip_trivia()?;
             if self.at(PolicySyntax::Comma) {
                 self.bump()?;
             }
+
+            self.advance_pop();
         }
 
         self.expect(PolicySyntax::CloseBracket)?;
@@ -768,12 +802,14 @@ impl<'a> PolicyParser<'a> {
                 break;
             }
 
+            self.advance_push();
             self.record_entry()?;
 
             self.skip_trivia()?;
             if self.at(PolicySyntax::Comma) {
                 self.bump()?;
             }
+            self.advance_pop();
         }
 
         self.expect(PolicySyntax::CloseBrace)?;
@@ -804,4 +840,40 @@ impl<'a> PolicyParser<'a> {
     fn at_condition_start(&self) -> bool {
         self.at_any(&[PolicySyntax::WhenKeyword, PolicySyntax::UnlessKeyword])
     }
+
+    #[cfg(debug_assertions)]
+    fn advance_push(&mut self) {
+        self.advances.push(self.current.position());
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn advance_push(&mut self) {}
+
+    #[expect(clippy::panic, reason = "Debug only")]
+    #[cfg(debug_assertions)]
+    fn advance_pop(&mut self) {
+        let Some(start) = self.advances.pop() else {
+            panic!("`advance_pop` called without prior `advance_push`");
+        };
+
+        assert!(
+            self.current.position() > start,
+            "parser did not advance: stuck at position {start} (token {:?})",
+            self.current.syntax()
+        );
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn advance_pop(&mut self) {}
+
+    #[expect(clippy::panic, reason = "Debug only")]
+    #[cfg(debug_assertions)]
+    fn advance_drop(&mut self) {
+        let Some(_) = self.advances.pop() else {
+            panic!("`advance_drop` called without prior `advance_push`");
+        };
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn advance_drop(&mut self) {}
 }
