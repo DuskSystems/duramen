@@ -1,2 +1,2 @@
 [files]
-extend-exclude = ["cedar-integration-tests"]
+extend-exclude = ["cedar", "cedar-integration-tests"]

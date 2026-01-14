@@ -8,12 +8,12 @@ use similar_asserts::assert_eq;
 datatest_stable::harness! {
     {
         test = compare_schema,
-        root = "cedar-integration-tests/sample-data",
+        root = "cedar",
         pattern = r".*[.]cedarschema$"
     },
     {
         test = compare_schema,
-        root = "cedar-integration-tests/cedar",
+        root = "cedar-integration-tests/sample-data",
         pattern = r".*[.]cedarschema$"
     },
     {

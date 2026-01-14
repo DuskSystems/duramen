@@ -7,12 +7,12 @@ use similar_asserts::assert_eq;
 datatest_stable::harness! {
     {
         test = roundtrip_policy,
-        root = "cedar-integration-tests/tests",
+        root = "cedar",
         pattern = r".*[.]cedar$"
     },
     {
         test = roundtrip_policy,
-        root = "cedar-integration-tests/cedar",
+        root = "cedar-integration-tests/tests",
         pattern = r".*[.]cedar$"
     },
     {
