@@ -1,9 +1,9 @@
 #![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
+use alloc::vec::Vec;
 use core::error::Error;
 use core::fmt;
 
-use smallvec::SmallVec;
 use syntree::{FlavorDefault, Tree};
 
 use crate::diagnostics::Diagnostic;
@@ -40,14 +40,14 @@ impl Error for PolicyErrors {}
 pub struct PolicySet<'a> {
     source: &'a str,
     tree: PolicyTree,
-    diagnostics: SmallVec<[Diagnostic; 4]>,
+    diagnostics: Vec<Diagnostic>,
 }
 
 impl<'a> PolicySet<'a> {
     pub(crate) const fn new(
         source: &'a str,
         tree: PolicyTree,
-        diagnostics: SmallVec<[Diagnostic; 4]>,
+        diagnostics: Vec<Diagnostic>,
     ) -> Self {
         Self {
             source,

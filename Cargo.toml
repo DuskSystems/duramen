@@ -117,9 +117,6 @@ syntree = { version = "0.18", default-features = false }
 # SIMD
 memchr = { version = "2.7", default-features = false }
 
-# Collections
-smallvec = { version = "1.15", default-features = false }
-
 # Serialization
 serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false }
@@ -184,7 +181,7 @@ std = [
 serde = ["dep:serde", "dep:serde_json"]
 facet = ["dep:facet", "dep:facet-json"]
 prost = ["dep:prost"]
-arbitrary = ["std", "dep:arbitrary", "smallvec/arbitrary"]
+arbitrary = ["std", "dep:arbitrary"]
 
 [dependencies]
 # Syntax
@@ -192,9 +189,6 @@ syntree = { workspace = true, features = ["alloc"] }
 
 # SIMD
 memchr = { workspace = true }
-
-# Collections
-smallvec = { workspace = true, features = ["const_new", "union"] }
 
 # Diagnostics
 annotate-snippets = { workspace = true, features = ["simd"] }

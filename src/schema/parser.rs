@@ -1,6 +1,6 @@
 use alloc::string::ToString as _;
+use alloc::vec::Vec;
 
-use smallvec::SmallVec;
 use syntree::{Builder, Tree};
 
 use super::Schema;
@@ -13,9 +13,9 @@ pub struct SchemaParser<'a> {
     lexer: SchemaLexer<'a>,
     current: SchemaToken<'a>,
     builder: Builder<SchemaSyntax>,
-    diagnostics: SmallVec<[Diagnostic; 4]>,
+    diagnostics: Vec<Diagnostic>,
     #[cfg(debug_assertions)]
-    advances: SmallVec<[usize; 4]>,
+    advances: Vec<usize>,
 }
 
 impl<'a> SchemaParser<'a> {
@@ -29,9 +29,9 @@ impl<'a> SchemaParser<'a> {
             lexer,
             current,
             builder: Builder::new(),
-            diagnostics: SmallVec::new_const(),
+            diagnostics: Vec::new(),
             #[cfg(debug_assertions)]
-            advances: SmallVec::new_const(),
+            advances: Vec::new(),
         }
     }
 

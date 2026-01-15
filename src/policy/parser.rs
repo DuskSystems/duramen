@@ -1,6 +1,6 @@
 use alloc::string::ToString as _;
+use alloc::vec::Vec;
 
-use smallvec::SmallVec;
 use syntree::{Builder, Checkpoint, Flavor, FlavorDefault, Tree};
 
 use super::PolicySet;
@@ -15,9 +15,9 @@ pub struct PolicyParser<'a> {
     lexer: PolicyLexer<'a>,
     current: PolicyToken<'a>,
     builder: Builder<PolicySyntax>,
-    diagnostics: SmallVec<[Diagnostic; 4]>,
+    diagnostics: Vec<Diagnostic>,
     #[cfg(debug_assertions)]
-    advances: SmallVec<[usize; 4]>,
+    advances: Vec<usize>,
 }
 
 impl<'a> PolicyParser<'a> {
@@ -31,9 +31,9 @@ impl<'a> PolicyParser<'a> {
             lexer,
             current,
             builder: Builder::new(),
-            diagnostics: SmallVec::new_const(),
+            diagnostics: Vec::new(),
             #[cfg(debug_assertions)]
-            advances: SmallVec::new_const(),
+            advances: Vec::new(),
         }
     }
 

@@ -1,4 +1,4 @@
-use smallvec::SmallVec;
+use alloc::vec::Vec;
 
 use super::syntax::SchemaSyntax;
 use crate::cursor::Cursor;
@@ -30,7 +30,7 @@ impl<'a> SchemaToken<'a> {
 
 pub struct SchemaLexer<'a> {
     cursor: Cursor<'a>,
-    diagnostics: SmallVec<[Diagnostic; 4]>,
+    diagnostics: Vec<Diagnostic>,
 }
 
 impl<'a> SchemaLexer<'a> {
@@ -38,7 +38,7 @@ impl<'a> SchemaLexer<'a> {
     pub const fn new(source: &'a str) -> Self {
         Self {
             cursor: Cursor::new(source),
-            diagnostics: SmallVec::new_const(),
+            diagnostics: Vec::new(),
         }
     }
 
@@ -47,7 +47,7 @@ impl<'a> SchemaLexer<'a> {
         self.cursor.position()
     }
 
-    pub fn take_diagnostics(&mut self) -> SmallVec<[Diagnostic; 4]> {
+    pub fn take_diagnostics(&mut self) -> Vec<Diagnostic> {
         core::mem::take(&mut self.diagnostics)
     }
 
