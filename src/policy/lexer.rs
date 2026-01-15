@@ -51,6 +51,7 @@ impl<'a> PolicyLexer<'a> {
         core::mem::take(&mut self.diagnostics)
     }
 
+    #[inline]
     pub fn next_token(&mut self) -> PolicyToken<'a> {
         let start = self.cursor.position();
         let first = self.cursor.current();

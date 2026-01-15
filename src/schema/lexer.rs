@@ -51,6 +51,7 @@ impl<'a> SchemaLexer<'a> {
         core::mem::take(&mut self.diagnostics)
     }
 
+    #[inline]
     pub fn next_token(&mut self) -> SchemaToken<'a> {
         let start = self.cursor.position();
         let first = self.cursor.current();

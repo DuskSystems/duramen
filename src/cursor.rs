@@ -66,6 +66,7 @@ impl<'a> Cursor<'a> {
         }
     }
 
+    #[inline]
     #[must_use]
     pub fn slice(&self, start: usize) -> &'a str {
         self.source.get(start..self.position).unwrap_or_default()
@@ -129,6 +130,7 @@ impl<'a> Cursor<'a> {
         }
     }
 
+    #[inline]
     pub fn scan_ident(&mut self) -> &'a str {
         let start = self.position;
 

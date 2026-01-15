@@ -1,4 +1,4 @@
-#![expect(clippy::missing_errors_doc, reason = "WIP")]
+#![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
 use alloc::vec::Vec;
 use core::error::Error;
