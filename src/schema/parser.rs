@@ -85,7 +85,14 @@ impl<'a> SchemaParser<'a> {
 
     fn expect(&mut self, kind: SchemaSyntax) -> Result<(), syntree::Error> {
         self.skip_trivia()?;
-        if self.at(kind) { self.bump() } else { Ok(()) }
+        if self.at(kind) {
+            self.bump()
+        } else {
+            self.diagnostics
+                .push(Diagnostic::error(alloc::format!("expected `{kind}`")));
+
+            Ok(())
+        }
     }
 
     fn schema(&mut self) -> Result<(), syntree::Error> {
@@ -107,6 +114,10 @@ impl<'a> SchemaParser<'a> {
             } else if self.at_decl_start() {
                 self.decl()?;
             } else {
+                self.diagnostics.push(Diagnostic::error(
+                    "expected `namespace`, `entity`, `action`, `type`, or `@`",
+                ));
+
                 self.builder.open(SchemaSyntax::Error)?;
                 self.bump()?;
                 self.builder.close()?;
@@ -141,6 +152,10 @@ impl<'a> SchemaParser<'a> {
             } else if self.at_decl_start() {
                 self.decl()?;
             } else {
+                self.diagnostics.push(Diagnostic::error(
+                    "expected `entity`, `action`, `type`, or `@`",
+                ));
+
                 self.builder.open(SchemaSyntax::Error)?;
                 self.bump()?;
                 self.builder.close()?;
@@ -165,6 +180,12 @@ impl<'a> SchemaParser<'a> {
 
         if self.at_decl_start() {
             self.decl()?;
+        } else if self.at(SchemaSyntax::NamespaceKeyword) {
+            self.namespace()?;
+        } else {
+            self.diagnostics.push(Diagnostic::error(
+                "expected declaration (`entity`, `action`, `type`, or `namespace`) after annotation",
+            ));
         }
 
         Ok(())
@@ -177,6 +198,9 @@ impl<'a> SchemaParser<'a> {
         self.skip_trivia()?;
         if self.at(SchemaSyntax::Identifier) || self.current().is_keyword() {
             self.bump()?;
+        } else {
+            self.diagnostics
+                .push(Diagnostic::error("expected annotation name after `@`"));
         }
 
         self.skip_trivia()?;

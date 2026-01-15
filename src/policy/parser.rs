@@ -87,7 +87,14 @@ impl<'a> PolicyParser<'a> {
 
     fn expect(&mut self, kind: PolicySyntax) -> Result<(), syntree::Error> {
         self.skip_trivia()?;
-        if self.at(kind) { self.bump() } else { Ok(()) }
+        if self.at(kind) {
+            self.bump()
+        } else {
+            self.diagnostics
+                .push(Diagnostic::error(alloc::format!("expected `{kind}`")));
+
+            Ok(())
+        }
     }
 
     fn checkpoint(&mut self) -> Result<PolicyCheckpoint, syntree::Error> {
@@ -132,6 +139,31 @@ impl<'a> PolicyParser<'a> {
 
         if self.at_any(&[PolicySyntax::PermitKeyword, PolicySyntax::ForbidKeyword]) {
             self.bump()?;
+        } else {
+            self.diagnostics
+                .push(Diagnostic::error("expected `permit` or `forbid`"));
+
+            while !self.at(PolicySyntax::Eof)
+                && !self.at(PolicySyntax::Semicolon)
+                && !self.at(PolicySyntax::PermitKeyword)
+                && !self.at(PolicySyntax::ForbidKeyword)
+            {
+                self.bump()?;
+            }
+
+            if self.at(PolicySyntax::Semicolon) {
+                self.bump()?;
+                self.builder.close()?;
+                return Ok(());
+            }
+
+            if self.at_any(&[PolicySyntax::PermitKeyword, PolicySyntax::ForbidKeyword]) {
+                self.builder.close()?;
+                return Ok(());
+            }
+
+            self.builder.close()?;
+            return Ok(());
         }
 
         self.expect(PolicySyntax::OpenParenthesis)?;

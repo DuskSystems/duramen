@@ -6,6 +6,8 @@
 //! - [Syntax](https://docs.cedarpolicy.com/schema/human-readable-schema.html)
 //! - [LALRPOP](https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-validator/src/cedar_schema/grammar.lalrpop)
 
+use core::fmt;
+
 /// Syntax kinds for Cedar schemas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SchemaSyntax {
@@ -444,5 +446,58 @@ impl SchemaSyntax {
     #[must_use]
     pub const fn is_node(self) -> bool {
         !self.is_token()
+    }
+}
+
+impl fmt::Display for SchemaSyntax {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            Self::Integer => "integer",
+            Self::String => "string",
+            Self::Identifier => "identifier",
+            Self::NamespaceKeyword => "namespace",
+            Self::EntityKeyword => "entity",
+            Self::ActionKeyword => "action",
+            Self::TypeKeyword => "type",
+            Self::InKeyword => "in",
+            Self::TagsKeyword => "tags",
+            Self::AppliesToKeyword => "appliesTo",
+            Self::PrincipalKeyword => "principal",
+            Self::ResourceKeyword => "resource",
+            Self::ContextKeyword => "context",
+            Self::AttributesKeyword => "attributes",
+            Self::BoolKeyword => "Bool",
+            Self::LongKeyword => "Long",
+            Self::StringKeyword => "String",
+            Self::SetKeyword => "Set",
+            Self::EnumKeyword => "enum",
+            Self::TrueKeyword => "true",
+            Self::FalseKeyword => "false",
+            Self::OpenParenthesis => "(",
+            Self::CloseParenthesis => ")",
+            Self::OpenBrace => "{",
+            Self::CloseBrace => "}",
+            Self::OpenBracket => "[",
+            Self::CloseBracket => "]",
+            Self::Comma => ",",
+            Self::Semicolon => ";",
+            Self::Colon => ":",
+            Self::Colon2 => "::",
+            Self::At => "@",
+            Self::Dot => ".",
+            Self::Question => "?",
+            Self::LessThan => "<",
+            Self::GreaterThan => ">",
+            Self::Equal => "=",
+            Self::Pipe => "|",
+            Self::Slash => "/",
+            Self::Comment => "comment",
+            Self::Whitespace => "whitespace",
+            Self::Eof => "end of file",
+            Self::Unknown => "unknown",
+            _ => "node",
+        };
+
+        f.write_str(text)
     }
 }

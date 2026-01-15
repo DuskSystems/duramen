@@ -56,7 +56,9 @@ impl<'a> PolicyLexer<'a> {
         let first = self.cursor.current();
 
         let syntax = match first {
-            Cursor::END => PolicySyntax::Eof,
+            Cursor::END if self.cursor.position() >= self.cursor.source().len() => {
+                PolicySyntax::Eof
+            }
             byte if Cursor::is_whitespace(byte) => {
                 self.cursor.skip_whitespace();
                 PolicySyntax::Whitespace
@@ -222,15 +224,21 @@ impl<'a> PolicyLexer<'a> {
                 PolicySyntax::Percent
             }
             _ => {
-                self.cursor.bump_char();
+                let len = self.cursor.unicode_whitespace_len();
+                if len > 0 {
+                    self.cursor.skip_whitespace();
+                    PolicySyntax::Whitespace
+                } else {
+                    self.cursor.bump_char();
 
-                let end = self.cursor.position();
-                self.diagnostics.push(
-                    Diagnostic::error("unexpected character")
-                        .with_label(start..end, "not recognized"),
-                );
+                    let end = self.cursor.position();
+                    self.diagnostics.push(
+                        Diagnostic::error("unexpected character")
+                            .with_label(start..end, "not recognized"),
+                    );
 
-                PolicySyntax::Unknown
+                    PolicySyntax::Unknown
+                }
             }
         };
 

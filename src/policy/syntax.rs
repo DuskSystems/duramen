@@ -7,6 +7,8 @@
 //! - [Grammar](https://docs.cedarpolicy.com/policies/syntax-grammar.html)
 //! - [LALRPOP](https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/parser/grammar.lalrpop)
 
+use core::fmt;
+
 /// Syntax kinds for Cedar policies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PolicySyntax {
@@ -558,5 +560,71 @@ impl PolicySyntax {
             Self::Integer => "expected integer",
             _ => "unexpected token",
         }
+    }
+}
+
+impl fmt::Display for PolicySyntax {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            Self::Integer => "integer",
+            Self::String => "string",
+            Self::Identifier => "identifier",
+            Self::PermitKeyword => "permit",
+            Self::ForbidKeyword => "forbid",
+            Self::PrincipalKeyword => "principal",
+            Self::ActionKeyword => "action",
+            Self::ResourceKeyword => "resource",
+            Self::ContextKeyword => "context",
+            Self::WhenKeyword => "when",
+            Self::UnlessKeyword => "unless",
+            Self::TrueKeyword => "true",
+            Self::FalseKeyword => "false",
+            Self::LikeKeyword => "like",
+            Self::IfKeyword => "if",
+            Self::ThenKeyword => "then",
+            Self::ElseKeyword => "else",
+            Self::InKeyword => "in",
+            Self::HasKeyword => "has",
+            Self::IsKeyword => "is",
+            Self::TemplateKeyword => "template",
+            Self::OpenParenthesis => "(",
+            Self::CloseParenthesis => ")",
+            Self::OpenBrace => "{",
+            Self::CloseBrace => "}",
+            Self::OpenBracket => "[",
+            Self::CloseBracket => "]",
+            Self::Comma => ",",
+            Self::Semicolon => ";",
+            Self::Colon => ":",
+            Self::Colon2 => "::",
+            Self::At => "@",
+            Self::Dot => ".",
+            Self::Question => "?",
+            Self::Equal => "=",
+            Self::Equal2 => "==",
+            Self::FatArrow => "=>",
+            Self::Not => "!",
+            Self::NotEqual => "!=",
+            Self::LessThan => "<",
+            Self::LessEqual => "<=",
+            Self::GreaterThan => ">",
+            Self::GreaterEqual => ">=",
+            Self::Ampersand => "&",
+            Self::Ampersand2 => "&&",
+            Self::Pipe => "|",
+            Self::Pipe2 => "||",
+            Self::Plus => "+",
+            Self::Minus => "-",
+            Self::Asterisk => "*",
+            Self::Slash => "/",
+            Self::Percent => "%",
+            Self::Comment => "comment",
+            Self::Whitespace => "whitespace",
+            Self::Eof => "end of file",
+            Self::Unknown => "unknown",
+            _ => "node",
+        };
+
+        f.write_str(text)
     }
 }

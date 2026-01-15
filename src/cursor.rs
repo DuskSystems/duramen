@@ -74,11 +74,21 @@ impl<'a> Cursor<'a> {
     pub fn skip_whitespace(&mut self) {
         loop {
             let byte = self.current();
-            if byte == Self::END || !Self::is_whitespace(byte) {
+            if byte == Self::END {
                 break;
             }
 
-            self.bump();
+            if Self::is_whitespace(byte) {
+                self.bump();
+                continue;
+            }
+
+            let len = self.unicode_whitespace_len();
+            if len > 0 {
+                self.position = self.position.saturating_add(len);
+            } else {
+                break;
+            }
         }
     }
 
@@ -154,7 +164,24 @@ impl<'a> Cursor<'a> {
     #[inline]
     #[must_use]
     pub const fn is_whitespace(byte: u8) -> bool {
-        byte.is_ascii_whitespace()
+        matches!(byte, b' ' | b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r')
+    }
+
+    #[must_use]
+    pub fn unicode_whitespace_len(&self) -> usize {
+        let Some(remaining) = self.source.get(self.position..) else {
+            return 0;
+        };
+
+        let Some(char) = remaining.chars().next() else {
+            return 0;
+        };
+
+        if char.is_whitespace() {
+            char.len_utf8()
+        } else {
+            0
+        }
     }
 
     #[inline]

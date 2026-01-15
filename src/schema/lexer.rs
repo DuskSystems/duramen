@@ -56,7 +56,9 @@ impl<'a> SchemaLexer<'a> {
         let first = self.cursor.current();
 
         let syntax = match first {
-            Cursor::END => SchemaSyntax::Eof,
+            Cursor::END if self.cursor.position() >= self.cursor.source().len() => {
+                SchemaSyntax::Eof
+            }
             byte if Cursor::is_whitespace(byte) => {
                 self.cursor.skip_whitespace();
                 SchemaSyntax::Whitespace
@@ -163,15 +165,21 @@ impl<'a> SchemaLexer<'a> {
                 }
             }
             _ => {
-                self.cursor.bump_char();
+                let len = self.cursor.unicode_whitespace_len();
+                if len > 0 {
+                    self.cursor.skip_whitespace();
+                    SchemaSyntax::Whitespace
+                } else {
+                    self.cursor.bump_char();
 
-                let end = self.cursor.position();
-                self.diagnostics.push(
-                    Diagnostic::error("unexpected character")
-                        .with_label(start..end, "not recognized"),
-                );
+                    let end = self.cursor.position();
+                    self.diagnostics.push(
+                        Diagnostic::error("unexpected character")
+                            .with_label(start..end, "not recognized"),
+                    );
 
-                SchemaSyntax::Unknown
+                    SchemaSyntax::Unknown
+                }
             }
         };
 
