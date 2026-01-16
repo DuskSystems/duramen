@@ -1,9 +1,9 @@
-use alloc::borrow::ToOwned as _;
-use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::mem;
+
+use bumpalo::Bump;
+use bumpalo::collections::Vec as BumpVec;
 
 use super::types::{
     ActionRef, ActionType, AppliesTo, EntityType, NamespaceDefinition, RecordType, SchemaFragment,
@@ -16,13 +16,13 @@ use crate::schema::ast::{
 use crate::schema::{Schema, SchemaSyntax};
 
 #[must_use]
-pub fn convert_schema(schema: &Schema<'_>) -> SchemaFragment {
+pub fn convert_schema<'a>(bump: &'a Bump, schema: &Schema<'_>) -> SchemaFragment<'a> {
     let mut result = SchemaFragment::new();
     let source = schema.source();
 
     if let Some(root) = schema.root() {
         let mut pending_annotations: Vec<ast::Annotation<'_>> = Vec::new();
-        let mut top_level_namespace_def: Option<NamespaceDefinition> = None;
+        let mut top_level_namespace_def: Option<NamespaceDefinition<'a>> = None;
 
         for child in root.syntax().children() {
             match child.value() {
@@ -33,13 +33,16 @@ pub fn convert_schema(schema: &Schema<'_>) -> SchemaFragment {
                 }
                 SchemaSyntax::Namespace => {
                     if let Some(namespace) = Namespace::cast(child) {
-                        let name = namespace_name(source, &namespace);
+                        let name = namespace_name(bump, source, &namespace);
                         let mut namespace_def =
-                            convert_node_children(source, namespace.syntax(), &name);
+                            convert_node_children(bump, source, namespace.syntax(), name);
+
                         namespace_def.annotations = collect_annotations(
+                            bump,
                             source,
-                            mem::take(&mut pending_annotations).into_iter(),
+                            core::mem::take(&mut pending_annotations).into_iter(),
                         );
+
                         result.insert(name, namespace_def);
                     }
                 }
@@ -48,8 +51,9 @@ pub fn convert_schema(schema: &Schema<'_>) -> SchemaFragment {
                 | SchemaSyntax::CommonTypeDeclaration => {
                     if top_level_namespace_def.is_none() {
                         top_level_namespace_def =
-                            Some(convert_node_children(source, root.syntax(), ""));
+                            Some(convert_node_children(bump, source, root.syntax(), ""));
                     }
+
                     pending_annotations.clear();
                 }
                 _ => {}
@@ -57,25 +61,25 @@ pub fn convert_schema(schema: &Schema<'_>) -> SchemaFragment {
         }
 
         if let Some(namespace_def) = top_level_namespace_def {
-            result.insert(String::new(), namespace_def);
+            result.insert("", namespace_def);
         }
     }
 
     result
 }
 
-fn namespace_name(source: &str, namespace: &Namespace<'_>) -> String {
+fn namespace_name<'a>(bump: &'a Bump, source: &str, namespace: &Namespace<'_>) -> &'a str {
     namespace
         .name()
-        .map(|name| name_to_string(source, &name))
-        .unwrap_or_default()
+        .map_or("", |name| name_to_str(bump, source, &name))
 }
 
-fn convert_node_children(
+fn convert_node_children<'a>(
+    bump: &'a Bump,
     source: &str,
     node: &SchemaNode<'_>,
-    namespace_path: &str,
-) -> NamespaceDefinition {
+    namespace_path: &'a str,
+) -> NamespaceDefinition<'a> {
     let mut def = NamespaceDefinition::default();
     let mut pending_annotations: Vec<ast::Annotation<'_>> = Vec::new();
 
@@ -89,13 +93,17 @@ fn convert_node_children(
             SchemaSyntax::EntityDeclaration => {
                 if let Some(entity) = EntityDeclaration::cast(child) {
                     let annotations = collect_annotations(
+                        bump,
                         source,
-                        mem::take(&mut pending_annotations).into_iter(),
+                        core::mem::take(&mut pending_annotations).into_iter(),
                     );
-                    for (name, mut entity_type) in convert_entity_declaration(source, &entity) {
+
+                    for (name, mut entity_type) in convert_entity_declaration(bump, source, &entity)
+                    {
                         for (key, value) in &annotations {
-                            entity_type.annotations.insert(key.clone(), value.clone());
+                            entity_type.annotations.insert(*key, *value);
                         }
+
                         def.entity_types.insert(name, entity_type);
                     }
                 }
@@ -103,15 +111,18 @@ fn convert_node_children(
             SchemaSyntax::ActionDeclaration => {
                 if let Some(action) = ActionDeclaration::cast(child) {
                     let annotations = collect_annotations(
+                        bump,
                         source,
-                        mem::take(&mut pending_annotations).into_iter(),
+                        core::mem::take(&mut pending_annotations).into_iter(),
                     );
+
                     for (name, mut action_type) in
-                        convert_action_declaration(source, &action, namespace_path)
+                        convert_action_declaration(bump, source, &action, namespace_path)
                     {
                         for (key, value) in &annotations {
-                            action_type.annotations.insert(key.clone(), value.clone());
+                            action_type.annotations.insert(*key, *value);
                         }
+
                         def.actions.insert(name, action_type);
                     }
                 }
@@ -119,7 +130,9 @@ fn convert_node_children(
             SchemaSyntax::CommonTypeDeclaration => {
                 if let Some(type_decl) = TypeDeclaration::cast(child) {
                     pending_annotations.clear();
-                    if let Some((name, type_def)) = convert_type_declaration(source, &type_decl) {
+                    if let Some((name, type_def)) =
+                        convert_type_declaration(bump, source, &type_decl)
+                    {
                         def.common_types.insert(name, type_def);
                     }
                 }
@@ -131,179 +144,217 @@ fn convert_node_children(
     def
 }
 
-fn convert_entity_declaration(
+fn convert_entity_declaration<'a>(
+    bump: &'a Bump,
     source: &str,
     entity: &EntityDeclaration<'_>,
-) -> Vec<(String, EntityType)> {
-    let mut results = Vec::new();
-    let annotations = collect_annotations(source, entity.annotations());
+) -> Vec<(&'a str, EntityType<'a>)> {
+    let names: Vec<&'a str> = extract_declaration_names(bump, source, entity.syntax());
+    if names.is_empty() {
+        return Vec::new();
+    }
 
-    let member_of_types: Vec<String> = entity
+    let base_annotations = collect_annotations(bump, source, entity.annotations());
+
+    let member_of_names: Vec<&'a str> = entity
         .parents()
         .and_then(|parents| parents.type_list())
         .map(|type_list| {
             type_list
                 .types()
-                .map(|name| name_to_string(source, &name))
+                .map(|name| name_to_str(bump, source, &name))
                 .collect()
         })
         .unwrap_or_default();
 
-    let shape = entity
+    let shape_record = entity
         .attributes()
         .and_then(|attrs| attrs.record_type())
-        .map(|record| convert_record_type(source, &record));
+        .map(|record| convert_record_type(bump, source, &record));
 
-    let tags = entity
+    let tags_type = entity
         .tags()
         .and_then(|tags| tags.tag_type())
-        .map(|type_expr| convert_type_expr(source, &type_expr, true, BTreeMap::new()));
+        .map(|type_expr| convert_type_expr(bump, source, &type_expr, true, BTreeMap::new()));
 
-    let enum_values = entity.enum_type().map(|enum_type| {
-        enum_type
-            .variants()
-            .map(|variant| unescape_string(variant.text(source)))
-            .collect()
-    });
+    let enum_variant_names: Vec<&'a str> = entity
+        .enum_type()
+        .map(|enum_type| {
+            enum_type
+                .variants()
+                .map(|variant| unescape_str(bump, variant.text(source)))
+                .collect()
+        })
+        .unwrap_or_default();
 
-    let entity_type = EntityType {
-        annotations,
-        member_of_types,
-        shape,
-        tags,
-        enum_values,
-    };
+    names
+        .into_iter()
+        .map(|name| {
+            let mut member_of_types = BumpVec::new_in(bump);
+            member_of_types.extend(member_of_names.iter().copied());
 
-    for name in extract_declaration_names(source, entity.syntax()) {
-        results.push((name, entity_type.clone()));
-    }
+            let enum_values = if enum_variant_names.is_empty() {
+                None
+            } else {
+                let mut values = BumpVec::new_in(bump);
+                values.extend(enum_variant_names.iter().copied());
+                Some(values)
+            };
 
-    results
+            let entity_type = EntityType {
+                annotations: base_annotations.clone(),
+                member_of_types,
+                shape: shape_record.clone(),
+                tags: tags_type.clone(),
+                enum_values,
+            };
+
+            (name, entity_type)
+        })
+        .collect()
 }
 
-fn convert_action_declaration(
+fn convert_action_declaration<'a>(
+    bump: &'a Bump,
     source: &str,
     action: &ActionDeclaration<'_>,
-    namespace_path: &str,
-) -> Vec<(String, ActionType)> {
-    let mut results = Vec::new();
-    let annotations = collect_annotations(source, action.annotations());
+    namespace_path: &'a str,
+) -> Vec<(&'a str, ActionType<'a>)> {
+    let names: Vec<&'a str> = extract_declaration_names(bump, source, action.syntax());
+    if names.is_empty() {
+        return Vec::new();
+    }
 
-    let member_of: Vec<ActionRef> = action
+    let base_annotations = collect_annotations(bump, source, action.annotations());
+
+    let member_of_refs: Vec<ActionRef<'a>> = action
         .parents()
         .map(|parents| {
             parents
                 .names()
-                .map(|name| parse_action_ref(source, &name))
+                .map(|name| parse_action_ref(bump, source, &name))
                 .collect()
         })
         .unwrap_or_default();
 
-    let applies_to = action
+    let principal_type_names: Vec<&'a str> = action
         .applies_to()
-        .map(|applies| {
-            let principal_types = applies
-                .principal_types()
-                .and_then(|pt| pt.type_list())
-                .map(|type_list| {
-                    type_list
-                        .types()
-                        .map(|name| qualify_entity_name(source, &name, namespace_path))
-                        .collect()
-                })
-                .unwrap_or_default();
+        .and_then(|applies| applies.principal_types())
+        .and_then(|pt| pt.type_list())
+        .map(|type_list| {
+            type_list
+                .types()
+                .map(|name| qualify_entity_name(bump, source, &name, namespace_path))
+                .collect()
+        })
+        .unwrap_or_default();
 
-            let resource_types = applies
-                .resource_types()
-                .and_then(|rt| rt.type_list())
-                .map(|type_list| {
-                    type_list
-                        .types()
-                        .map(|name| qualify_entity_name(source, &name, namespace_path))
-                        .collect()
-                })
-                .unwrap_or_default();
+    let resource_type_names: Vec<&'a str> = action
+        .applies_to()
+        .and_then(|applies| applies.resource_types())
+        .and_then(|rt| rt.type_list())
+        .map(|type_list| {
+            type_list
+                .types()
+                .map(|name| qualify_entity_name(bump, source, &name, namespace_path))
+                .collect()
+        })
+        .unwrap_or_default();
 
-            let context = applies
-                .context_type()
-                .and_then(|ctx| ctx.type_expr())
-                .map(|type_expr| convert_type_expr(source, &type_expr, true, BTreeMap::new()));
+    let context_type = action
+        .applies_to()
+        .and_then(|applies| applies.context_type())
+        .and_then(|ctx| ctx.type_expr())
+        .map(|type_expr| convert_type_expr(bump, source, &type_expr, true, BTreeMap::new()));
 
-            AppliesTo {
+    names
+        .into_iter()
+        .map(|name| {
+            let mut member_of = BumpVec::new_in(bump);
+            member_of.extend(member_of_refs.iter().cloned());
+
+            let mut principal_types = BumpVec::new_in(bump);
+            principal_types.extend(principal_type_names.iter().copied());
+
+            let mut resource_types = BumpVec::new_in(bump);
+            resource_types.extend(resource_type_names.iter().copied());
+
+            let applies_to = Some(AppliesTo {
                 principal_types,
                 resource_types,
-                context,
-            }
+                context: context_type.clone(),
+            });
+
+            let action_type = ActionType {
+                annotations: base_annotations.clone(),
+                member_of,
+                applies_to,
+            };
+
+            (name, action_type)
         })
-        .or_else(|| Some(AppliesTo::default()));
-
-    let action_type = ActionType {
-        annotations,
-        member_of,
-        applies_to,
-    };
-
-    for name in extract_declaration_names(source, action.syntax()) {
-        results.push((name, action_type.clone()));
-    }
-
-    results
+        .collect()
 }
 
-fn convert_type_declaration(
+fn convert_type_declaration<'a>(
+    bump: &'a Bump,
     source: &str,
     type_decl: &TypeDeclaration<'_>,
-) -> Option<(String, TypeDef)> {
-    let name = type_decl.name()?.text(source).to_owned();
+) -> Option<(&'a str, TypeDef<'a>)> {
+    let name = bump.alloc_str(type_decl.name()?.text(source));
     let definition = type_decl.definition()?;
-    let type_def = convert_type_expr(source, &definition, true, BTreeMap::new());
+    let type_def = convert_type_expr(bump, source, &definition, true, BTreeMap::new());
     Some((name, type_def))
 }
 
-fn convert_type_expr(
+fn convert_type_expr<'a>(
+    bump: &'a Bump,
     source: &str,
     type_expr: &TypeExpr<'_>,
     required: bool,
-    annotations: BTreeMap<String, String>,
-) -> TypeDef {
+    annotations: BTreeMap<&'a str, &'a str>,
+) -> TypeDef<'a> {
     match type_expr {
         TypeExpr::Name(name) => TypeDef::EntityOrCommon {
-            name: name_to_string(source, name),
+            name: name_to_str(bump, source, name),
             required,
             annotations,
         },
         TypeExpr::Set(set_type) => {
             let element = set_type.element().map_or_else(
                 || TypeDef::EntityOrCommon {
-                    name: String::from("Unknown"),
+                    name: "Unknown",
                     required: true,
                     annotations: BTreeMap::new(),
                 },
-                |elem| convert_type_expr(source, &elem, true, BTreeMap::new()),
+                |elem| convert_type_expr(bump, source, &elem, true, BTreeMap::new()),
             );
             TypeDef::Set {
-                element: Box::new(element),
+                element: bump.alloc(element),
                 required,
                 annotations,
             }
         }
         TypeExpr::Record(record) => TypeDef::Record {
-            record: convert_record_type(source, record),
+            record: convert_record_type(bump, source, record),
             required,
             annotations,
         },
         TypeExpr::Entity(entity_ref) => TypeDef::EntityOrCommon {
             name: entity_ref
                 .name()
-                .map(|name| name_to_string(source, &name))
-                .unwrap_or_default(),
+                .map_or("", |name| name_to_str(bump, source, &name)),
             required,
             annotations,
         },
     }
 }
 
-fn convert_record_type(source: &str, record: &ast::RecordType<'_>) -> RecordType {
+fn convert_record_type<'a>(
+    bump: &'a Bump,
+    source: &str,
+    record: &ast::RecordType<'_>,
+) -> RecordType<'a> {
     let mut attributes = BTreeMap::new();
     let mut pending_annotations: Vec<ast::Annotation<'_>> = Vec::new();
 
@@ -317,21 +368,24 @@ fn convert_record_type(source: &str, record: &ast::RecordType<'_>) -> RecordType
             SchemaSyntax::AttributeDeclaration => {
                 if let Some(attr) = ast::AttributeDeclaration::cast(child) {
                     let annotations = collect_annotations(
+                        bump,
                         source,
-                        mem::take(&mut pending_annotations).into_iter(),
+                        core::mem::take(&mut pending_annotations).into_iter(),
                     );
 
                     if let Some(key) = attr.name() {
                         let key_str = match key {
-                            ast::AttrKey::Identifier(ident) => ident.text(source).to_owned(),
-                            ast::AttrKey::String(string) => unescape_string(string.text(source)),
-                            ast::AttrKey::Keyword(node) => source[node.span().range()].to_owned(),
+                            ast::AttrKey::Identifier(ident) => bump.alloc_str(ident.text(source)),
+                            ast::AttrKey::String(string) => unescape_str(bump, string.text(source)),
+                            ast::AttrKey::Keyword(node) => {
+                                bump.alloc_str(&source[node.span().range()])
+                            }
                         };
 
                         let required = !attr.is_optional();
                         if let Some(type_expr) = attr.attribute_type() {
                             let type_def =
-                                convert_type_expr(source, &type_expr, required, annotations);
+                                convert_type_expr(bump, source, &type_expr, required, annotations);
                             attributes.insert(key_str, type_def);
                         }
                     }
@@ -344,10 +398,11 @@ fn convert_record_type(source: &str, record: &ast::RecordType<'_>) -> RecordType
     RecordType { attributes }
 }
 
-fn collect_annotations<'a>(
+fn collect_annotations<'a, 'b>(
+    bump: &'a Bump,
     source: &str,
-    annotations: impl Iterator<Item = ast::Annotation<'a>>,
-) -> BTreeMap<String, String> {
+    annotations: impl Iterator<Item = ast::Annotation<'b>>,
+) -> BTreeMap<&'a str, &'a str> {
     let mut result = BTreeMap::new();
 
     for annotation in annotations {
@@ -361,23 +416,21 @@ fn collect_annotations<'a>(
         });
 
         if let Some(key) = name_text {
-            let value = annotation
+            let key: &'a str = bump.alloc_str(key);
+            let value: &'a str = annotation
                 .value()
-                .map(|value| {
-                    let text = value.text(source);
-                    unescape_string(text)
-                })
-                .unwrap_or_default();
-            result.insert(key.to_owned(), value);
+                .map_or("", |value| unescape_str(bump, value.text(source)));
+
+            result.insert(key, value);
         }
     }
 
     result
 }
 
-fn name_to_string(source: &str, name: &ast::Name<'_>) -> String {
+fn name_to_str<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> &'a str {
     let node = name.syntax();
-    let mut parts = Vec::new();
+    let mut parts: Vec<&str> = Vec::new();
 
     for child in node.children() {
         let kind = child.value();
@@ -386,34 +439,42 @@ fn name_to_string(source: &str, name: &ast::Name<'_>) -> String {
             | SchemaSyntax::BoolKeyword
             | SchemaSyntax::LongKeyword
             | SchemaSyntax::StringKeyword => {
-                let text = &source[child.span().range()];
-                parts.push(text);
+                parts.push(&source[child.span().range()]);
             }
             _ => {}
         }
     }
 
-    parts.join("::")
+    if let [single] = parts.as_slice() {
+        bump.alloc_str(single)
+    } else {
+        let joined: String = parts.join("::");
+        bump.alloc_str(&joined)
+    }
 }
 
-fn qualify_entity_name(source: &str, name: &ast::Name<'_>, _namespace_path: &str) -> String {
-    name_to_string(source, name)
+fn qualify_entity_name<'a>(
+    bump: &'a Bump,
+    source: &str,
+    name: &ast::Name<'_>,
+    _namespace_path: &str,
+) -> &'a str {
+    name_to_str(bump, source, name)
 }
 
-fn parse_action_ref(source: &str, name: &ast::Name<'_>) -> ActionRef {
+fn parse_action_ref<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> ActionRef<'a> {
     let node = name.syntax();
-    let mut identifiers = Vec::new();
-    let mut action_id = None;
+
+    let mut identifiers: Vec<&str> = Vec::new();
+    let mut action_id: Option<&'a str> = None;
 
     for child in node.children() {
         match child.value() {
             SchemaSyntax::Identifier => {
-                let text = &source[child.span().range()];
-                identifiers.push(text);
+                identifiers.push(&source[child.span().range()]);
             }
             SchemaSyntax::String => {
-                let text = &source[child.span().range()];
-                action_id = Some(unescape_string(text));
+                action_id = Some(unescape_str(bump, &source[child.span().range()]));
             }
             _ => {}
         }
@@ -423,34 +484,39 @@ fn parse_action_ref(source: &str, name: &ast::Name<'_>) -> ActionRef {
         (Some(id), []) => ActionRef { id, ty: None },
         (Some(id), parts) => ActionRef {
             id,
-            ty: Some(parts.join("::")),
+            ty: Some(bump.alloc_str(&parts.join("::"))),
         },
-        (None, []) => ActionRef {
-            id: String::new(),
-            ty: None,
-        },
+        (None, []) => ActionRef { id: "", ty: None },
         (None, [single]) => ActionRef {
-            id: (*single).to_owned(),
+            id: bump.alloc_str(single),
             ty: None,
         },
         (None, [init @ .., last]) => ActionRef {
-            id: (*last).to_owned(),
-            ty: Some(init.join("::")),
+            id: bump.alloc_str(last),
+            ty: Some(bump.alloc_str(&init.join("::"))),
         },
     }
 }
 
 fn strip_quotes(text: &str) -> Option<&str> {
-    let inner = text.strip_prefix('"')?;
-    if let Some(stripped) = inner.strip_suffix('"') {
-        return Some(stripped);
+    if let Some(inner) = text.strip_prefix('"') {
+        return inner.strip_suffix('"');
     }
-    let inner = text.strip_prefix('\'')?;
-    inner.strip_suffix('\'')
+
+    if let Some(inner) = text.strip_prefix('\'') {
+        return inner.strip_suffix('\'');
+    }
+
+    None
 }
 
-fn unescape_string(text: &str) -> String {
+fn unescape_str<'a>(bump: &'a Bump, text: &str) -> &'a str {
     let inner = strip_quotes(text).unwrap_or(text);
+    if !inner.contains('\\') {
+        let result: &'a str = bump.alloc_str(inner);
+        return result;
+    }
+
     let mut result = String::with_capacity(inner.len());
     let mut chars = inner.chars().peekable();
 
@@ -467,6 +533,7 @@ fn unescape_string(text: &str) -> String {
                 Some('u') => {
                     if chars.peek() == Some(&'{') {
                         chars.next();
+
                         let mut hex = String::new();
                         while let Some(&digit) = chars.peek() {
                             if digit == '}' {
@@ -476,6 +543,7 @@ fn unescape_string(text: &str) -> String {
                             hex.push(digit);
                             chars.next();
                         }
+
                         if let Ok(code) = u32::from_str_radix(&hex, 16)
                             && let Some(unicode_char) = char::from_u32(code)
                         {
@@ -496,20 +564,22 @@ fn unescape_string(text: &str) -> String {
         }
     }
 
-    result
+    let str_ref: &'a str = bump.alloc_str(&result);
+    str_ref
 }
 
-fn extract_declaration_names(source: &str, node: &SchemaNode<'_>) -> Vec<String> {
+fn extract_declaration_names<'a>(
+    bump: &'a Bump,
+    source: &str,
+    node: &SchemaNode<'_>,
+) -> Vec<&'a str> {
     node.children()
         .filter_map(|child| match child.value() {
             SchemaSyntax::Identifier => {
-                let text = &source[child.span().range()];
-                Some(text.to_owned())
+                let str_ref: &'a str = bump.alloc_str(&source[child.span().range()]);
+                Some(str_ref)
             }
-            SchemaSyntax::String => {
-                let text = &source[child.span().range()];
-                Some(unescape_string(text))
-            }
+            SchemaSyntax::String => Some(unescape_str(bump, &source[child.span().range()])),
             _ => None,
         })
         .collect()

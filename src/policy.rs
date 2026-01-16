@@ -1,9 +1,15 @@
 #![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
 
+#[cfg(any(feature = "serde", feature = "facet"))]
+use alloc::collections::BTreeMap;
+#[cfg(any(feature = "serde", feature = "facet"))]
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::error::Error;
 use core::fmt;
 
+#[cfg(any(feature = "serde", feature = "facet", feature = "prost"))]
+use bumpalo::Bump;
 use syntree::{FlavorDefault, Tree};
 
 use crate::diagnostics::Diagnostic;
@@ -96,7 +102,7 @@ impl<'a> PolicySet<'a> {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
         let policy_set = self.to_policy_set_json()?;
         serde_json::to_string(&policy_set).map_err(|_serialize_error| PolicyErrors)
     }
@@ -107,7 +113,7 @@ impl<'a> PolicySet<'a> {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
         let policy_set = self.to_policy_set_json()?;
         facet_json::to_string(&policy_set).map_err(|_serialize_error| PolicyErrors)
     }
@@ -128,13 +134,14 @@ impl<'a> PolicySet<'a> {
     fn to_policy_set_proto(&self) -> Result<est::proto::PolicySet, PolicyErrors> {
         let Some(root) = self.root() else {
             return Ok(est::proto::PolicySet {
-                templates: alloc::vec![],
-                links: alloc::vec![],
+                templates: Vec::new(),
+                links: Vec::new(),
             });
         };
 
-        let est_policies =
-            est::convert_policies(&root, self.source).map_err(|_convert_error| PolicyErrors)?;
+        let bump = Bump::new();
+        let est_policies = est::convert_policies(&bump, &root, self.source)
+            .map_err(|_convert_error| PolicyErrors)?;
 
         Ok(est::policies_to_proto(&est_policies))
     }
@@ -149,14 +156,15 @@ impl<'a> PolicySet<'a> {
     fn to_policy_set_json(&self) -> Result<est::json::PolicySetJson, PolicyErrors> {
         let Some(root) = self.root() else {
             return Ok(est::json::PolicySetJson {
-                static_policies: alloc::collections::BTreeMap::new(),
-                templates: alloc::collections::BTreeMap::new(),
-                template_links: alloc::vec![],
+                static_policies: BTreeMap::new(),
+                templates: BTreeMap::new(),
+                template_links: Vec::new(),
             });
         };
 
-        let est_policies =
-            est::convert_policies(&root, self.source).map_err(|_convert_error| PolicyErrors)?;
+        let bump = Bump::new();
+        let est_policies = est::convert_policies(&bump, &root, self.source)
+            .map_err(|_convert_error| PolicyErrors)?;
 
         Ok(est::policies_to_json(&est_policies))
     }
@@ -188,7 +196,7 @@ impl Policy {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -198,7 +206,7 @@ impl Policy {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -227,7 +235,7 @@ impl Template {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_serde_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 
@@ -237,7 +245,7 @@ impl Template {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, PolicyErrors> {
+    pub fn to_facet_json(&self) -> Result<String, PolicyErrors> {
         todo!()
     }
 

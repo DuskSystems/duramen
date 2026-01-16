@@ -1,7 +1,7 @@
 mod convert;
+pub use convert::convert_schema;
+
 #[cfg(any(feature = "serde", feature = "facet"))]
 pub mod json;
-mod types;
 
-pub use convert::convert_schema;
-pub use types::*;
+pub mod types;

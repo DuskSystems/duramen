@@ -712,6 +712,7 @@ dependencies = [
  "annotate-snippets",
  "anstream",
  "arbitrary",
+ "bumpalo",
  "cedar-policy",
  "cedar-policy-core",
  "datatest-stable",

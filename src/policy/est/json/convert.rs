@@ -1,13 +1,15 @@
+use alloc::borrow::ToOwned as _;
 use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
-use alloc::format;
 use alloc::string::String;
+use alloc::vec::Vec;
+use alloc::{format, vec};
 
 use super::types as json;
 use crate::policy::est::types as est;
 
 #[must_use]
-pub fn policies_to_json(policies: &[est::Policy]) -> json::PolicySetJson {
+pub fn policies_to_json(policies: &[est::Policy<'_>]) -> json::PolicySetJson {
     let mut templates = BTreeMap::new();
     let mut static_policies = BTreeMap::new();
 
@@ -25,11 +27,11 @@ pub fn policies_to_json(policies: &[est::Policy]) -> json::PolicySetJson {
     json::PolicySetJson {
         templates,
         static_policies,
-        template_links: alloc::vec![],
+        template_links: Vec::new(),
     }
 }
 
-fn policy_to_json(policy: &est::Policy) -> json::PolicyJson {
+fn policy_to_json(policy: &est::Policy<'_>) -> json::PolicyJson {
     let effect = match policy.effect {
         est::Effect::Permit => String::from("permit"),
         est::Effect::Forbid => String::from("forbid"),
@@ -38,7 +40,13 @@ fn policy_to_json(policy: &est::Policy) -> json::PolicyJson {
     let annotations = if policy.annotations.is_empty() {
         None
     } else {
-        Some(policy.annotations.iter().cloned().collect())
+        Some(
+            policy
+                .annotations
+                .iter()
+                .map(|(name, value)| ((*name).to_owned(), value.map(str::to_owned)))
+                .collect(),
+        )
     };
 
     json::PolicyJson {
@@ -62,7 +70,7 @@ fn scope_json(op: &str) -> json::ScopeJson {
     }
 }
 
-fn scope_to_json(constraint: &est::PrincipalOrResourceConstraint) -> json::ScopeJson {
+fn scope_to_json(constraint: &est::PrincipalOrResourceConstraint<'_>) -> json::ScopeJson {
     match constraint {
         est::PrincipalOrResourceConstraint::Any => scope_json("All"),
         est::PrincipalOrResourceConstraint::Equal(expression) => {
@@ -84,14 +92,14 @@ fn scope_to_json(constraint: &est::PrincipalOrResourceConstraint) -> json::Scope
             }
         }
         est::PrincipalOrResourceConstraint::Is { entity_type } => json::ScopeJson {
-            entity_type: Some(entity_type.clone()),
+            entity_type: Some((*entity_type).to_owned()),
             ..scope_json("is")
         },
         est::PrincipalOrResourceConstraint::IsIn {
             entity_type,
             in_entity,
         } => json::ScopeJson {
-            entity_type: Some(entity_type.clone()),
+            entity_type: Some((*entity_type).to_owned()),
             in_entity: Some(json::ScopeInJson {
                 entity: expression_to_entity(in_entity),
             }),
@@ -100,7 +108,7 @@ fn scope_to_json(constraint: &est::PrincipalOrResourceConstraint) -> json::Scope
     }
 }
 
-fn action_to_json(constraint: &est::ActionConstraint) -> json::ScopeJson {
+fn action_to_json(constraint: &est::ActionConstraint<'_>) -> json::ScopeJson {
     match constraint {
         est::ActionConstraint::Any => scope_json("All"),
         est::ActionConstraint::Equal(expression) => json::ScopeJson {
@@ -118,7 +126,9 @@ fn action_to_json(constraint: &est::ActionConstraint) -> json::ScopeJson {
     }
 }
 
-fn entity_or_slot(expression: &est::Expression) -> (Option<json::EntityUidJson>, Option<String>) {
+fn entity_or_slot(
+    expression: &est::Expression<'_>,
+) -> (Option<json::EntityUidJson>, Option<String>) {
     match expression {
         est::Expression::Slot(est::SlotId::Principal) => (None, Some(String::from("?principal"))),
         est::Expression::Slot(est::SlotId::Resource) => (None, Some(String::from("?resource"))),
@@ -126,11 +136,11 @@ fn entity_or_slot(expression: &est::Expression) -> (Option<json::EntityUidJson>,
     }
 }
 
-fn expression_to_entity(expression: &est::Expression) -> json::EntityUidJson {
+fn expression_to_entity(expression: &est::Expression<'_>) -> json::EntityUidJson {
     match expression {
         est::Expression::Entity { entity_type, id } => json::EntityUidJson {
-            entity_type: entity_type.clone(),
-            id: id.clone(),
+            entity_type: (*entity_type).to_owned(),
+            id: (*id).to_owned(),
         },
         _ => json::EntityUidJson {
             entity_type: String::from("Unknown"),
@@ -139,7 +149,7 @@ fn expression_to_entity(expression: &est::Expression) -> json::EntityUidJson {
     }
 }
 
-fn condition_to_json(condition: &est::Condition) -> json::ConditionJson {
+fn condition_to_json(condition: &est::Condition<'_>) -> json::ConditionJson {
     json::ConditionJson {
         kind: match condition.kind {
             est::ConditionKind::When => String::from("when"),
@@ -149,36 +159,7 @@ fn condition_to_json(condition: &est::Condition) -> json::ConditionJson {
     }
 }
 
-macro_rules! unary_expression {
-    ($enum_variant:ident, $struct:ident, $field:ident, $inner:expr) => {
-        json::ExpressionJson::$enum_variant(json::$struct {
-            $field: json::UnaryArgumentJson {
-                arg: Box::new(expression_to_json($inner)),
-            },
-        })
-    };
-}
-
-macro_rules! binary_expression {
-    ($enum_variant:ident, $struct:ident, $field:ident, $left:expr, $right:expr) => {
-        json::ExpressionJson::$enum_variant(json::$struct {
-            $field: binary_arguments($left, $right),
-        })
-    };
-}
-
-macro_rules! attribute_expression {
-    ($enum_variant:ident, $struct:ident, $field:ident, $expression:expr, $attribute:expr) => {
-        json::ExpressionJson::$enum_variant(json::$struct {
-            $field: json::AttributeArgumentJson {
-                left: Box::new(expression_to_json($expression)),
-                attr: $attribute.clone(),
-            },
-        })
-    };
-}
-
-fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
+fn expression_to_json(expression: &est::Expression<'_>) -> json::ExpressionJson {
     match expression {
         est::Expression::Boolean(value) => json::ExpressionJson::Value(json::ExpressionValueJson {
             value: json::ValueJson::Bool(*value),
@@ -187,7 +168,7 @@ fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
             value: json::ValueJson::Int(*value),
         }),
         est::Expression::String(value) => json::ExpressionJson::Value(json::ExpressionValueJson {
-            value: json::ValueJson::String(value.clone()),
+            value: json::ValueJson::String((*value).to_owned()),
         }),
         est::Expression::Variable(variable) => {
             json::ExpressionJson::Variable(json::ExpressionVariableJson {
@@ -209,8 +190,8 @@ fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
             json::ExpressionJson::Value(json::ExpressionValueJson {
                 value: json::ValueJson::Entity(json::EntityValueJson {
                     entity: json::EntityUidJson {
-                        entity_type: entity_type.clone(),
-                        id: id.clone(),
+                        entity_type: (*entity_type).to_owned(),
+                        id: (*id).to_owned(),
                     },
                 }),
             })
@@ -222,78 +203,92 @@ fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
             json::ExpressionJson::Record(json::ExpressionRecordJson {
                 record: entries
                     .iter()
-                    .map(|(key, value)| (key.clone(), expression_to_json(value)))
+                    .map(|(key, value)| ((*key).to_owned(), expression_to_json(value)))
                     .collect(),
             })
         }
-        est::Expression::Not(inner) => unary_expression!(Not, ExpressionNotJson, not, inner),
+        est::Expression::Not(inner) => json::ExpressionJson::Not(json::ExpressionNotJson {
+            not: json::UnaryArgumentJson {
+                arg: Box::new(expression_to_json(inner)),
+            },
+        }),
         est::Expression::Negate(inner) => {
-            unary_expression!(Negate, ExpressionNegateJson, neg, inner)
+            json::ExpressionJson::Negate(json::ExpressionNegateJson {
+                neg: json::UnaryArgumentJson {
+                    arg: Box::new(expression_to_json(inner)),
+                },
+            })
         }
-        est::Expression::Or(left, right) => {
-            binary_expression!(Or, ExpressionOrJson, or, left, right)
-        }
-        est::Expression::And(left, right) => {
-            binary_expression!(And, ExpressionAndJson, and, left, right)
-        }
+        est::Expression::Or(left, right) => json::ExpressionJson::Or(json::ExpressionOrJson {
+            or: binary_arguments(left, right),
+        }),
+        est::Expression::And(left, right) => json::ExpressionJson::And(json::ExpressionAndJson {
+            and: binary_arguments(left, right),
+        }),
         est::Expression::Equal(left, right) => {
-            binary_expression!(Equal, ExpressionEqualJson, eq, left, right)
+            json::ExpressionJson::Equal(json::ExpressionEqualJson {
+                eq: binary_arguments(left, right),
+            })
         }
         est::Expression::NotEqual(left, right) => {
-            binary_expression!(NotEqual, ExpressionNotEqualJson, neq, left, right)
+            json::ExpressionJson::NotEqual(json::ExpressionNotEqualJson {
+                neq: binary_arguments(left, right),
+            })
         }
         est::Expression::LessThan(left, right) => {
-            binary_expression!(LessThan, ExpressionLessThanJson, lt, left, right)
+            json::ExpressionJson::LessThan(json::ExpressionLessThanJson {
+                lt: binary_arguments(left, right),
+            })
         }
-        est::Expression::LessThanOrEqual(left, right) => binary_expression!(
-            LessThanOrEqual,
-            ExpressionLessThanOrEqualJson,
-            lte,
-            left,
-            right
-        ),
+        est::Expression::LessThanOrEqual(left, right) => {
+            json::ExpressionJson::LessThanOrEqual(json::ExpressionLessThanOrEqualJson {
+                lte: binary_arguments(left, right),
+            })
+        }
         est::Expression::GreaterThan(left, right) => {
-            binary_expression!(GreaterThan, ExpressionGreaterThanJson, gt, left, right)
+            json::ExpressionJson::GreaterThan(json::ExpressionGreaterThanJson {
+                gt: binary_arguments(left, right),
+            })
         }
-        est::Expression::GreaterThanOrEqual(left, right) => binary_expression!(
-            GreaterThanOrEqual,
-            ExpressionGreaterThanOrEqualJson,
-            gte,
-            left,
-            right
-        ),
-        est::Expression::In(left, right) => {
-            binary_expression!(In, ExpressionInJson, in_op, left, right)
+        est::Expression::GreaterThanOrEqual(left, right) => {
+            json::ExpressionJson::GreaterThanOrEqual(json::ExpressionGreaterThanOrEqualJson {
+                gte: binary_arguments(left, right),
+            })
         }
-        est::Expression::Add(left, right) => {
-            binary_expression!(Add, ExpressionAddJson, add, left, right)
-        }
+        est::Expression::In(left, right) => json::ExpressionJson::In(json::ExpressionInJson {
+            in_op: binary_arguments(left, right),
+        }),
+        est::Expression::Add(left, right) => json::ExpressionJson::Add(json::ExpressionAddJson {
+            add: binary_arguments(left, right),
+        }),
         est::Expression::Subtract(left, right) => {
-            binary_expression!(Subtract, ExpressionSubtractJson, sub, left, right)
+            json::ExpressionJson::Subtract(json::ExpressionSubtractJson {
+                sub: binary_arguments(left, right),
+            })
         }
         est::Expression::Multiply(left, right) => {
-            binary_expression!(Multiply, ExpressionMultiplyJson, mul, left, right)
+            json::ExpressionJson::Multiply(json::ExpressionMultiplyJson {
+                mul: binary_arguments(left, right),
+            })
         }
         est::Expression::GetAttribute {
             expression,
             attribute,
-        } => attribute_expression!(
-            GetAttribute,
-            ExpressionGetAttributeJson,
-            get_attr,
-            expression,
-            attribute
-        ),
+        } => json::ExpressionJson::GetAttribute(json::ExpressionGetAttributeJson {
+            get_attr: json::AttributeArgumentJson {
+                left: Box::new(expression_to_json(expression)),
+                attr: (*attribute).to_owned(),
+            },
+        }),
         est::Expression::HasAttribute {
             expression,
             attribute,
-        } => attribute_expression!(
-            HasAttribute,
-            ExpressionHasAttributeJson,
-            has,
-            expression,
-            attribute
-        ),
+        } => json::ExpressionJson::HasAttribute(json::ExpressionHasAttributeJson {
+            has: json::AttributeArgumentJson {
+                left: Box::new(expression_to_json(expression)),
+                attr: (*attribute).to_owned(),
+            },
+        }),
         est::Expression::Index { expression, index } => {
             json::ExpressionJson::Index(json::ExpressionIndexJson {
                 index: json::IndexArgumentJson {
@@ -318,7 +313,7 @@ fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
         } => json::ExpressionJson::Is(json::ExpressionIsJson {
             is: json::IsArgumentJson {
                 left: Box::new(expression_to_json(expression)),
-                entity_type: entity_type.clone(),
+                entity_type: (*entity_type).to_owned(),
                 in_expr: in_expression
                     .as_ref()
                     .map(|inner| Box::new(expression_to_json(inner))),
@@ -343,7 +338,7 @@ fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
         est::Expression::ExtensionCall { name, arguments } => {
             let mut map = BTreeMap::new();
             map.insert(
-                name.clone(),
+                (*name).to_owned(),
                 arguments.iter().map(expression_to_json).collect(),
             );
             json::ExpressionJson::ExtensionFunction(json::ExpressionExtensionFunctionJson(map))
@@ -351,11 +346,11 @@ fn expression_to_json(expression: &est::Expression) -> json::ExpressionJson {
     }
 }
 
-fn pattern_element_to_json(element: &est::PatternElement) -> json::PatternElementJson {
+fn pattern_element_to_json(element: &est::PatternElement<'_>) -> json::PatternElementJson {
     match element {
         est::PatternElement::Literal(literal) => {
             json::PatternElementJson::Literal(json::PatternLiteralJson {
-                literal: literal.clone(),
+                literal: (*literal).to_owned(),
             })
         }
         est::PatternElement::Wildcard => {
@@ -364,7 +359,10 @@ fn pattern_element_to_json(element: &est::PatternElement) -> json::PatternElemen
     }
 }
 
-fn binary_arguments(left: &est::Expression, right: &est::Expression) -> json::BinaryArgumentJson {
+fn binary_arguments(
+    left: &est::Expression<'_>,
+    right: &est::Expression<'_>,
+) -> json::BinaryArgumentJson {
     json::BinaryArgumentJson {
         left: Box::new(expression_to_json(left)),
         right: Box::new(expression_to_json(right)),
@@ -372,8 +370,8 @@ fn binary_arguments(left: &est::Expression, right: &est::Expression) -> json::Bi
 }
 
 fn method_binary_arguments(
-    receiver: &est::Expression,
-    arguments: &[est::Expression],
+    receiver: &est::Expression<'_>,
+    arguments: &[est::Expression<'_>],
 ) -> json::BinaryArgumentJson {
     json::BinaryArgumentJson {
         left: Box::new(expression_to_json(receiver)),
@@ -388,53 +386,39 @@ fn method_binary_arguments(
     }
 }
 
-macro_rules! method_binary_expression {
-    ($enum_variant:ident, $struct:ident, $field:ident, $receiver:expr, $arguments:expr) => {
-        json::ExpressionJson::$enum_variant(json::$struct {
-            $field: method_binary_arguments($receiver, $arguments),
-        })
-    };
-}
-
 fn method_call_to_json(
-    receiver: &est::Expression,
+    receiver: &est::Expression<'_>,
     method: &str,
-    arguments: &[est::Expression],
+    arguments: &[est::Expression<'_>],
 ) -> json::ExpressionJson {
     match method {
-        "contains" => method_binary_expression!(
-            Contains,
-            ExpressionContainsJson,
-            contains,
-            receiver,
-            arguments
-        ),
-        "containsAll" => method_binary_expression!(
-            ContainsAll,
-            ExpressionContainsAllJson,
-            contains_all,
-            receiver,
-            arguments
-        ),
-        "containsAny" => method_binary_expression!(
-            ContainsAny,
-            ExpressionContainsAnyJson,
-            contains_any,
-            receiver,
-            arguments
-        ),
-        "hasTag" => {
-            method_binary_expression!(HasTag, ExpressionHasTagJson, has_tag, receiver, arguments)
-        }
-        "getTag" => {
-            method_binary_expression!(GetTag, ExpressionGetTagJson, get_tag, receiver, arguments)
-        }
-        "isEmpty" => unary_expression!(IsEmpty, ExpressionIsEmptyJson, is_empty, receiver),
+        "contains" => json::ExpressionJson::Contains(json::ExpressionContainsJson {
+            contains: method_binary_arguments(receiver, arguments),
+        }),
+        "containsAll" => json::ExpressionJson::ContainsAll(json::ExpressionContainsAllJson {
+            contains_all: method_binary_arguments(receiver, arguments),
+        }),
+        "containsAny" => json::ExpressionJson::ContainsAny(json::ExpressionContainsAnyJson {
+            contains_any: method_binary_arguments(receiver, arguments),
+        }),
+        "hasTag" => json::ExpressionJson::HasTag(json::ExpressionHasTagJson {
+            has_tag: method_binary_arguments(receiver, arguments),
+        }),
+        "getTag" => json::ExpressionJson::GetTag(json::ExpressionGetTagJson {
+            get_tag: method_binary_arguments(receiver, arguments),
+        }),
+        "isEmpty" => json::ExpressionJson::IsEmpty(json::ExpressionIsEmptyJson {
+            is_empty: json::UnaryArgumentJson {
+                arg: Box::new(expression_to_json(receiver)),
+            },
+        }),
         _ => {
-            let mut all_arguments = alloc::vec![expression_to_json(receiver)];
+            let mut all_arguments = vec![expression_to_json(receiver)];
             all_arguments.extend(arguments.iter().map(expression_to_json));
+
             let mut map = BTreeMap::new();
             map.insert(String::from(method), all_arguments);
+
             json::ExpressionJson::ExtensionMethod(json::ExpressionExtensionMethodJson(map))
         }
     }
