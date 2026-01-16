@@ -231,6 +231,32 @@ similar-asserts = { workspace = true }
 divan = { workspace = true }
 gungraun = { workspace = true, features = ["default"] }
 
+[[bin]]
+name = "policy"
+
+[[bin]]
+name = "policy_serde"
+required-features = ["serde"]
+
+[[bin]]
+name = "policy_facet"
+required-features = ["facet"]
+
+[[bin]]
+name = "policy_prost"
+required-features = ["prost"]
+
+[[bin]]
+name = "schema"
+
+[[bin]]
+name = "schema_serde"
+required-features = ["serde"]
+
+[[bin]]
+name = "schema_facet"
+required-features = ["facet"]
+
 [[test]]
 name = "policy_fixtures"
 harness = false

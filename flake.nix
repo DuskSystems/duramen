@@ -89,6 +89,7 @@
             # FIXME: https://nixpkgs-tracker.ocfox.me/?pr=480054
             # cargo-semver-checks
             cargo-shear
+            cargo-show-asm
             vscode-extensions.vadimcn.vscode-lldb.adapter
 
             # Build

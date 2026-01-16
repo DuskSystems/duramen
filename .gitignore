@@ -2,6 +2,13 @@
 target
 *.rs.bk
 
+# Insta
+*.pending-snap
+
+# Perf
+*.data
+*.data.*
+
 # Coverage
 codecov.json
 
