@@ -2,4 +2,4 @@
 set -euxo pipefail
 
 cargo xtask fixtures
-cargo llvm-cov --workspace --all-features --doctests --html
+cargo llvm-cov --workspace --all-features --doctests --codecov --output-path codecov.json

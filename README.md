@@ -5,6 +5,8 @@
 ![wasm: compatible](https://img.shields.io/badge/wasm-compatible-success.svg)
 ![unsafe: forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)
 
+[![codecov](https://codecov.io/gh/DuskSystems/duramen/graph/badge.svg)](https://codecov.io/gh/DuskSystems/duramen)
+
 # `duramen`
 
 A Cedar parser.
