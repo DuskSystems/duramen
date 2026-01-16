@@ -88,7 +88,7 @@
             cargo-llvm-cov
             cargo-nextest
             cargo-outdated
-            # FIXME: https://github.com/NixOS/nixpkgs/pull/480054
+            # FIXME: https://nixpkgs-tracker.ocfox.me/?pr=480054
             # cargo-semver-checks
             cargo-shear
             vscode-extensions.vadimcn.vscode-lldb.adapter
