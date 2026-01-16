@@ -11,5 +11,5 @@ typos
 zizmor --pedantic .github
 cargo deny check
 cargo hack build --workspace --feature-powerset --optional-deps
-cargo nextest run --workspace --all-features
-cargo test --workspace --doc --all-features
+cargo test --workspace --all-features
+cargo test --workspace --all-features --doc

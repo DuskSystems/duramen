@@ -60,7 +60,6 @@
             RUSTFLAGS = "-C target-cpu=native";
             RUSTDOCFLAGS = "-D warnings --html-in-header docs/arborium.html";
             CARGO_INCREMENTAL = "0";
-            INSTA_TEST_RUNNER = "nextest";
           };
 
           buildInputs = with pkgs; [
@@ -86,7 +85,6 @@
             cargo-hack
             cargo-insta
             cargo-llvm-cov
-            cargo-nextest
             cargo-outdated
             # FIXME: https://nixpkgs-tracker.ocfox.me/?pr=480054
             # cargo-semver-checks
@@ -135,7 +133,6 @@
             sccache
             cargo-deny
             cargo-hack
-            cargo-nextest
 
             # Build
             protobuf
