@@ -117,6 +117,9 @@ syntree = { version = "0.18", default-features = false }
 # SIMD
 memchr = { version = "2.7", default-features = false }
 
+# Arena
+bumpalo = { version = "3.19", default-features = false }
+
 # Serialization
 serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false }
@@ -189,6 +192,9 @@ syntree = { workspace = true, features = ["alloc"] }
 
 # SIMD
 memchr = { workspace = true }
+
+# Arena
+bumpalo = { workspace = true, features = ["collections"] }
 
 # Diagnostics
 annotate-snippets = { workspace = true, features = ["simd"] }

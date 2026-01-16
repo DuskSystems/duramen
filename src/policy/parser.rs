@@ -1,3 +1,4 @@
+use alloc::format;
 use alloc::string::ToString as _;
 use alloc::vec::Vec;
 
@@ -91,7 +92,7 @@ impl<'a> PolicyParser<'a> {
             self.bump()
         } else {
             self.diagnostics
-                .push(Diagnostic::error(alloc::format!("expected `{kind}`")));
+                .push(Diagnostic::error(format!("expected `{kind}`")));
 
             Ok(())
         }

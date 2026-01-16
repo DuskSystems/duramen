@@ -1,6 +1,4 @@
-use alloc::boxed::Box;
-use alloc::string::String;
-use alloc::vec::Vec;
+use bumpalo::collections::Vec as BumpVec;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Effect {
@@ -22,37 +20,37 @@ pub enum SlotId {
     Resource,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PatternElement {
-    Literal(String),
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PatternElement<'a> {
+    Literal(&'a str),
     Wildcard,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum PrincipalOrResourceConstraint {
+#[derive(Debug, PartialEq)]
+pub enum PrincipalOrResourceConstraint<'a> {
     Any,
-    Equal(Expression),
-    In(Expression),
+    Equal(Expression<'a>),
+    In(Expression<'a>),
     Is {
-        entity_type: String,
+        entity_type: &'a str,
     },
     IsIn {
-        entity_type: String,
-        in_entity: Expression,
+        entity_type: &'a str,
+        in_entity: Expression<'a>,
     },
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum ActionConstraint {
+#[derive(Debug, PartialEq)]
+pub enum ActionConstraint<'a> {
     Any,
-    Equal(Expression),
-    In(Vec<Expression>),
+    Equal(Expression<'a>),
+    In(BumpVec<'a, Expression<'a>>),
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Condition {
+#[derive(Debug, PartialEq)]
+pub struct Condition<'a> {
     pub kind: ConditionKind,
-    pub body: Expression,
+    pub body: Expression<'a>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -61,24 +59,24 @@ pub enum ConditionKind {
     Unless,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Policy {
+#[derive(Debug, PartialEq)]
+pub struct Policy<'a> {
     pub effect: Effect,
-    pub principal: PrincipalOrResourceConstraint,
-    pub action: ActionConstraint,
-    pub resource: PrincipalOrResourceConstraint,
-    pub conditions: Vec<Condition>,
-    pub annotations: Vec<(String, Option<String>)>,
+    pub principal: PrincipalOrResourceConstraint<'a>,
+    pub action: ActionConstraint<'a>,
+    pub resource: PrincipalOrResourceConstraint<'a>,
+    pub conditions: BumpVec<'a, Condition<'a>>,
+    pub annotations: BumpVec<'a, (&'a str, Option<&'a str>)>,
 }
 
-impl Policy {
+impl Policy<'_> {
     #[must_use]
     pub fn is_template(&self) -> bool {
         self.principal.has_slot() || self.action.has_slot() || self.resource.has_slot()
     }
 }
 
-impl PrincipalOrResourceConstraint {
+impl PrincipalOrResourceConstraint<'_> {
     #[must_use]
     pub fn has_slot(&self) -> bool {
         match self {
@@ -89,7 +87,7 @@ impl PrincipalOrResourceConstraint {
     }
 }
 
-impl ActionConstraint {
+impl ActionConstraint<'_> {
     #[must_use]
     pub fn has_slot(&self) -> bool {
         match self {
@@ -100,7 +98,7 @@ impl ActionConstraint {
     }
 }
 
-impl Expression {
+impl Expression<'_> {
     #[must_use]
     pub fn has_slot(&self) -> bool {
         match self {
@@ -152,66 +150,66 @@ impl Expression {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Expression {
+#[derive(Debug, PartialEq)]
+pub enum Expression<'a> {
     Boolean(bool),
     Integer(i64),
-    String(String),
+    String(&'a str),
     Variable(Variable),
     Slot(SlotId),
     Entity {
-        entity_type: String,
-        id: String,
+        entity_type: &'a str,
+        id: &'a str,
     },
-    Set(Vec<Self>),
-    Record(Vec<(String, Self)>),
-    Not(Box<Self>),
-    Negate(Box<Self>),
-    Or(Box<Self>, Box<Self>),
-    And(Box<Self>, Box<Self>),
-    Equal(Box<Self>, Box<Self>),
-    NotEqual(Box<Self>, Box<Self>),
-    LessThan(Box<Self>, Box<Self>),
-    LessThanOrEqual(Box<Self>, Box<Self>),
-    GreaterThan(Box<Self>, Box<Self>),
-    GreaterThanOrEqual(Box<Self>, Box<Self>),
-    In(Box<Self>, Box<Self>),
-    Add(Box<Self>, Box<Self>),
-    Subtract(Box<Self>, Box<Self>),
-    Multiply(Box<Self>, Box<Self>),
+    Set(BumpVec<'a, Self>),
+    Record(BumpVec<'a, (&'a str, Self)>),
+    Not(&'a Self),
+    Negate(&'a Self),
+    Or(&'a Self, &'a Self),
+    And(&'a Self, &'a Self),
+    Equal(&'a Self, &'a Self),
+    NotEqual(&'a Self, &'a Self),
+    LessThan(&'a Self, &'a Self),
+    LessThanOrEqual(&'a Self, &'a Self),
+    GreaterThan(&'a Self, &'a Self),
+    GreaterThanOrEqual(&'a Self, &'a Self),
+    In(&'a Self, &'a Self),
+    Add(&'a Self, &'a Self),
+    Subtract(&'a Self, &'a Self),
+    Multiply(&'a Self, &'a Self),
     GetAttribute {
-        expression: Box<Self>,
-        attribute: String,
+        expression: &'a Self,
+        attribute: &'a str,
     },
     HasAttribute {
-        expression: Box<Self>,
-        attribute: String,
+        expression: &'a Self,
+        attribute: &'a str,
     },
     Index {
-        expression: Box<Self>,
-        index: Box<Self>,
+        expression: &'a Self,
+        index: &'a Self,
     },
     Like {
-        expression: Box<Self>,
-        pattern: Vec<PatternElement>,
+        expression: &'a Self,
+        pattern: BumpVec<'a, PatternElement<'a>>,
     },
     Is {
-        expression: Box<Self>,
-        entity_type: String,
-        in_expression: Option<Box<Self>>,
+        expression: &'a Self,
+        entity_type: &'a str,
+        in_expression: Option<&'a Self>,
     },
     If {
-        condition: Box<Self>,
-        then_expression: Box<Self>,
-        else_expression: Box<Self>,
+        condition: &'a Self,
+        then_expression: &'a Self,
+        else_expression: &'a Self,
     },
     MethodCall {
-        receiver: Box<Self>,
-        method: String,
-        arguments: Vec<Self>,
+        receiver: &'a Self,
+        method: &'a str,
+        arguments: BumpVec<'a, Self>,
     },
     ExtensionCall {
-        name: String,
-        arguments: Vec<Self>,
+        name: &'a str,
+        arguments: BumpVec<'a, Self>,
     },
 }

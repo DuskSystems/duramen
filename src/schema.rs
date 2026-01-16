@@ -4,10 +4,14 @@
     expect(clippy::todo, reason = "WIP")
 )]
 
+#[cfg(any(feature = "serde", feature = "facet"))]
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::error::Error;
 use core::fmt;
 
+#[cfg(any(feature = "serde", feature = "facet"))]
+use bumpalo::Bump;
 use syntree::{FlavorDefault, Tree};
 
 use crate::diagnostics::Diagnostic;
@@ -104,7 +108,7 @@ impl<'a> Schema<'a> {
     }
 
     #[cfg(feature = "serde")]
-    pub fn to_serde_json(&self) -> Result<alloc::string::String, SchemaErrors> {
+    pub fn to_serde_json(&self) -> Result<String, SchemaErrors> {
         let json = self.to_schema_fragment_json();
         serde_json::to_string(&json).map_err(|_err| SchemaErrors)
     }
@@ -115,7 +119,7 @@ impl<'a> Schema<'a> {
     }
 
     #[cfg(feature = "facet")]
-    pub fn to_facet_json(&self) -> Result<alloc::string::String, SchemaErrors> {
+    pub fn to_facet_json(&self) -> Result<String, SchemaErrors> {
         let json = self.to_schema_fragment_json();
         facet_json::to_string(&json).map_err(|_err| SchemaErrors)
     }
@@ -129,7 +133,8 @@ impl<'a> Schema<'a> {
 
     #[cfg(any(feature = "serde", feature = "facet"))]
     fn to_schema_fragment_json(&self) -> est::json::SchemaFragmentJson {
-        let fragment = est::convert_schema(self);
+        let bump = Bump::new();
+        let fragment = est::convert_schema(&bump, self);
         est::json::convert_to_json(&fragment)
     }
 }

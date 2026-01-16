@@ -13,4 +13,4 @@ pub mod proto;
 #[cfg(feature = "prost")]
 pub use proto::policies_to_proto;
 
-mod types;
+pub mod types;
