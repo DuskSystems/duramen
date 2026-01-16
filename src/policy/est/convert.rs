@@ -3,16 +3,16 @@ use alloc::vec::Vec;
 
 use bumpalo::Bump;
 use bumpalo::collections::Vec as BumpVec;
-use memchr::memchr;
 
 use super::error::ConvertError;
 use super::types as est;
+use crate::escape::LazyEscape;
 use crate::policy::ast::{self, AstToken as _, BinaryOperator, UnaryOperator};
 
 pub fn convert_policies<'a>(
     bump: &'a Bump,
     policies: &ast::Policies<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<BumpVec<'a, est::Policy<'a>>, ConvertError> {
     let mut result = BumpVec::new_in(bump);
     for policy in policies.policies() {
@@ -25,7 +25,7 @@ pub fn convert_policies<'a>(
 fn convert_policy<'a>(
     bump: &'a Bump,
     policy: &ast::Policy<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Policy<'a>, ConvertError> {
     let effect = match policy.effect() {
         Some(ast::Effect::Permit) => est::Effect::Permit,
@@ -78,7 +78,7 @@ fn convert_policy<'a>(
         let name: &str = bump.alloc_str(name_token.text(source));
         let value = annotation
             .value()
-            .map(|value| unescape_string_content(bump, value.text(source)));
+            .map(|value| LazyEscape::new(value.text(source)));
 
         annotations.push((name, value));
     }
@@ -96,7 +96,7 @@ fn convert_policy<'a>(
 fn convert_principal_or_resource_constraint<'a>(
     bump: &'a Bump,
     variable_def: &ast::VariableDefinition<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::PrincipalOrResourceConstraint<'a>, ConvertError> {
     if variable_def.has_is_constraint() {
         let entity_type_name = variable_def
@@ -144,7 +144,7 @@ fn convert_principal_or_resource_constraint<'a>(
 fn convert_is_constraint<'a>(
     bump: &'a Bump,
     is_expression: &ast::IsExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::PrincipalOrResourceConstraint<'a>, ConvertError> {
     let entity_type_name = is_expression
         .entity_type()
@@ -166,7 +166,7 @@ fn convert_is_constraint<'a>(
 fn convert_action_constraint<'a>(
     bump: &'a Bump,
     variable_def: &ast::VariableDefinition<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::ActionConstraint<'a>, ConvertError> {
     let Some(constraint) = variable_def.constraint() else {
         return Ok(est::ActionConstraint::Any);
@@ -201,7 +201,7 @@ fn convert_action_constraint<'a>(
     }
 }
 
-fn build_type_name<'a>(bump: &'a Bump, name: &ast::Name<'_>, source: &str) -> &'a str {
+fn build_type_name<'a>(bump: &'a Bump, name: &ast::Name<'_>, source: &'a str) -> &'a str {
     let segments: Vec<&str> = name.segments().map(|seg| seg.text(source)).collect();
     if let [single] = segments.as_slice() {
         return bump.alloc_str(single);
@@ -214,10 +214,10 @@ fn build_type_name<'a>(bump: &'a Bump, name: &ast::Name<'_>, source: &str) -> &'
 fn convert_expression<'a>(
     bump: &'a Bump,
     expression: &ast::Expression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     match expression {
-        ast::Expression::Literal(literal) => convert_literal(bump, literal, source),
+        ast::Expression::Literal(literal) => convert_literal(literal, source),
         ast::Expression::EntityRef(entity) => convert_entity_ref(bump, entity, source),
         ast::Expression::Slot(slot) => convert_slot(slot, source),
         ast::Expression::Paren(paren) => {
@@ -268,9 +268,8 @@ fn convert_expression<'a>(
 }
 
 fn convert_literal<'a>(
-    bump: &'a Bump,
     literal: &ast::LiteralExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     if let Some(bool_val) = literal.as_bool() {
         return Ok(est::Expression::Boolean(bool_val));
@@ -284,8 +283,7 @@ fn convert_literal<'a>(
 
     if let Some(str_token) = literal.as_string() {
         let text = str_token.text(source);
-        let value = unescape_string_content(bump, text);
-        return Ok(est::Expression::String(value));
+        return Ok(est::Expression::String(LazyEscape::new(text)));
     }
 
     Err(ConvertError::MissingNode("literal value"))
@@ -294,7 +292,7 @@ fn convert_literal<'a>(
 fn convert_entity_ref<'a>(
     bump: &'a Bump,
     entity: &ast::EntityRefExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let entity_type = entity
         .entity_type()
@@ -305,11 +303,10 @@ fn convert_entity_ref<'a>(
         .ok_or(ConvertError::MissingNode("entity id"))?;
 
     let type_str = build_type_name(bump, &entity_type, source);
-    let id_str = unescape_string_content(bump, id.text(source));
 
     Ok(est::Expression::Entity {
         entity_type: type_str,
-        id: id_str,
+        id: LazyEscape::new(id.text(source)),
     })
 }
 
@@ -332,7 +329,7 @@ fn convert_slot(
 fn convert_unary<'a>(
     bump: &'a Bump,
     unary: &ast::UnaryExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let operator = unary
         .operator()
@@ -373,7 +370,7 @@ fn convert_unary<'a>(
 fn convert_binary<'a>(
     bump: &'a Bump,
     binary: &ast::BinaryExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let operator = binary
         .operator()
@@ -413,7 +410,7 @@ fn convert_binary<'a>(
 fn convert_has<'a>(
     bump: &'a Bump,
     has: &ast::HasExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let target = has
         .target()
@@ -474,7 +471,7 @@ fn convert_has<'a>(
 fn convert_like<'a>(
     bump: &'a Bump,
     like: &ast::LikeExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let target = like
         .target()
@@ -497,7 +494,7 @@ fn convert_like<'a>(
 fn convert_is<'a>(
     bump: &'a Bump,
     is_expr: &ast::IsExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let target = is_expr
         .target()
@@ -526,7 +523,7 @@ fn convert_is<'a>(
 fn convert_if<'a>(
     bump: &'a Bump,
     if_expression: &ast::IfExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let cond = if_expression
         .condition()
@@ -550,7 +547,7 @@ fn convert_if<'a>(
 fn convert_field<'a>(
     bump: &'a Bump,
     field: &ast::FieldExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let receiver = field
         .receiver()
@@ -572,7 +569,7 @@ fn convert_field<'a>(
 fn convert_method_call<'a>(
     bump: &'a Bump,
     method_call: &ast::MethodCallExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let receiver = method_call
         .receiver()
@@ -600,7 +597,7 @@ fn convert_method_call<'a>(
 fn convert_index<'a>(
     bump: &'a Bump,
     index_expression: &ast::IndexExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let receiver = index_expression
         .receiver()
@@ -612,7 +609,7 @@ fn convert_index<'a>(
         if let ast::Expression::Literal(literal) = &index_value
             && let Some(string_token) = literal.as_string()
         {
-            let attribute = unescape_string_content(bump, string_token.text(source));
+            let attribute = LazyEscape::new(string_token.text(source)).unescape_in(bump);
             return Ok(est::Expression::GetAttribute {
                 expression: bump.alloc(receiver_expression),
                 attribute,
@@ -627,7 +624,7 @@ fn convert_index<'a>(
     }
 
     if let Some(string_token) = index_expression.index_string() {
-        let attribute = unescape_string_content(bump, string_token.text(source));
+        let attribute = LazyEscape::new(string_token.text(source)).unescape_in(bump);
         return Ok(est::Expression::GetAttribute {
             expression: bump.alloc(receiver_expression),
             attribute,
@@ -640,7 +637,7 @@ fn convert_index<'a>(
 fn convert_function_call<'a>(
     bump: &'a Bump,
     function_call: &ast::FunctionCallExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     let name_node = function_call
         .name()
@@ -659,7 +656,7 @@ fn convert_function_call<'a>(
 fn convert_path<'a>(
     bump: &'a Bump,
     path: &ast::PathExpression<'_>,
-    source: &str,
+    source: &'a str,
 ) -> Result<est::Expression<'a>, ConvertError> {
     if let Some(variable) = path.as_variable(source) {
         let est_variable = match variable {
@@ -681,10 +678,10 @@ fn convert_path<'a>(
     })
 }
 
-fn extract_attr_key<'a>(bump: &'a Bump, key: ast::AttrKey<'_>, source: &str) -> &'a str {
+fn extract_attr_key<'a>(bump: &'a Bump, key: ast::AttrKey<'_>, source: &'a str) -> &'a str {
     match key {
         ast::AttrKey::Identifier(identifier) => bump.alloc_str(identifier.text(source)),
-        ast::AttrKey::String(string) => unescape_string_content(bump, string.text(source)),
+        ast::AttrKey::String(string) => LazyEscape::new(string.text(source)).unescape_in(bump),
     }
 }
 
@@ -693,135 +690,14 @@ fn parse_integer(text: &str) -> Result<i64, ConvertError> {
         .map_err(|_parse_error| ConvertError::IntegerOverflow)
 }
 
-fn unescape_string_content<'a>(bump: &'a Bump, text: &str) -> &'a str {
-    let inner = if text.len() >= 2 && text.starts_with('"') && text.ends_with('"') {
-        &text[1..text.len().saturating_sub(1)]
-    } else {
-        text
-    };
-
-    if !has_escapes(inner) {
-        return bump.alloc_str(inner);
-    }
-
-    let unescaped = unescape_string_slow(inner);
-    bump.alloc_str(&unescaped)
-}
-
-#[inline]
-fn has_escapes(string: &str) -> bool {
-    memchr(b'\\', string.as_bytes()).is_some()
-}
-
-fn unescape_string_slow(string: &str) -> String {
-    let mut result = String::with_capacity(string.len());
-    let bytes = string.as_bytes();
-    let mut index = 0;
-
-    while index < bytes.len() {
-        let Some(slice) = bytes.get(index..) else {
-            break;
-        };
-
-        if let Some(position) = memchr(b'\\', slice) {
-            if position > 0
-                && let Some(chunk) = string.get(index..index.saturating_add(position))
-            {
-                result.push_str(chunk);
-            }
-
-            index = index.saturating_add(position).saturating_add(1);
-
-            let Some(&escape_byte) = bytes.get(index) else {
-                result.push('\\');
-                break;
-            };
-
-            index = index.saturating_add(1);
-
-            match escape_byte {
-                b'n' => result.push('\n'),
-                b'r' => result.push('\r'),
-                b't' => result.push('\t'),
-                b'"' => result.push('"'),
-                b'\'' => result.push('\''),
-                b'0' => result.push('\0'),
-                b'\\' => result.push('\\'),
-                b'*' => result.push('*'),
-                b'x' => {
-                    if let (Some(&hex_1), Some(&hex_2)) =
-                        (bytes.get(index), bytes.get(index.saturating_add(1)))
-                        && hex_1.is_ascii_hexdigit()
-                        && hex_2.is_ascii_hexdigit()
-                        && let Some(hex_str) = string.get(index..index.saturating_add(2))
-                        && let Ok(number) = u8::from_str_radix(hex_str, 16)
-                    {
-                        result.push(number as char);
-                        index = index.saturating_add(2);
-                        continue;
-                    }
-
-                    result.push('\\');
-                    result.push('x');
-                }
-                b'u' => {
-                    if bytes.get(index) == Some(&b'{') {
-                        index = index.saturating_add(1);
-
-                        let start = index;
-                        while let Some(&byte) = bytes.get(index) {
-                            if byte == b'}' || !byte.is_ascii_hexdigit() {
-                                break;
-                            }
-                            index = index.saturating_add(1);
-                        }
-
-                        if let Some(hex_str) = string.get(start..index)
-                            && let Ok(number) = u32::from_str_radix(hex_str, 16)
-                            && let Some(character) = char::from_u32(number)
-                        {
-                            result.push(character);
-                            if bytes.get(index) == Some(&b'}') {
-                                index = index.saturating_add(1);
-                            }
-                            continue;
-                        }
-
-                        result.push_str("\\u{");
-                    } else {
-                        result.push('\\');
-                        result.push('u');
-                    }
-                }
-
-                character => {
-                    result.push('\\');
-                    result.push(character as char);
-                }
-            }
-        } else {
-            if let Some(rest) = string.get(index..) {
-                result.push_str(rest);
-            }
-
-            break;
-        }
-    }
-
-    result
-}
-
 /// Allocate a single char as a &str in the bump arena.
 fn alloc_char(bump: &Bump, ch: char) -> &str {
     bump.alloc_str(ch.encode_utf8(&mut [0; 4]))
 }
 
 fn parse_pattern<'a>(bump: &'a Bump, text: &str) -> BumpVec<'a, est::PatternElement<'a>> {
-    let inner = if text.len() >= 2 && text.starts_with('"') && text.ends_with('"') {
-        &text[1..text.len().saturating_sub(1)]
-    } else {
-        text
-    };
+    let inner = LazyEscape::new(text);
+    let inner = inner.inner();
 
     let mut result = BumpVec::new_in(bump);
     let mut chars = inner.chars().peekable();

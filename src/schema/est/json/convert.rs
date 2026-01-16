@@ -41,7 +41,7 @@ fn convert_namespace_def(def: &NamespaceDefinition<'_>) -> NamespaceDefinitionJs
         annotations: def
             .annotations
             .iter()
-            .map(|(key, value)| ((*key).to_owned(), (*value).to_owned()))
+            .map(|(key, value)| ((*key).to_owned(), value.unescape().into_owned()))
             .collect(),
     }
 }
@@ -59,11 +59,11 @@ fn convert_entity_type(entity: &EntityType<'_>) -> EntityTypeJson {
         enum_values: entity
             .enum_values
             .as_ref()
-            .map(|values| values.iter().map(|v| (*v).to_owned()).collect()),
+            .map(|values| values.iter().map(|v| v.unescape().into_owned()).collect()),
         annotations: entity
             .annotations
             .iter()
-            .map(|(key, value)| ((*key).to_owned(), (*value).to_owned()))
+            .map(|(key, value)| ((*key).to_owned(), value.unescape().into_owned()))
             .collect(),
         member_of_types: entity
             .member_of_types
@@ -81,7 +81,7 @@ fn convert_action_type(action: &ActionType<'_>) -> ActionTypeJson {
         annotations: action
             .annotations
             .iter()
-            .map(|(key, value)| ((*key).to_owned(), (*value).to_owned()))
+            .map(|(key, value)| ((*key).to_owned(), value.unescape().into_owned()))
             .collect(),
         member_of: action.member_of.iter().map(convert_action_ref).collect(),
     }
@@ -123,7 +123,7 @@ fn convert_context_type_def(type_def: &TypeDef<'_>) -> TypeDefJson {
             name: String::new(),
             annotations: annotations
                 .iter()
-                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .map(|(k, v)| ((*k).to_owned(), v.unescape().into_owned()))
                 .collect(),
             required: *required,
         }),
@@ -149,7 +149,7 @@ fn convert_type_def(type_def: &TypeDef<'_>) -> TypeDefJson {
             name: (*name).to_owned(),
             annotations: annotations
                 .iter()
-                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .map(|(k, v)| ((*k).to_owned(), v.unescape().into_owned()))
                 .collect(),
             required: *required,
         }),
@@ -162,7 +162,7 @@ fn convert_type_def(type_def: &TypeDef<'_>) -> TypeDefJson {
             element: Box::new(convert_type_def(element)),
             annotations: annotations
                 .iter()
-                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .map(|(k, v)| ((*k).to_owned(), v.unescape().into_owned()))
                 .collect(),
             required: *required,
         }),
@@ -175,7 +175,7 @@ fn convert_type_def(type_def: &TypeDef<'_>) -> TypeDefJson {
             attributes: convert_attributes(&record.attributes),
             annotations: annotations
                 .iter()
-                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .map(|(k, v)| ((*k).to_owned(), v.unescape().into_owned()))
                 .collect(),
             required: *required,
         }),
