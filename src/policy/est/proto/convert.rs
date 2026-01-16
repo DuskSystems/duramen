@@ -83,7 +83,9 @@ fn policy_to_template_body(id: &str, policy: &est::Policy<'_>) -> proto::Templat
         .map(|(key, value)| {
             (
                 (*key).to_owned(),
-                value.map_or(String::new(), str::to_owned),
+                value
+                    .as_ref()
+                    .map_or(String::new(), |lazy| lazy.unescape().into_owned()),
             )
         })
         .collect();
@@ -204,7 +206,7 @@ fn expression_to_entity_reference(expr: &est::Expression<'_>) -> proto::EntityRe
         est::Expression::Entity { entity_type, id } => {
             proto::entity_reference::Data::Euid(proto::EntityUid {
                 ty: Some(parse_name(entity_type)),
-                eid: (*id).to_owned(),
+                eid: id.unescape().into_owned(),
             })
         }
         _ => proto::entity_reference::Data::Euid(proto::EntityUid {
@@ -223,7 +225,7 @@ fn expression_to_entity_uid(expr: &est::Expression<'_>) -> Option<proto::EntityU
     match expr {
         est::Expression::Entity { entity_type, id } => Some(proto::EntityUid {
             ty: Some(parse_name(entity_type)),
-            eid: (*id).to_owned(),
+            eid: id.unescape().into_owned(),
         }),
         _ => None,
     }
@@ -261,13 +263,13 @@ fn expression_to_proto(expr: &est::Expression<'_>) -> proto::Expr {
             lit: Some(proto::expr::literal::Lit::I(*value)),
         }),
         est::Expression::String(value) => proto::expr::ExprKind::Lit(proto::expr::Literal {
-            lit: Some(proto::expr::literal::Lit::S((*value).to_owned())),
+            lit: Some(proto::expr::literal::Lit::S(value.unescape().into_owned())),
         }),
         est::Expression::Entity { entity_type, id } => {
             proto::expr::ExprKind::Lit(proto::expr::Literal {
                 lit: Some(proto::expr::literal::Lit::Euid(proto::EntityUid {
                     ty: Some(parse_name(entity_type)),
-                    eid: (*id).to_owned(),
+                    eid: id.unescape().into_owned(),
                 })),
             })
         }

@@ -44,7 +44,12 @@ fn policy_to_json(policy: &est::Policy<'_>) -> json::PolicyJson {
             policy
                 .annotations
                 .iter()
-                .map(|(name, value)| ((*name).to_owned(), value.map(str::to_owned)))
+                .map(|(name, value)| {
+                    (
+                        (*name).to_owned(),
+                        value.as_ref().map(|lazy| lazy.unescape().into_owned()),
+                    )
+                })
                 .collect(),
         )
     };
@@ -140,7 +145,7 @@ fn expression_to_entity(expression: &est::Expression<'_>) -> json::EntityUidJson
     match expression {
         est::Expression::Entity { entity_type, id } => json::EntityUidJson {
             entity_type: (*entity_type).to_owned(),
-            id: (*id).to_owned(),
+            id: id.unescape().into_owned(),
         },
         _ => json::EntityUidJson {
             entity_type: String::from("Unknown"),
@@ -168,7 +173,7 @@ fn expression_to_json(expression: &est::Expression<'_>) -> json::ExpressionJson 
             value: json::ValueJson::Int(*value),
         }),
         est::Expression::String(value) => json::ExpressionJson::Value(json::ExpressionValueJson {
-            value: json::ValueJson::String((*value).to_owned()),
+            value: json::ValueJson::String(value.unescape().into_owned()),
         }),
         est::Expression::Variable(variable) => {
             json::ExpressionJson::Variable(json::ExpressionVariableJson {
@@ -191,7 +196,7 @@ fn expression_to_json(expression: &est::Expression<'_>) -> json::ExpressionJson 
                 value: json::ValueJson::Entity(json::EntityValueJson {
                     entity: json::EntityUidJson {
                         entity_type: (*entity_type).to_owned(),
-                        id: (*id).to_owned(),
+                        id: id.unescape().into_owned(),
                     },
                 }),
             })

@@ -1,5 +1,7 @@
 use bumpalo::collections::Vec as BumpVec;
 
+use crate::escape::LazyEscape;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Effect {
     Permit,
@@ -66,7 +68,7 @@ pub struct Policy<'a> {
     pub action: ActionConstraint<'a>,
     pub resource: PrincipalOrResourceConstraint<'a>,
     pub conditions: BumpVec<'a, Condition<'a>>,
-    pub annotations: BumpVec<'a, (&'a str, Option<&'a str>)>,
+    pub annotations: BumpVec<'a, (&'a str, Option<LazyEscape<'a>>)>,
 }
 
 impl Policy<'_> {
@@ -154,12 +156,12 @@ impl Expression<'_> {
 pub enum Expression<'a> {
     Boolean(bool),
     Integer(i64),
-    String(&'a str),
+    String(LazyEscape<'a>),
     Variable(Variable),
     Slot(SlotId),
     Entity {
         entity_type: &'a str,
-        id: &'a str,
+        id: LazyEscape<'a>,
     },
     Set(BumpVec<'a, Self>),
     Record(BumpVec<'a, (&'a str, Self)>),

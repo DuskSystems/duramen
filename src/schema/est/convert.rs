@@ -9,6 +9,7 @@ use super::types::{
     ActionRef, ActionType, AppliesTo, EntityType, NamespaceDefinition, RecordType, SchemaFragment,
     TypeDef,
 };
+use crate::escape::LazyEscape;
 use crate::schema::ast::{
     self, ActionDeclaration, AstNode as _, AstToken as _, EntityDeclaration, Namespace, SchemaNode,
     TypeDeclaration, TypeExpr,
@@ -16,7 +17,7 @@ use crate::schema::ast::{
 use crate::schema::{Schema, SchemaSyntax};
 
 #[must_use]
-pub fn convert_schema<'a>(bump: &'a Bump, schema: &Schema<'_>) -> SchemaFragment<'a> {
+pub fn convert_schema<'a>(bump: &'a Bump, schema: &Schema<'a>) -> SchemaFragment<'a> {
     let mut result = SchemaFragment::new();
     let source = schema.source();
 
@@ -68,7 +69,7 @@ pub fn convert_schema<'a>(bump: &'a Bump, schema: &Schema<'_>) -> SchemaFragment
     result
 }
 
-fn namespace_name<'a>(bump: &'a Bump, source: &str, namespace: &Namespace<'_>) -> &'a str {
+fn namespace_name<'a>(bump: &'a Bump, source: &'a str, namespace: &Namespace<'_>) -> &'a str {
     namespace
         .name()
         .map_or("", |name| name_to_str(bump, source, &name))
@@ -76,7 +77,7 @@ fn namespace_name<'a>(bump: &'a Bump, source: &str, namespace: &Namespace<'_>) -
 
 fn convert_node_children<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     node: &SchemaNode<'_>,
     namespace_path: &'a str,
 ) -> NamespaceDefinition<'a> {
@@ -101,7 +102,7 @@ fn convert_node_children<'a>(
                     for (name, mut entity_type) in convert_entity_declaration(bump, source, &entity)
                     {
                         for (key, value) in &annotations {
-                            entity_type.annotations.insert(*key, *value);
+                            entity_type.annotations.insert(*key, value.clone());
                         }
 
                         def.entity_types.insert(name, entity_type);
@@ -120,7 +121,7 @@ fn convert_node_children<'a>(
                         convert_action_declaration(bump, source, &action, namespace_path)
                     {
                         for (key, value) in &annotations {
-                            action_type.annotations.insert(*key, *value);
+                            action_type.annotations.insert(*key, value.clone());
                         }
 
                         def.actions.insert(name, action_type);
@@ -146,7 +147,7 @@ fn convert_node_children<'a>(
 
 fn convert_entity_declaration<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     entity: &EntityDeclaration<'_>,
 ) -> Vec<(&'a str, EntityType<'a>)> {
     let names: Vec<&'a str> = extract_declaration_names(bump, source, entity.syntax());
@@ -177,12 +178,12 @@ fn convert_entity_declaration<'a>(
         .and_then(|tags| tags.tag_type())
         .map(|type_expr| convert_type_expr(bump, source, &type_expr, true, BTreeMap::new()));
 
-    let enum_variant_names: Vec<&'a str> = entity
+    let enum_variant_names: Vec<LazyEscape<'a>> = entity
         .enum_type()
         .map(|enum_type| {
             enum_type
                 .variants()
-                .map(|variant| unescape_str(bump, variant.text(source)))
+                .map(|variant| LazyEscape::new(variant.text(source)))
                 .collect()
         })
         .unwrap_or_default();
@@ -197,7 +198,7 @@ fn convert_entity_declaration<'a>(
                 None
             } else {
                 let mut values = BumpVec::new_in(bump);
-                values.extend(enum_variant_names.iter().copied());
+                values.extend(enum_variant_names.iter().cloned());
                 Some(values)
             };
 
@@ -216,7 +217,7 @@ fn convert_entity_declaration<'a>(
 
 fn convert_action_declaration<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     action: &ActionDeclaration<'_>,
     namespace_path: &'a str,
 ) -> Vec<(&'a str, ActionType<'a>)> {
@@ -298,7 +299,7 @@ fn convert_action_declaration<'a>(
 
 fn convert_type_declaration<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     type_decl: &TypeDeclaration<'_>,
 ) -> Option<(&'a str, TypeDef<'a>)> {
     let name = bump.alloc_str(type_decl.name()?.text(source));
@@ -309,10 +310,10 @@ fn convert_type_declaration<'a>(
 
 fn convert_type_expr<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     type_expr: &TypeExpr<'_>,
     required: bool,
-    annotations: BTreeMap<&'a str, &'a str>,
+    annotations: BTreeMap<&'a str, LazyEscape<'a>>,
 ) -> TypeDef<'a> {
     match type_expr {
         TypeExpr::Name(name) => TypeDef::EntityOrCommon {
@@ -352,7 +353,7 @@ fn convert_type_expr<'a>(
 
 fn convert_record_type<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     record: &ast::RecordType<'_>,
 ) -> RecordType<'a> {
     let mut attributes = BTreeMap::new();
@@ -376,7 +377,9 @@ fn convert_record_type<'a>(
                     if let Some(key) = attr.name() {
                         let key_str = match key {
                             ast::AttrKey::Identifier(ident) => bump.alloc_str(ident.text(source)),
-                            ast::AttrKey::String(string) => unescape_str(bump, string.text(source)),
+                            ast::AttrKey::String(string) => {
+                                LazyEscape::new(string.text(source)).unescape_in(bump)
+                            }
                             ast::AttrKey::Keyword(node) => {
                                 bump.alloc_str(&source[node.span().range()])
                             }
@@ -400,9 +403,9 @@ fn convert_record_type<'a>(
 
 fn collect_annotations<'a, 'b>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     annotations: impl Iterator<Item = ast::Annotation<'b>>,
-) -> BTreeMap<&'a str, &'a str> {
+) -> BTreeMap<&'a str, LazyEscape<'a>> {
     let mut result = BTreeMap::new();
 
     for annotation in annotations {
@@ -417,9 +420,9 @@ fn collect_annotations<'a, 'b>(
 
         if let Some(key) = name_text {
             let key: &'a str = bump.alloc_str(key);
-            let value: &'a str = annotation
-                .value()
-                .map_or("", |value| unescape_str(bump, value.text(source)));
+            let value = annotation.value().map_or_else(LazyEscape::empty, |value| {
+                LazyEscape::new(value.text(source))
+            });
 
             result.insert(key, value);
         }
@@ -428,7 +431,7 @@ fn collect_annotations<'a, 'b>(
     result
 }
 
-fn name_to_str<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> &'a str {
+fn name_to_str<'a>(bump: &'a Bump, source: &'a str, name: &ast::Name<'_>) -> &'a str {
     let node = name.syntax();
     let mut parts: Vec<&str> = Vec::new();
 
@@ -455,14 +458,14 @@ fn name_to_str<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> &'a st
 
 fn qualify_entity_name<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     name: &ast::Name<'_>,
     _namespace_path: &str,
 ) -> &'a str {
     name_to_str(bump, source, name)
 }
 
-fn parse_action_ref<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> ActionRef<'a> {
+fn parse_action_ref<'a>(bump: &'a Bump, source: &'a str, name: &ast::Name<'_>) -> ActionRef<'a> {
     let node = name.syntax();
 
     let mut identifiers: Vec<&str> = Vec::new();
@@ -474,7 +477,7 @@ fn parse_action_ref<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> A
                 identifiers.push(&source[child.span().range()]);
             }
             SchemaSyntax::String => {
-                action_id = Some(unescape_str(bump, &source[child.span().range()]));
+                action_id = Some(LazyEscape::new(&source[child.span().range()]).unescape_in(bump));
             }
             _ => {}
         }
@@ -498,79 +501,9 @@ fn parse_action_ref<'a>(bump: &'a Bump, source: &str, name: &ast::Name<'_>) -> A
     }
 }
 
-fn strip_quotes(text: &str) -> Option<&str> {
-    if let Some(inner) = text.strip_prefix('"') {
-        return inner.strip_suffix('"');
-    }
-
-    if let Some(inner) = text.strip_prefix('\'') {
-        return inner.strip_suffix('\'');
-    }
-
-    None
-}
-
-fn unescape_str<'a>(bump: &'a Bump, text: &str) -> &'a str {
-    let inner = strip_quotes(text).unwrap_or(text);
-    if !inner.contains('\\') {
-        let result: &'a str = bump.alloc_str(inner);
-        return result;
-    }
-
-    let mut result = String::with_capacity(inner.len());
-    let mut chars = inner.chars().peekable();
-
-    while let Some(char) = chars.next() {
-        if char == '\\' {
-            match chars.next() {
-                Some('n') => result.push('\n'),
-                Some('r') => result.push('\r'),
-                Some('t') => result.push('\t'),
-                Some('\\') | None => result.push('\\'),
-                Some('"') => result.push('"'),
-                Some('\'') => result.push('\''),
-                Some('0') => result.push('\0'),
-                Some('u') => {
-                    if chars.peek() == Some(&'{') {
-                        chars.next();
-
-                        let mut hex = String::new();
-                        while let Some(&digit) = chars.peek() {
-                            if digit == '}' {
-                                chars.next();
-                                break;
-                            }
-                            hex.push(digit);
-                            chars.next();
-                        }
-
-                        if let Ok(code) = u32::from_str_radix(&hex, 16)
-                            && let Some(unicode_char) = char::from_u32(code)
-                        {
-                            result.push(unicode_char);
-                        }
-                    } else {
-                        result.push('\\');
-                        result.push('u');
-                    }
-                }
-                Some(other) => {
-                    result.push('\\');
-                    result.push(other);
-                }
-            }
-        } else {
-            result.push(char);
-        }
-    }
-
-    let str_ref: &'a str = bump.alloc_str(&result);
-    str_ref
-}
-
 fn extract_declaration_names<'a>(
     bump: &'a Bump,
-    source: &str,
+    source: &'a str,
     node: &SchemaNode<'_>,
 ) -> Vec<&'a str> {
     node.children()
@@ -579,7 +512,9 @@ fn extract_declaration_names<'a>(
                 let str_ref: &'a str = bump.alloc_str(&source[child.span().range()]);
                 Some(str_ref)
             }
-            SchemaSyntax::String => Some(unescape_str(bump, &source[child.span().range()])),
+            SchemaSyntax::String => {
+                Some(LazyEscape::new(&source[child.span().range()]).unescape_in(bump))
+            }
             _ => None,
         })
         .collect()
