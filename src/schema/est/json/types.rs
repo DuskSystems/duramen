@@ -117,10 +117,6 @@ pub struct ActionRefJson {
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
-#[cfg_attr(
-    all(feature = "facet", not(feature = "serde")),
-    expect(dead_code, reason = "fields used by facet via reflection")
-)]
 pub enum TypeDefJson {
     EntityOrCommon(EntityOrCommonJson),
     Set(SetTypeJson),

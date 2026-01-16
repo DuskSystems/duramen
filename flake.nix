@@ -155,6 +155,7 @@
           env = {
             # Rust
             RUSTC_WRAPPER = "sccache";
+            RUSTDOCFLAGS = "-D warnings --html-in-header docs/arborium.html";
             CARGO_INCREMENTAL = "0";
           };
 

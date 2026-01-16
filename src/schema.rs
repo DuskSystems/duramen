@@ -1,4 +1,8 @@
-#![expect(clippy::todo, clippy::missing_errors_doc, reason = "WIP")]
+#![expect(clippy::missing_errors_doc, reason = "WIP")]
+#![cfg_attr(
+    any(feature = "serde", feature = "facet"),
+    expect(clippy::todo, reason = "WIP")
+)]
 
 use alloc::vec::Vec;
 use core::error::Error;

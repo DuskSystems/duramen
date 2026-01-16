@@ -137,10 +137,6 @@ pub struct ConditionJson {
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
-#[cfg_attr(
-    all(feature = "facet", not(feature = "serde")),
-    expect(dead_code, reason = "fields used by facet via reflection")
-)]
 pub enum ExpressionJson {
     Value(ExpressionValueJson),
     Variable(ExpressionVariableJson),
@@ -186,10 +182,6 @@ json_struct!(ExpressionValueJson { value: ValueJson => "Value" });
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
-#[cfg_attr(
-    all(feature = "facet", not(feature = "serde")),
-    expect(dead_code, reason = "fields used by facet via reflection")
-)]
 pub enum ValueJson {
     Bool(bool),
     Int(i64),
@@ -283,10 +275,6 @@ pub struct LikeArgumentJson {
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[cfg_attr(feature = "facet", facet(untagged))]
 #[repr(u8)]
-#[cfg_attr(
-    all(feature = "facet", not(feature = "serde")),
-    expect(dead_code, reason = "fields used by facet via reflection")
-)]
 pub enum PatternElementJson {
     Wildcard(String),
     Literal(PatternLiteralJson),
