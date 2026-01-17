@@ -24,7 +24,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 
 ### Policy
 
-#### decimal_1
+#### [decimal_1](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/decimal/policies_1.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -36,7 +36,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    40.57 µs |         172 |   33.58 KB |
 | duramen (prost) |    2.458 µs |          31 |    5.45 KB |
 
-#### decimal_2
+#### [decimal_2](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/decimal/policies_2.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -48,7 +48,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    47.78 µs |         207 |   40.84 KB |
 | duramen (prost) |     3.77 µs |          48 |   6.318 KB |
 
-#### example_1a
+#### [example_1a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_1a.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -60,7 +60,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     30.7 µs |         136 |   28.12 KB |
 | duramen (prost) |    1.762 µs |          20 |   3.929 KB |
 
-#### example_2a
+#### [example_2a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_2a.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -72,7 +72,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    33.48 µs |         141 |   28.46 KB |
 | duramen (prost) |    1.762 µs |          20 |   3.953 KB |
 
-#### example_2b
+#### [example_2b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_2b.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -84,7 +84,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    32.98 µs |         141 |    28.4 KB |
 | duramen (prost) |    1.763 µs |          20 |   3.917 KB |
 
-#### example_2c
+#### [example_2c](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_2c.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -96,7 +96,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    40.91 µs |         170 |   35.63 KB |
 | duramen (prost) |    2.334 µs |          30 |   5.531 KB |
 
-#### example_3a
+#### [example_3a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_3a.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -108,7 +108,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    30.62 µs |         134 |   26.36 KB |
 | duramen (prost) |    1.403 µs |          16 |   3.761 KB |
 
-#### example_3b
+#### [example_3b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_3b.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -120,7 +120,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     40.2 µs |         170 |   35.63 KB |
 | duramen (prost) |    2.334 µs |          30 |   5.536 KB |
 
-#### example_3c
+#### [example_3c](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_3c.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -132,7 +132,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    30.74 µs |         134 |   26.37 KB |
 | duramen (prost) |    1.424 µs |          16 |   3.761 KB |
 
-#### example_4a
+#### [example_4a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4a.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -144,7 +144,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     50.6 µs |         217 |   39.39 KB |
 | duramen (prost) |    3.193 µs |          44 |    6.35 KB |
 
-#### example_4d
+#### [example_4d](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4d.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -156,7 +156,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    36.33 µs |         161 |   28.94 KB |
 | duramen (prost) |    2.003 µs |          28 |   5.371 KB |
 
-#### example_4e
+#### [example_4e](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4e.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -168,7 +168,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     38.5 µs |         165 |   29.21 KB |
 | duramen (prost) |    2.313 µs |          30 |   5.391 KB |
 
-#### example_4f
+#### [example_4f](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4f.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -180,7 +180,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    43.92 µs |         190 |   35.64 KB |
 | duramen (prost) |    2.864 µs |          40 |   5.975 KB |
 
-#### example_5b
+#### [example_5b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_5b.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -192,7 +192,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     68.3 µs |         294 |    53.4 KB |
 | duramen (prost) |    6.429 µs |          91 |   10.38 KB |
 
-#### ip_1
+#### [ip_1](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/ip/policies_1.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -204,7 +204,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    38.53 µs |         172 |   32.29 KB |
 | duramen (prost) |    2.333 µs |          31 |   5.462 KB |
 
-#### ip_2
+#### [ip_2](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/ip/policies_2.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -216,7 +216,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    43.75 µs |         193 |   36.09 KB |
 | duramen (prost) |    3.153 µs |          42 |    5.98 KB |
 
-#### ip_3
+#### [ip_3](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/ip/policies_3.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -228,7 +228,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    40.48 µs |         175 |    33.7 KB |
 | duramen (prost) |    2.458 µs |          31 |   5.446 KB |
 
-#### multi_1
+#### [multi_1](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_1.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -240,7 +240,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    47.07 µs |         207 |   42.45 KB |
 | duramen (prost) |    3.529 µs |          40 |    5.89 KB |
 
-#### multi_2
+#### [multi_2](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_2.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -252,7 +252,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     42.1 µs |         185 |   35.95 KB |
 | duramen (prost) |    2.957 µs |          31 |   5.304 KB |
 
-#### multi_3
+#### [multi_3](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_3.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -264,7 +264,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    55.86 µs |         247 |    42.1 KB |
 | duramen (prost) |    4.058 µs |          52 |   8.404 KB |
 
-#### multi_4
+#### [multi_4](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_4.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -276,7 +276,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |     75.2 µs |         344 |   57.51 KB |
 | duramen (prost) |     6.61 µs |          77 |   13.49 KB |
 
-#### multi_5
+#### [multi_5](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_5.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -288,7 +288,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | cedar (prost)   |    59.91 µs |         268 |   43.76 KB |
 | duramen (prost) |    4.353 µs |          48 |   12.17 KB |
 
-#### parser_testfile
+#### [parser_testfile](https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/parser/testfiles/policies.cedar)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -338,7 +338,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 
 ### Schema
 
-#### sandbox_a
+#### [sandbox_a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/sample-data/sandbox_a/schema.cedarschema)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -348,7 +348,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | duramen (serde) |    26.61 µs |         543 |    63.1 KB |
 | duramen (facet) |    29.65 µs |         323 |   96.35 KB |
 
-#### sandbox_b
+#### [sandbox_b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/sample-data/sandbox_b/schema.cedarschema)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -358,7 +358,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | duramen (serde) |    32.04 µs |         643 |   82.48 KB |
 | duramen (facet) |    33.87 µs |         386 |   123.6 KB |
 
-#### sandbox_b_exts
+#### [sandbox_b_exts](https://github.com/cedar-policy/cedar-integration-tests/blob/main/sample-data/sandbox_b/schema_exts.cedarschema)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
@@ -368,7 +368,7 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 | duramen (serde) |    33.13 µs |         673 |   84.88 KB |
 | duramen (facet) |    35.59 µs |         406 |   127.4 KB |
 
-#### validator_testfile
+#### [validator_testfile](https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/validator/cedar_schema/testfiles/example.cedarschema)
 
 | Implementation  |        Time | Alloc Count | Alloc Size |
 |-----------------|-------------|-------------|------------|
