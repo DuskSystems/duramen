@@ -401,6 +401,7 @@ pub enum PolicySyntax {
 
 impl PolicySyntax {
     /// Returns the keyword kind for the given text, if any.
+    #[inline(always)]
     #[must_use]
     pub fn from_keyword(value: &str) -> Option<Self> {
         match value {

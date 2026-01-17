@@ -51,15 +51,13 @@ impl<'a> PolicyLexer<'a> {
         core::mem::take(&mut self.diagnostics)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn next_token(&mut self) -> PolicyToken<'a> {
         let start = self.cursor.position();
         let first = self.cursor.current();
 
         let syntax = match first {
-            Cursor::END if self.cursor.position() >= self.cursor.source().len() => {
-                PolicySyntax::Eof
-            }
+            _ if self.cursor.is_eof() => PolicySyntax::Eof,
             byte if Cursor::is_whitespace(byte) => {
                 self.cursor.skip_whitespace();
                 PolicySyntax::Whitespace

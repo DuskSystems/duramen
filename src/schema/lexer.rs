@@ -51,15 +51,13 @@ impl<'a> SchemaLexer<'a> {
         core::mem::take(&mut self.diagnostics)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn next_token(&mut self) -> SchemaToken<'a> {
         let start = self.cursor.position();
         let first = self.cursor.current();
 
         let syntax = match first {
-            Cursor::END if self.cursor.position() >= self.cursor.source().len() => {
-                SchemaSyntax::Eof
-            }
+            _ if self.cursor.is_eof() => SchemaSyntax::Eof,
             byte if Cursor::is_whitespace(byte) => {
                 self.cursor.skip_whitespace();
                 SchemaSyntax::Whitespace
@@ -168,6 +166,7 @@ impl<'a> SchemaLexer<'a> {
             _ => {
                 let len = self.cursor.unicode_whitespace_len();
                 if len > 0 {
+                    self.cursor.bump_n(len);
                     self.cursor.skip_whitespace();
                     SchemaSyntax::Whitespace
                 } else {
