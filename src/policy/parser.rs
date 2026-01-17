@@ -1,15 +1,11 @@
 use alloc::format;
-use alloc::string::ToString as _;
 use alloc::vec::Vec;
-
-use syntree::{Builder, Checkpoint, Flavor, FlavorDefault, Tree};
 
 use super::PolicySet;
 use super::lexer::{PolicyLexer, PolicyToken};
 use super::syntax::PolicySyntax;
+use crate::cst::{Builder, Checkpoint};
 use crate::diagnostics::Diagnostic;
-
-type PolicyCheckpoint = Checkpoint<<FlavorDefault as Flavor>::Pointer>;
 
 pub struct PolicyParser<'a> {
     source: &'a str,
@@ -40,21 +36,12 @@ impl<'a> PolicyParser<'a> {
 
     #[must_use]
     pub fn parse(mut self) -> PolicySet<'a> {
-        if let Err(err) = self.policy_set() {
-            self.diagnostics.push(Diagnostic::error(err.to_string()));
-        }
+        self.policy_set();
 
         let mut diagnostics = self.lexer.take_diagnostics();
         diagnostics.extend(self.diagnostics);
 
-        let tree = match self.builder.build() {
-            Ok(tree) => tree,
-            Err(err) => {
-                diagnostics.push(Diagnostic::error(err.to_string()));
-                Tree::default()
-            }
-        };
-
+        let tree = self.builder.build();
         PolicySet::new(self.source, tree, diagnostics)
     }
 
@@ -70,76 +57,64 @@ impl<'a> PolicyParser<'a> {
         kinds.contains(&self.current.syntax())
     }
 
-    fn bump(&mut self) -> Result<(), syntree::Error> {
+    fn bump(&mut self) {
         let token = self.current;
-        self.builder.token(token.syntax(), token.text().len())?;
+        self.builder.token(token.syntax(), token.text().len());
         self.current = self.lexer.next_token();
-
-        Ok(())
     }
 
-    fn skip_trivia(&mut self) -> Result<(), syntree::Error> {
+    fn skip_trivia(&mut self) {
         while self.current().is_trivial() {
-            self.bump()?;
+            self.bump();
         }
-
-        Ok(())
     }
 
-    fn expect(&mut self, kind: PolicySyntax) -> Result<(), syntree::Error> {
-        self.skip_trivia()?;
+    fn expect(&mut self, kind: PolicySyntax) {
+        self.skip_trivia();
         if self.at(kind) {
-            self.bump()
+            self.bump();
         } else {
             self.diagnostics
                 .push(Diagnostic::error(format!("expected `{kind}`")));
-
-            Ok(())
         }
     }
 
-    fn checkpoint(&mut self) -> Result<PolicyCheckpoint, syntree::Error> {
+    const fn checkpoint(&self) -> Checkpoint {
         self.builder.checkpoint()
     }
 
-    fn wrap_at(
-        &mut self,
-        checkpoint: &PolicyCheckpoint,
-        kind: PolicySyntax,
-    ) -> Result<(), syntree::Error> {
-        self.builder.close_at(checkpoint, kind)?;
-        Ok(())
+    fn wrap_at(&mut self, checkpoint: Checkpoint, kind: PolicySyntax) {
+        self.builder.close_at(checkpoint, kind);
     }
 
-    fn policy_set(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::PolicySet)?;
+    fn policy_set(&mut self) {
+        self.builder.open(PolicySyntax::PolicySet);
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::Eof) {
                 break;
             }
 
             self.advance_push();
-            self.policy()?;
+            self.policy();
             self.advance_pop();
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
-    fn policy(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::Policy)?;
+    fn policy(&mut self) {
+        self.builder.open(PolicySyntax::Policy);
 
         while self.at(PolicySyntax::At) {
-            self.annotation()?;
-            self.skip_trivia()?;
+            self.annotation();
+            self.skip_trivia();
         }
 
         if self.at_any(&[PolicySyntax::PermitKeyword, PolicySyntax::ForbidKeyword]) {
-            self.bump()?;
+            self.bump();
         } else {
             self.diagnostics
                 .push(Diagnostic::error("expected `permit` or `forbid`"));
@@ -149,77 +124,74 @@ impl<'a> PolicyParser<'a> {
                 && !self.at(PolicySyntax::PermitKeyword)
                 && !self.at(PolicySyntax::ForbidKeyword)
             {
-                self.bump()?;
+                self.bump();
             }
 
             if self.at(PolicySyntax::Semicolon) {
-                self.bump()?;
-                self.builder.close()?;
-                return Ok(());
+                self.bump();
+                self.builder.close();
+                return;
             }
 
             if self.at_any(&[PolicySyntax::PermitKeyword, PolicySyntax::ForbidKeyword]) {
-                self.builder.close()?;
-                return Ok(());
+                self.builder.close();
+                return;
             }
 
-            self.builder.close()?;
-            return Ok(());
+            self.builder.close();
+            return;
         }
 
-        self.expect(PolicySyntax::OpenParenthesis)?;
-        self.scope()?;
-        self.expect(PolicySyntax::CloseParenthesis)?;
+        self.expect(PolicySyntax::OpenParenthesis);
+        self.scope();
+        self.expect(PolicySyntax::CloseParenthesis);
 
-        self.skip_trivia()?;
+        self.skip_trivia();
 
         loop {
             if self.at_condition_start() {
                 self.advance_push();
-                self.condition()?;
+                self.condition();
                 self.advance_pop();
             } else if self.at(PolicySyntax::Identifier) {
                 self.advance_push();
-                self.extension_clause()?;
+                self.extension_clause();
                 self.advance_pop();
             } else {
                 break;
             }
 
-            self.skip_trivia()?;
+            self.skip_trivia();
         }
 
-        self.expect(PolicySyntax::Semicolon)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::Semicolon);
+        self.builder.close();
     }
 
-    fn annotation(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::Annotation)?;
-        self.expect(PolicySyntax::At)?;
+    fn annotation(&mut self) {
+        self.builder.open(PolicySyntax::Annotation);
+        self.expect(PolicySyntax::At);
 
-        self.skip_trivia()?;
+        self.skip_trivia();
         if self.at_ident_or_keyword() {
-            self.bump()?;
+            self.bump();
         }
 
-        self.skip_trivia()?;
+        self.skip_trivia();
         if self.at(PolicySyntax::OpenParenthesis) {
-            self.bump()?;
-            self.skip_trivia()?;
+            self.bump();
+            self.skip_trivia();
             if self.at(PolicySyntax::String) {
-                self.bump()?;
+                self.bump();
             }
-            self.expect(PolicySyntax::CloseParenthesis)?;
+            self.expect(PolicySyntax::CloseParenthesis);
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
-    fn extension_clause(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::Condition)?;
+    fn extension_clause(&mut self) {
+        self.builder.open(PolicySyntax::Condition);
 
         if self.at(PolicySyntax::Identifier) {
             if self.current.text() == "advice" {
@@ -227,183 +199,172 @@ impl<'a> PolicyParser<'a> {
                     "the `advice` clause is deprecated; it was removed in Cedar 3.0",
                 ));
             }
-            self.bump()?;
+            self.bump();
         }
 
-        self.expect(PolicySyntax::OpenBrace)?;
+        self.expect(PolicySyntax::OpenBrace);
 
-        self.skip_trivia()?;
+        self.skip_trivia();
         if !self.at(PolicySyntax::CloseBrace) {
             if self.at(PolicySyntax::String) {
-                self.bump()?;
+                self.bump();
             } else {
-                self.expression()?;
+                self.expression();
             }
         }
 
-        self.expect(PolicySyntax::CloseBrace)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseBrace);
+        self.builder.close();
     }
 
-    fn scope(&mut self) -> Result<(), syntree::Error> {
-        self.skip_trivia()?;
-        self.variable_definition()?;
+    fn scope(&mut self) {
+        self.skip_trivia();
+        self.variable_definition();
 
-        self.expect(PolicySyntax::Comma)?;
+        self.expect(PolicySyntax::Comma);
 
-        self.skip_trivia()?;
-        self.variable_definition()?;
+        self.skip_trivia();
+        self.variable_definition();
 
-        self.expect(PolicySyntax::Comma)?;
+        self.expect(PolicySyntax::Comma);
 
-        self.skip_trivia()?;
-        self.variable_definition()?;
-
-        Ok(())
+        self.skip_trivia();
+        self.variable_definition();
     }
 
-    fn variable_definition(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::VariableDefinition)?;
+    fn variable_definition(&mut self) {
+        self.builder.open(PolicySyntax::VariableDefinition);
 
         if self.at_any(&[
             PolicySyntax::PrincipalKeyword,
             PolicySyntax::ActionKeyword,
             PolicySyntax::ResourceKeyword,
         ]) {
-            self.bump()?;
+            self.bump();
         }
 
-        self.skip_trivia()?;
+        self.skip_trivia();
 
         match self.current() {
             PolicySyntax::Equal2 => {
-                self.bump()?;
-                self.skip_trivia()?;
-                self.entity_or_slot()?;
+                self.bump();
+                self.skip_trivia();
+                self.entity_or_slot();
             }
             PolicySyntax::InKeyword => {
-                self.bump()?;
-                self.skip_trivia()?;
+                self.bump();
+                self.skip_trivia();
 
                 if self.at(PolicySyntax::OpenBracket) {
-                    self.entity_list()?;
+                    self.entity_list();
                 } else {
-                    self.entity_or_slot()?;
+                    self.entity_or_slot();
                 }
             }
             PolicySyntax::IsKeyword | PolicySyntax::Colon => {
-                self.bump()?;
-                self.skip_trivia()?;
+                self.bump();
+                self.skip_trivia();
 
-                self.path()?;
-                self.skip_trivia()?;
+                self.path();
+                self.skip_trivia();
 
                 if self.at(PolicySyntax::InKeyword) {
-                    self.bump()?;
-                    self.skip_trivia()?;
-                    self.entity_or_slot()?;
+                    self.bump();
+                    self.skip_trivia();
+                    self.entity_or_slot();
                 }
             }
             _ => {}
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
-    fn entity_or_slot(&mut self) -> Result<(), syntree::Error> {
+    fn entity_or_slot(&mut self) {
         if self.at(PolicySyntax::Question) {
-            self.slot()?;
+            self.slot();
         } else {
-            self.entity_ref()?;
+            self.entity_ref();
         }
-
-        Ok(())
     }
 
-    fn slot(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::SlotExpression)?;
-        self.expect(PolicySyntax::Question)?;
+    fn slot(&mut self) {
+        self.builder.open(PolicySyntax::SlotExpression);
+        self.expect(PolicySyntax::Question);
 
-        self.skip_trivia()?;
+        self.skip_trivia();
         if self.at(PolicySyntax::Identifier)
             || self.at(PolicySyntax::PrincipalKeyword)
             || self.at(PolicySyntax::ResourceKeyword)
         {
-            self.bump()?;
+            self.bump();
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
-    fn entity_list(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::ListExpression)?;
-        self.expect(PolicySyntax::OpenBracket)?;
+    fn entity_list(&mut self) {
+        self.builder.open(PolicySyntax::ListExpression);
+        self.expect(PolicySyntax::OpenBracket);
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::CloseBracket) || self.at(PolicySyntax::Eof) {
                 break;
             }
 
             self.advance_push();
-            self.entity_ref()?;
-            self.skip_trivia()?;
+            self.entity_ref();
+            self.skip_trivia();
 
             if self.at(PolicySyntax::Comma) {
-                self.bump()?;
+                self.bump();
             }
 
             self.advance_pop();
         }
 
-        self.expect(PolicySyntax::CloseBracket)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseBracket);
+        self.builder.close();
     }
 
-    fn entity_ref(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::EntityReference)?;
-        self.path()?;
+    fn entity_ref(&mut self) {
+        self.builder.open(PolicySyntax::EntityReference);
+        self.path();
 
-        self.skip_trivia()?;
+        self.skip_trivia();
         if self.at(PolicySyntax::Colon2) {
-            self.bump()?;
-            self.skip_trivia()?;
+            self.bump();
+            self.skip_trivia();
         }
 
         if self.at(PolicySyntax::String) {
-            self.bump()?;
+            self.bump();
         } else if self.at(PolicySyntax::OpenBrace) {
-            self.expr_record()?;
+            self.expr_record();
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
-    fn path(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::Name)?;
+    fn path(&mut self) {
+        self.builder.open(PolicySyntax::Name);
 
         if self.at(PolicySyntax::Identifier) {
-            self.bump()?;
+            self.bump();
         }
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::Colon2) {
                 self.advance_push();
-                self.bump()?;
-                self.skip_trivia()?;
+                self.bump();
+                self.skip_trivia();
 
                 if self.at(PolicySyntax::Identifier) {
-                    self.bump()?;
+                    self.bump();
                     self.advance_pop();
                 } else {
                     self.advance_drop();
@@ -414,108 +375,99 @@ impl<'a> PolicyParser<'a> {
             }
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
-    fn condition(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::Condition)?;
+    fn condition(&mut self) {
+        self.builder.open(PolicySyntax::Condition);
 
         if self.at_any(&[PolicySyntax::WhenKeyword, PolicySyntax::UnlessKeyword]) {
-            self.bump()?;
+            self.bump();
         }
 
-        self.expect(PolicySyntax::OpenBrace)?;
-        self.skip_trivia()?;
+        self.expect(PolicySyntax::OpenBrace);
+        self.skip_trivia();
 
         if !self.at(PolicySyntax::CloseBrace) {
-            self.expression()?;
+            self.expression();
         }
 
-        self.expect(PolicySyntax::CloseBrace)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseBrace);
+        self.builder.close();
     }
 
-    fn expression(&mut self) -> Result<(), syntree::Error> {
-        self.expr_if()
+    fn expression(&mut self) {
+        self.expr_if();
     }
 
-    fn expr_if(&mut self) -> Result<(), syntree::Error> {
+    fn expr_if(&mut self) {
         if self.at(PolicySyntax::IfKeyword) {
-            self.builder.open(PolicySyntax::IfExpression)?;
+            self.builder.open(PolicySyntax::IfExpression);
 
-            self.bump()?;
+            self.bump();
 
-            self.skip_trivia()?;
-            self.expression()?;
+            self.skip_trivia();
+            self.expression();
 
-            self.expect(PolicySyntax::ThenKeyword)?;
+            self.expect(PolicySyntax::ThenKeyword);
 
-            self.skip_trivia()?;
-            self.expression()?;
+            self.skip_trivia();
+            self.expression();
 
-            self.expect(PolicySyntax::ElseKeyword)?;
+            self.expect(PolicySyntax::ElseKeyword);
 
-            self.skip_trivia()?;
-            self.expression()?;
+            self.skip_trivia();
+            self.expression();
 
-            self.builder.close()?;
+            self.builder.close();
         } else {
-            self.expr_or()?;
+            self.expr_or();
         }
-
-        Ok(())
     }
 
-    fn expr_or(&mut self) -> Result<(), syntree::Error> {
-        let checkpoint = self.checkpoint()?;
-        self.expr_and()?;
+    fn expr_or(&mut self) {
+        let checkpoint = self.checkpoint();
+        self.expr_and();
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
             if self.at(PolicySyntax::Pipe2) {
                 self.advance_push();
-                self.bump()?;
-                self.skip_trivia()?;
-                self.expr_and()?;
-                self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.bump();
+                self.skip_trivia();
+                self.expr_and();
+                self.wrap_at(checkpoint, PolicySyntax::BinaryExpression);
                 self.advance_pop();
             } else {
                 break;
             }
         }
-
-        Ok(())
     }
 
-    fn expr_and(&mut self) -> Result<(), syntree::Error> {
-        let checkpoint = self.checkpoint()?;
-        self.expr_relation()?;
+    fn expr_and(&mut self) {
+        let checkpoint = self.checkpoint();
+        self.expr_relation();
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
             if self.at(PolicySyntax::Ampersand2) {
                 self.advance_push();
-                self.bump()?;
-                self.skip_trivia()?;
-                self.expr_relation()?;
-                self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.bump();
+                self.skip_trivia();
+                self.expr_relation();
+                self.wrap_at(checkpoint, PolicySyntax::BinaryExpression);
                 self.advance_pop();
             } else {
                 break;
             }
         }
-
-        Ok(())
     }
 
-    fn expr_relation(&mut self) -> Result<(), syntree::Error> {
-        let checkpoint = self.checkpoint()?;
+    fn expr_relation(&mut self) {
+        let checkpoint = self.checkpoint();
 
-        self.expr_add()?;
-        self.skip_trivia()?;
+        self.expr_add();
+        self.skip_trivia();
 
         match self.current() {
             PolicySyntax::Equal2
@@ -525,26 +477,26 @@ impl<'a> PolicyParser<'a> {
             | PolicySyntax::GreaterThan
             | PolicySyntax::GreaterEqual
             | PolicySyntax::InKeyword => {
-                self.bump()?;
-                self.skip_trivia()?;
-                self.expr_add()?;
-                self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.bump();
+                self.skip_trivia();
+                self.expr_add();
+                self.wrap_at(checkpoint, PolicySyntax::BinaryExpression);
             }
             PolicySyntax::HasKeyword => {
-                self.bump()?;
-                self.skip_trivia()?;
+                self.bump();
+                self.skip_trivia();
 
                 if self.at(PolicySyntax::Identifier) {
-                    self.bump()?;
+                    self.bump();
 
                     loop {
-                        self.skip_trivia()?;
+                        self.skip_trivia();
                         if self.at(PolicySyntax::Dot) {
                             self.advance_push();
-                            self.bump()?;
-                            self.skip_trivia()?;
+                            self.bump();
+                            self.skip_trivia();
                             if self.at(PolicySyntax::Identifier) {
-                                self.bump()?;
+                                self.bump();
                                 self.advance_pop();
                             } else {
                                 self.advance_drop();
@@ -555,201 +507,189 @@ impl<'a> PolicyParser<'a> {
                         }
                     }
                 } else if self.at(PolicySyntax::String) {
-                    self.bump()?;
+                    self.bump();
                 }
 
-                self.wrap_at(&checkpoint, PolicySyntax::HasExpression)?;
+                self.wrap_at(checkpoint, PolicySyntax::HasExpression);
             }
             PolicySyntax::LikeKeyword => {
-                self.bump()?;
-                self.skip_trivia()?;
+                self.bump();
+                self.skip_trivia();
 
                 if self.at(PolicySyntax::String) {
-                    self.bump()?;
+                    self.bump();
                 }
 
-                self.wrap_at(&checkpoint, PolicySyntax::LikeExpression)?;
+                self.wrap_at(checkpoint, PolicySyntax::LikeExpression);
             }
             PolicySyntax::IsKeyword => {
-                self.bump()?;
-                self.skip_trivia()?;
+                self.bump();
+                self.skip_trivia();
 
-                self.path()?;
-                self.skip_trivia()?;
+                self.path();
+                self.skip_trivia();
 
                 if self.at(PolicySyntax::InKeyword) {
-                    self.bump()?;
-                    self.skip_trivia()?;
-                    self.entity_ref()?;
+                    self.bump();
+                    self.skip_trivia();
+                    self.entity_ref();
                 }
 
-                self.wrap_at(&checkpoint, PolicySyntax::IsExpression)?;
+                self.wrap_at(checkpoint, PolicySyntax::IsExpression);
             }
             _ => {}
         }
-
-        Ok(())
     }
 
-    fn expr_add(&mut self) -> Result<(), syntree::Error> {
-        let checkpoint = self.checkpoint()?;
-        self.expr_mul()?;
+    fn expr_add(&mut self) {
+        let checkpoint = self.checkpoint();
+        self.expr_mul();
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at_any(&[PolicySyntax::Plus, PolicySyntax::Minus]) {
                 self.advance_push();
-                self.bump()?;
-                self.skip_trivia()?;
-                self.expr_mul()?;
-                self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.bump();
+                self.skip_trivia();
+                self.expr_mul();
+                self.wrap_at(checkpoint, PolicySyntax::BinaryExpression);
                 self.advance_pop();
             } else {
                 break;
             }
         }
-
-        Ok(())
     }
 
-    fn expr_mul(&mut self) -> Result<(), syntree::Error> {
-        let checkpoint = self.checkpoint()?;
-        self.expr_unary()?;
+    fn expr_mul(&mut self) {
+        let checkpoint = self.checkpoint();
+        self.expr_unary();
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::Asterisk) {
                 self.advance_push();
-                self.bump()?;
-                self.skip_trivia()?;
-                self.expr_unary()?;
-                self.wrap_at(&checkpoint, PolicySyntax::BinaryExpression)?;
+                self.bump();
+                self.skip_trivia();
+                self.expr_unary();
+                self.wrap_at(checkpoint, PolicySyntax::BinaryExpression);
                 self.advance_pop();
             } else {
                 break;
             }
         }
-
-        Ok(())
     }
 
-    fn expr_unary(&mut self) -> Result<(), syntree::Error> {
+    fn expr_unary(&mut self) {
         if self.at_any(&[PolicySyntax::Not, PolicySyntax::Minus]) {
-            self.builder.open(PolicySyntax::UnaryExpression)?;
+            self.builder.open(PolicySyntax::UnaryExpression);
 
-            self.bump()?;
+            self.bump();
 
-            self.skip_trivia()?;
-            self.expr_unary()?;
+            self.skip_trivia();
+            self.expr_unary();
 
-            self.builder.close()?;
+            self.builder.close();
         } else {
-            self.expr_member()?;
+            self.expr_member();
         }
-
-        Ok(())
     }
 
-    fn expr_member(&mut self) -> Result<(), syntree::Error> {
-        let checkpoint = self.checkpoint()?;
-        self.expr_primary()?;
+    fn expr_member(&mut self) {
+        let checkpoint = self.checkpoint();
+        self.expr_primary();
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             match self.current() {
                 PolicySyntax::Dot => {
                     self.advance_push();
-                    self.bump()?;
-                    self.skip_trivia()?;
+                    self.bump();
+                    self.skip_trivia();
 
                     if self.at(PolicySyntax::Identifier) {
-                        self.bump()?;
+                        self.bump();
                     }
 
-                    self.skip_trivia()?;
+                    self.skip_trivia();
                     if self.at(PolicySyntax::OpenParenthesis) {
-                        self.argument_list()?;
+                        self.argument_list();
                     }
 
-                    self.wrap_at(&checkpoint, PolicySyntax::MemberExpression)?;
+                    self.wrap_at(checkpoint, PolicySyntax::MemberExpression);
                     self.advance_pop();
                 }
                 PolicySyntax::OpenBracket => {
                     self.advance_push();
-                    self.bump()?;
-                    self.skip_trivia()?;
+                    self.bump();
+                    self.skip_trivia();
 
                     if self.at(PolicySyntax::String) {
-                        self.bump()?;
+                        self.bump();
                     }
 
-                    self.expect(PolicySyntax::CloseBracket)?;
-                    self.wrap_at(&checkpoint, PolicySyntax::MemberExpression)?;
+                    self.expect(PolicySyntax::CloseBracket);
+                    self.wrap_at(checkpoint, PolicySyntax::MemberExpression);
                     self.advance_pop();
                 }
                 _ => break,
             }
         }
-
-        Ok(())
     }
 
-    fn argument_list(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::ArgumentList)?;
-        self.expect(PolicySyntax::OpenParenthesis)?;
+    fn argument_list(&mut self) {
+        self.builder.open(PolicySyntax::ArgumentList);
+        self.expect(PolicySyntax::OpenParenthesis);
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::CloseParenthesis) || self.at(PolicySyntax::Eof) {
                 break;
             }
 
             self.advance_push();
-            self.expression()?;
+            self.expression();
 
-            self.skip_trivia()?;
+            self.skip_trivia();
             if self.at(PolicySyntax::Comma) {
-                self.bump()?;
+                self.bump();
             }
 
             self.advance_pop();
         }
 
-        self.expect(PolicySyntax::CloseParenthesis)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseParenthesis);
+        self.builder.close();
     }
 
-    fn expr_primary(&mut self) -> Result<(), syntree::Error> {
+    fn expr_primary(&mut self) {
         match self.current() {
             syntax if syntax.is_literal() => {
-                self.builder.open(PolicySyntax::LiteralExpression)?;
-                self.bump()?;
-                self.builder.close()?;
+                self.builder.open(PolicySyntax::LiteralExpression);
+                self.bump();
+                self.builder.close();
             }
             PolicySyntax::Identifier
             | PolicySyntax::PrincipalKeyword
             | PolicySyntax::ActionKeyword
             | PolicySyntax::ResourceKeyword
             | PolicySyntax::ContextKeyword => {
-                self.expr_name_or_entity()?;
+                self.expr_name_or_entity();
             }
             PolicySyntax::Question => {
-                self.slot()?;
+                self.slot();
             }
             PolicySyntax::OpenParenthesis => {
-                self.expr_paren()?;
+                self.expr_paren();
             }
             PolicySyntax::OpenBracket => {
-                self.expr_list()?;
+                self.expr_list();
             }
             PolicySyntax::OpenBrace => {
-                self.expr_record()?;
+                self.expr_record();
             }
             _ => {
                 if !self.at(PolicySyntax::Eof)
@@ -757,133 +697,121 @@ impl<'a> PolicyParser<'a> {
                     && !self.at(PolicySyntax::CloseParenthesis)
                     && !self.at(PolicySyntax::CloseBracket)
                 {
-                    self.builder.open(PolicySyntax::Error)?;
-                    self.bump()?;
-                    self.builder.close()?;
+                    self.builder.open(PolicySyntax::Error);
+                    self.bump();
+                    self.builder.close();
                 }
             }
         }
-
-        Ok(())
     }
 
-    fn expr_name_or_entity(&mut self) -> Result<(), syntree::Error> {
+    fn expr_name_or_entity(&mut self) {
         if self.at_any(&[
             PolicySyntax::PrincipalKeyword,
             PolicySyntax::ActionKeyword,
             PolicySyntax::ResourceKeyword,
             PolicySyntax::ContextKeyword,
         ]) {
-            self.builder.open(PolicySyntax::PathExpression)?;
-            self.bump()?;
-            self.builder.close()?;
-            return Ok(());
+            self.builder.open(PolicySyntax::PathExpression);
+            self.bump();
+            self.builder.close();
+            return;
         }
 
-        let checkpoint = self.checkpoint()?;
+        let checkpoint = self.checkpoint();
 
-        self.path()?;
-        self.skip_trivia()?;
+        self.path();
+        self.skip_trivia();
 
         if self.at(PolicySyntax::Colon2) {
-            self.bump()?;
-            self.skip_trivia()?;
+            self.bump();
+            self.skip_trivia();
         }
 
         if self.at(PolicySyntax::String) {
-            self.bump()?;
-            self.wrap_at(&checkpoint, PolicySyntax::EntityReference)?;
+            self.bump();
+            self.wrap_at(checkpoint, PolicySyntax::EntityReference);
         } else if self.at(PolicySyntax::OpenParenthesis) {
-            self.argument_list()?;
-            self.wrap_at(&checkpoint, PolicySyntax::MemberExpression)?;
+            self.argument_list();
+            self.wrap_at(checkpoint, PolicySyntax::MemberExpression);
         } else {
-            self.wrap_at(&checkpoint, PolicySyntax::PathExpression)?;
+            self.wrap_at(checkpoint, PolicySyntax::PathExpression);
         }
-
-        Ok(())
     }
 
-    fn expr_paren(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::ParenExpression)?;
-        self.expect(PolicySyntax::OpenParenthesis)?;
+    fn expr_paren(&mut self) {
+        self.builder.open(PolicySyntax::ParenExpression);
+        self.expect(PolicySyntax::OpenParenthesis);
 
-        self.skip_trivia()?;
-        self.expression()?;
+        self.skip_trivia();
+        self.expression();
 
-        self.expect(PolicySyntax::CloseParenthesis)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseParenthesis);
+        self.builder.close();
     }
 
-    fn expr_list(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::ListExpression)?;
-        self.expect(PolicySyntax::OpenBracket)?;
+    fn expr_list(&mut self) {
+        self.builder.open(PolicySyntax::ListExpression);
+        self.expect(PolicySyntax::OpenBracket);
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::CloseBracket) || self.at(PolicySyntax::Eof) {
                 break;
             }
 
             self.advance_push();
-            self.expression()?;
+            self.expression();
 
-            self.skip_trivia()?;
+            self.skip_trivia();
             if self.at(PolicySyntax::Comma) {
-                self.bump()?;
+                self.bump();
             }
 
             self.advance_pop();
         }
 
-        self.expect(PolicySyntax::CloseBracket)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseBracket);
+        self.builder.close();
     }
 
-    fn expr_record(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::RecordExpression)?;
-        self.expect(PolicySyntax::OpenBrace)?;
+    fn expr_record(&mut self) {
+        self.builder.open(PolicySyntax::RecordExpression);
+        self.expect(PolicySyntax::OpenBrace);
 
         loop {
-            self.skip_trivia()?;
+            self.skip_trivia();
 
             if self.at(PolicySyntax::CloseBrace) || self.at(PolicySyntax::Eof) {
                 break;
             }
 
             self.advance_push();
-            self.record_entry()?;
+            self.record_entry();
 
-            self.skip_trivia()?;
+            self.skip_trivia();
             if self.at(PolicySyntax::Comma) {
-                self.bump()?;
+                self.bump();
             }
             self.advance_pop();
         }
 
-        self.expect(PolicySyntax::CloseBrace)?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::CloseBrace);
+        self.builder.close();
     }
 
-    fn record_entry(&mut self) -> Result<(), syntree::Error> {
-        self.builder.open(PolicySyntax::RecordEntry)?;
+    fn record_entry(&mut self) {
+        self.builder.open(PolicySyntax::RecordEntry);
 
         if self.at(PolicySyntax::Identifier) || self.at(PolicySyntax::String) {
-            self.bump()?;
+            self.bump();
         }
 
-        self.expect(PolicySyntax::Colon)?;
-        self.skip_trivia()?;
-        self.expression()?;
-        self.builder.close()?;
-
-        Ok(())
+        self.expect(PolicySyntax::Colon);
+        self.skip_trivia();
+        self.expression();
+        self.builder.close();
     }
 
     fn at_ident_or_keyword(&self) -> bool {

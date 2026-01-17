@@ -112,9 +112,6 @@ too_many_lines = "allow"
 cedar-policy = { version = "4.8", default-features = false }
 cedar-policy-core = { version = "4.8", default-features = false }
 
-# Syntax
-syntree = { version = "0.18", default-features = false }
-
 # SIMD
 memchr = { version = "2.7", default-features = false }
 
@@ -176,7 +173,6 @@ workspace = true
 default = ["std"]
 std = [
   "annotate-snippets/std",
-  "syntree/std",
   "serde_json?/std",
   "facet?/std",
   "facet-json?/std",
@@ -188,9 +184,6 @@ prost = ["dep:prost"]
 arbitrary = ["std", "dep:arbitrary"]
 
 [dependencies]
-# Syntax
-syntree = { workspace = true, features = ["alloc"] }
-
 # SIMD
 memchr = { workspace = true }
 

@@ -7,15 +7,19 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::error::Error;
 use core::fmt;
+use core::mem::size_of;
 
 #[cfg(any(feature = "serde", feature = "facet", feature = "prost"))]
 use bumpalo::Bump;
-use syntree::{FlavorDefault, Tree};
 
+use crate::cst::{NodeData, Tree};
 use crate::diagnostics::Diagnostic;
 
 pub mod ast;
 use ast::{AstNode as _, Policies, Policy as PolicyAst};
+
+#[cfg(any(feature = "serde", feature = "facet", feature = "prost"))]
+pub mod est;
 
 mod lexer;
 pub use lexer::{PolicyLexer, PolicyToken};
@@ -26,10 +30,12 @@ use parser::PolicyParser;
 mod syntax;
 pub use syntax::PolicySyntax;
 
-#[cfg(any(feature = "serde", feature = "facet", feature = "prost"))]
-pub mod est;
+const _: () = assert!(
+    size_of::<NodeData<PolicySyntax>>() == 32,
+    "NodeData must be 32 bytes for cache efficiency"
+);
 
-type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
+type PolicyTree = Tree<PolicySyntax>;
 
 #[derive(Debug)]
 pub struct PolicyErrors;

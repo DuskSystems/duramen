@@ -9,11 +9,12 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::error::Error;
 use core::fmt;
+use core::mem::size_of;
 
 #[cfg(any(feature = "serde", feature = "facet"))]
 use bumpalo::Bump;
-use syntree::{FlavorDefault, Tree};
 
+use crate::cst::{NodeData, Tree};
 use crate::diagnostics::Diagnostic;
 
 pub mod ast;
@@ -31,7 +32,12 @@ use parser::SchemaParser;
 mod syntax;
 pub use syntax::SchemaSyntax;
 
-type SchemaTree = Tree<SchemaSyntax, FlavorDefault>;
+const _: () = assert!(
+    size_of::<NodeData<SchemaSyntax>>() == 32,
+    "NodeData must be 32 bytes for cache efficiency"
+);
+
+type SchemaTree = Tree<SchemaSyntax>;
 
 #[derive(Debug)]
 pub struct SchemaErrors;

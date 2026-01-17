@@ -380,9 +380,7 @@ fn convert_record_type<'a>(
                             ast::AttrKey::String(string) => {
                                 LazyEscape::new(string.text(source)).unescape_in(bump)
                             }
-                            ast::AttrKey::Keyword(node) => {
-                                bump.alloc_str(&source[node.span().range()])
-                            }
+                            ast::AttrKey::Keyword(node) => bump.alloc_str(&source[node.range()]),
                         };
 
                         let required = !attr.is_optional();
@@ -412,7 +410,7 @@ fn collect_annotations<'a, 'b>(
         let name_text = annotation.syntax().children().find_map(|child| {
             let kind = child.value();
             if kind == SchemaSyntax::Identifier || kind.is_keyword() {
-                Some(&source[child.span().range()])
+                Some(&source[child.range()])
             } else {
                 None
             }
@@ -442,7 +440,7 @@ fn name_to_str<'a>(bump: &'a Bump, source: &'a str, name: &ast::Name<'_>) -> &'a
             | SchemaSyntax::BoolKeyword
             | SchemaSyntax::LongKeyword
             | SchemaSyntax::StringKeyword => {
-                parts.push(&source[child.span().range()]);
+                parts.push(&source[child.range()]);
             }
             _ => {}
         }
@@ -474,10 +472,10 @@ fn parse_action_ref<'a>(bump: &'a Bump, source: &'a str, name: &ast::Name<'_>) -
     for child in node.children() {
         match child.value() {
             SchemaSyntax::Identifier => {
-                identifiers.push(&source[child.span().range()]);
+                identifiers.push(&source[child.range()]);
             }
             SchemaSyntax::String => {
-                action_id = Some(LazyEscape::new(&source[child.span().range()]).unescape_in(bump));
+                action_id = Some(LazyEscape::new(&source[child.range()]).unescape_in(bump));
             }
             _ => {}
         }
@@ -509,12 +507,10 @@ fn extract_declaration_names<'a>(
     node.children()
         .filter_map(|child| match child.value() {
             SchemaSyntax::Identifier => {
-                let str_ref: &'a str = bump.alloc_str(&source[child.span().range()]);
+                let str_ref: &'a str = bump.alloc_str(&source[child.range()]);
                 Some(str_ref)
             }
-            SchemaSyntax::String => {
-                Some(LazyEscape::new(&source[child.span().range()]).unescape_in(bump))
-            }
+            SchemaSyntax::String => Some(LazyEscape::new(&source[child.range()]).unescape_in(bump)),
             _ => None,
         })
         .collect()
