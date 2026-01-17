@@ -1,6 +1,7 @@
-use syntree::{FlavorDefault, Node, Span};
+use core::ops::Range;
 
 use super::PolicySyntax;
+use crate::cst::Node;
 
 mod enums;
 pub use enums::*;
@@ -14,7 +15,7 @@ pub use nodes::*;
 mod tokens;
 pub use tokens::*;
 
-pub type PolicyNode<'a> = Node<'a, PolicySyntax, FlavorDefault>;
+pub type PolicyNode<'a> = Node<'a, PolicySyntax>;
 
 macro_rules! ast_node {
     ($(#[$meta:meta])* $name:ident, $kind:expr) => {
@@ -72,8 +73,8 @@ pub trait AstNode<'a>: Sized {
     fn syntax(&self) -> &PolicyNode<'a>;
 
     #[inline]
-    fn span(&self) -> Span<u32> {
-        *self.syntax().span()
+    fn range(&self) -> Range<usize> {
+        self.syntax().range()
     }
 }
 
@@ -83,12 +84,12 @@ pub trait AstToken<'a>: Sized {
     fn syntax(&self) -> &PolicyNode<'a>;
 
     #[inline]
-    fn span(&self) -> Span<u32> {
-        *self.syntax().span()
+    fn range(&self) -> Range<usize> {
+        self.syntax().range()
     }
 
     #[inline]
     fn text<'s>(&self, source: &'s str) -> &'s str {
-        &source[self.syntax().span().range()]
+        &source[self.syntax().range()]
     }
 }

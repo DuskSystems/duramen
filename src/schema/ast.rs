@@ -1,6 +1,7 @@
-use syntree::{FlavorDefault, Node, Span};
+use core::ops::Range;
 
 use super::SchemaSyntax;
+use crate::cst::Node;
 
 mod nodes;
 pub use nodes::*;
@@ -11,7 +12,7 @@ pub use tokens::*;
 mod types;
 pub use types::*;
 
-pub type SchemaNode<'a> = Node<'a, SchemaSyntax, FlavorDefault>;
+pub type SchemaNode<'a> = Node<'a, SchemaSyntax>;
 
 macro_rules! ast_node {
     ($(#[$meta:meta])* $name:ident, $kind:expr) => {
@@ -69,8 +70,8 @@ pub trait AstNode<'a>: Sized {
     fn syntax(&self) -> &SchemaNode<'a>;
 
     #[inline]
-    fn span(&self) -> Span<u32> {
-        *self.syntax().span()
+    fn range(&self) -> Range<usize> {
+        self.syntax().range()
     }
 }
 
@@ -80,12 +81,12 @@ pub trait AstToken<'a>: Sized {
     fn syntax(&self) -> &SchemaNode<'a>;
 
     #[inline]
-    fn span(&self) -> Span<u32> {
-        *self.syntax().span()
+    fn range(&self) -> Range<usize> {
+        self.syntax().range()
     }
 
     #[inline]
     fn text<'s>(&self, source: &'s str) -> &'s str {
-        &source[self.syntax().span().range()]
+        &source[self.syntax().range()]
     }
 }
