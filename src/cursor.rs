@@ -1,5 +1,3 @@
-use core::num::NonZeroUsize;
-
 pub struct Cursor<'a> {
     source: &'a str,
     position: usize,
@@ -15,17 +13,8 @@ impl<'a> Cursor<'a> {
     }
 
     #[must_use]
-    pub const fn source(&self) -> &'a str {
-        self.source
-    }
-
-    #[must_use]
     pub const fn position(&self) -> usize {
         self.position
-    }
-
-    pub const fn seek(&mut self, position: usize) {
-        self.position = position;
     }
 
     #[inline(always)]
@@ -34,16 +23,6 @@ impl<'a> Cursor<'a> {
         self.source
             .as_bytes()
             .get(self.position)
-            .copied()
-            .unwrap_or(0)
-    }
-
-    #[inline(always)]
-    #[must_use]
-    pub fn peek(&self, peek: NonZeroUsize) -> u8 {
-        self.source
-            .as_bytes()
-            .get(self.position + peek.get())
             .copied()
             .unwrap_or(0)
     }

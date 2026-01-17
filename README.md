@@ -26,387 +26,387 @@ We use [`divan`](https://github.com/nvzqz/divan) for our benchmarks, taking the 
 
 #### [decimal_1](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/decimal/policies_1.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |     39.1 µs |         150 |   28.99 KB |
-| duramen         |    894.8 ns |           5 |      384 B |
-| cedar (serde)   |    45.69 µs |         244 |   46.84 KB |
-| duramen (serde) |    4.498 µs |         104 |   15.07 KB |
-| duramen (facet) |    5.499 µs |          62 |   24.31 KB |
-| cedar (prost)   |    40.57 µs |         172 |   33.58 KB |
-| duramen (prost) |    2.458 µs |          31 |    5.45 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    38.47 µs |      150 |      28 |   121.7 KB |
+| duramen         |    915.5 ns |        5 |       8 |   4.704 KB |
+| cedar (serde)   |    46.07 µs |      244 |      28 |   139.5 KB |
+| duramen (serde) |    4.372 µs |      104 |       9 |   19.58 KB |
+| duramen (facet) |    5.457 µs |       62 |      18 |   30.22 KB |
+| cedar (prost)   |    40.53 µs |      172 |      28 |   126.3 KB |
+| duramen (prost) |    2.457 µs |       31 |       9 |   10.01 KB |
 
 #### [decimal_2](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/decimal/policies_2.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    46.07 µs |         174 |   35.51 KB |
-| duramen         |    1.286 µs |           8 |      480 B |
-| cedar (serde)   |    56.32 µs |         319 |   62.51 KB |
-| duramen (serde) |    6.735 µs |         151 |   18.38 KB |
-| duramen (facet) |    7.921 µs |          92 |   32.56 KB |
-| cedar (prost)   |    47.78 µs |         207 |   40.84 KB |
-| duramen (prost) |     3.77 µs |          48 |   6.318 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    45.32 µs |      174 |      29 |   128.5 KB |
+| duramen         |    1.307 µs |        8 |       9 |   8.384 KB |
+| cedar (serde)   |    56.61 µs |      319 |      29 |   155.5 KB |
+| duramen (serde) |    6.942 µs |      151 |      11 |   26.67 KB |
+| duramen (facet) |    7.878 µs |       92 |      21 |   42.75 KB |
+| cedar (prost)   |    47.78 µs |      207 |      29 |   133.8 KB |
+| duramen (prost) |    3.728 µs |       48 |      11 |    14.7 KB |
 
 #### [example_1a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_1a.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    30.42 µs |         120 |      24 KB |
-| duramen         |    674.3 ns |           2 |      288 B |
-| cedar (serde)   |    33.49 µs |         175 |   35.05 KB |
-| duramen (serde) |    3.125 µs |          67 |   11.33 KB |
-| duramen (facet) |     3.82 µs |          38 |   17.33 KB |
-| cedar (prost)   |     30.7 µs |         136 |   28.12 KB |
-| duramen (prost) |    1.762 µs |          20 |   3.929 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    29.42 µs |      120 |      22 |   70.38 KB |
+| duramen         |    684.6 ns |        2 |       8 |   4.608 KB |
+| cedar (serde)   |    34.03 µs |      175 |      22 |   81.43 KB |
+| duramen (serde) |    3.124 µs |       67 |       8 |   15.65 KB |
+| duramen (facet) |    3.819 µs |       38 |      16 |   23.03 KB |
+| cedar (prost)   |    30.66 µs |      136 |      22 |    74.5 KB |
+| duramen (prost) |    1.762 µs |       20 |       8 |   8.249 KB |
 
 #### [example_2a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_2a.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    32.29 µs |         125 |   24.32 KB |
-| duramen         |    679.6 ns |           2 |      288 B |
-| cedar (serde)   |    36.98 µs |         182 |   35.55 KB |
-| duramen (serde) |    3.167 µs |          67 |   11.35 KB |
-| duramen (facet) |    3.861 µs |          38 |   17.35 KB |
-| cedar (prost)   |    33.48 µs |         141 |   28.46 KB |
-| duramen (prost) |    1.762 µs |          20 |   3.953 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |       32 µs |      125 |      24 |   104.4 KB |
+| duramen         |    689.9 ns |        2 |       8 |   4.608 KB |
+| cedar (serde)   |    37.18 µs |      182 |      24 |   115.7 KB |
+| duramen (serde) |    3.041 µs |       67 |       8 |   15.67 KB |
+| duramen (facet) |    3.902 µs |       38 |      16 |   23.04 KB |
+| cedar (prost)   |    33.61 µs |      141 |      24 |   108.6 KB |
+| duramen (prost) |    1.773 µs |       20 |       8 |   8.273 KB |
 
 #### [example_2b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_2b.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    31.83 µs |         125 |    24.3 KB |
-| duramen         |    674.3 ns |           2 |      288 B |
-| cedar (serde)   |    36.39 µs |         182 |   35.52 KB |
-| duramen (serde) |    3.208 µs |          67 |   11.32 KB |
-| duramen (facet) |     3.82 µs |          38 |   17.33 KB |
-| cedar (prost)   |    32.98 µs |         141 |    28.4 KB |
-| duramen (prost) |    1.763 µs |          20 |   3.917 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    31.42 µs |      125 |      24 |   104.4 KB |
+| duramen         |    684.6 ns |        2 |       8 |   4.608 KB |
+| cedar (serde)   |    36.43 µs |      182 |      24 |   115.6 KB |
+| duramen (serde) |    3.082 µs |       67 |       8 |   15.64 KB |
+| duramen (facet) |     3.86 µs |       38 |      16 |   23.02 KB |
+| cedar (prost)   |    33.15 µs |      141 |      24 |   108.5 KB |
+| duramen (prost) |    1.773 µs |       20 |       8 |   8.237 KB |
 
 #### [example_2c](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_2c.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    40.06 µs |         148 |   31.19 KB |
-| duramen         |    804.6 ns |           2 |      288 B |
-| cedar (serde)   |    47.37 µs |         236 |    49.7 KB |
-| duramen (serde) |    4.017 µs |          88 |   13.38 KB |
-| duramen (facet) |    4.722 µs |          50 |   20.79 KB |
-| cedar (prost)   |    40.91 µs |         170 |   35.63 KB |
-| duramen (prost) |    2.334 µs |          30 |   5.531 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |     39.1 µs |      148 |      27 |   123.7 KB |
+| duramen         |    820.1 ns |        2 |       8 |   4.608 KB |
+| cedar (serde)   |    47.37 µs |      236 |      27 |   142.2 KB |
+| duramen (serde) |    3.934 µs |       88 |       8 |    17.7 KB |
+| duramen (facet) |    4.764 µs |       50 |      16 |   26.49 KB |
+| cedar (prost)   |    40.95 µs |      170 |      27 |   128.1 KB |
+| duramen (prost) |    2.293 µs |       30 |       8 |   9.851 KB |
 
 #### [example_3a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_3a.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    29.55 µs |         120 |   22.31 KB |
-| duramen         |    576.1 ns |           2 |      288 B |
-| cedar (serde)   |    33.12 µs |         167 |   31.46 KB |
-| duramen (serde) |    2.638 µs |          57 |   10.87 KB |
-| duramen (facet) |    3.368 µs |          33 |   16.18 KB |
-| cedar (prost)   |    30.62 µs |         134 |   26.36 KB |
-| duramen (prost) |    1.403 µs |          16 |   3.761 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    29.21 µs |      120 |      24 |   102.4 KB |
+| duramen         |    591.5 ns |        2 |       7 |   4.096 KB |
+| cedar (serde)   |    33.28 µs |      167 |      24 |   111.6 KB |
+| duramen (serde) |    2.658 µs |       57 |       7 |   14.68 KB |
+| duramen (facet) |     3.41 µs |       33 |      14 |    21.1 KB |
+| cedar (prost)   |    30.82 µs |      134 |      24 |   106.5 KB |
+| duramen (prost) |    1.413 µs |       16 |       7 |   7.569 KB |
 
 #### [example_3b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_3b.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    38.97 µs |         148 |   31.18 KB |
-| duramen         |    804.6 ns |           2 |      288 B |
-| cedar (serde)   |    46.54 µs |         236 |   49.69 KB |
-| duramen (serde) |    3.975 µs |          88 |   13.38 KB |
-| duramen (facet) |    4.722 µs |          50 |   20.79 KB |
-| cedar (prost)   |     40.2 µs |         170 |   35.63 KB |
-| duramen (prost) |    2.334 µs |          30 |   5.536 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    37.85 µs |      148 |      27 |   123.7 KB |
+| duramen         |    820.1 ns |        2 |       8 |   4.608 KB |
+| cedar (serde)   |    46.66 µs |      236 |      27 |   142.2 KB |
+| duramen (serde) |    3.892 µs |       88 |       8 |    17.7 KB |
+| duramen (facet) |    4.681 µs |       50 |      16 |   26.49 KB |
+| cedar (prost)   |    40.11 µs |      170 |      27 |   128.1 KB |
+| duramen (prost) |    2.334 µs |       30 |       8 |   9.856 KB |
 
 #### [example_3c](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_3c.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    29.51 µs |         120 |   22.32 KB |
-| duramen         |      576 ns |           2 |      288 B |
-| cedar (serde)   |     33.2 µs |         167 |   31.48 KB |
-| duramen (serde) |    2.741 µs |          57 |   10.87 KB |
-| duramen (facet) |     3.41 µs |          33 |   16.18 KB |
-| cedar (prost)   |    30.74 µs |         134 |   26.37 KB |
-| duramen (prost) |    1.424 µs |          16 |   3.761 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    28.96 µs |      120 |      24 |   102.4 KB |
+| duramen         |    591.5 ns |        2 |       7 |   4.096 KB |
+| cedar (serde)   |    33.37 µs |      167 |      24 |   111.6 KB |
+| duramen (serde) |    2.678 µs |       57 |       7 |   14.68 KB |
+| duramen (facet) |     3.41 µs |       33 |      14 |    21.1 KB |
+| cedar (prost)   |    30.74 µs |      134 |      24 |   106.5 KB |
+| duramen (prost) |    1.424 µs |       16 |       7 |   7.569 KB |
 
 #### [example_4a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4a.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    49.43 µs |         181 |   34.04 KB |
-| duramen         |    1.143 µs |           6 |      416 B |
-| cedar (serde)   |    59.06 µs |         327 |   58.43 KB |
-| duramen (serde) |    6.533 µs |         146 |   16.32 KB |
-| duramen (facet) |    7.718 µs |          89 |   35.43 KB |
-| cedar (prost)   |     50.6 µs |         217 |   39.39 KB |
-| duramen (prost) |    3.193 µs |          44 |    6.35 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    48.18 µs |      181 |      28 |   126.6 KB |
+| duramen         |    1.174 µs |        6 |       9 |    8.32 KB |
+| cedar (serde)   |    58.85 µs |      327 |      28 |     151 KB |
+| duramen (serde) |    6.408 µs |      146 |       9 |   24.22 KB |
+| duramen (facet) |    7.633 µs |       89 |      19 |   45.24 KB |
+| cedar (prost)   |    51.02 µs |      217 |      28 |   131.9 KB |
+| duramen (prost) |    3.233 µs |       44 |       9 |   14.25 KB |
 
 #### [example_4d](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4d.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    35.24 µs |         136 |   24.17 KB |
-| duramen         |    905.2 ns |           5 |      384 B |
-| cedar (serde)   |    41.12 µs |         235 |   38.65 KB |
-| duramen (serde) |    4.822 µs |         113 |   14.59 KB |
-| duramen (facet) |     5.99 µs |          71 |   30.73 KB |
-| cedar (prost)   |    36.33 µs |         161 |   28.94 KB |
-| duramen (prost) |    2.003 µs |          28 |   5.371 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    34.61 µs |      136 |      28 |   116.9 KB |
+| duramen         |    905.3 ns |        5 |       8 |   4.704 KB |
+| cedar (serde)   |    40.87 µs |      235 |      28 |   131.3 KB |
+| duramen (serde) |     4.78 µs |      113 |       8 |   18.91 KB |
+| duramen (facet) |     6.03 µs |       71 |      17 |   36.45 KB |
+| cedar (prost)   |     36.5 µs |      161 |      28 |   121.6 KB |
+| duramen (prost) |    2.002 µs |       28 |       8 |   9.691 KB |
 
 #### [example_4e](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4e.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    37.36 µs |         138 |   24.44 KB |
-| duramen         |    989.1 ns |           4 |      352 B |
-| cedar (serde)   |    43.49 µs |         241 |   39.24 KB |
-| duramen (serde) |    5.108 µs |         117 |   14.73 KB |
-| duramen (facet) |    6.321 µs |          71 |   30.65 KB |
-| cedar (prost)   |     38.5 µs |         165 |   29.21 KB |
-| duramen (prost) |    2.313 µs |          30 |   5.391 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    36.52 µs |      138 |      28 |   117.1 KB |
+| duramen         |    999.3 ns |        4 |       9 |   8.256 KB |
+| cedar (serde)   |    43.11 µs |      241 |      28 |   131.9 KB |
+| duramen (serde) |    5.065 µs |      117 |       9 |   22.64 KB |
+| duramen (facet) |    6.363 µs |       71 |      18 |   39.95 KB |
+| cedar (prost)   |     38.7 µs |      165 |      28 |   121.9 KB |
+| duramen (prost) |    2.292 µs |       30 |       9 |   13.29 KB |
 
 #### [example_4f](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_4f.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |     43.3 µs |         156 |   30.32 KB |
-| duramen         |    1.234 µs |           8 |      480 B |
-| cedar (serde)   |    51.72 µs |         298 |    53.1 KB |
-| duramen (serde) |     6.65 µs |         154 |   16.59 KB |
-| duramen (facet) |    8.166 µs |          98 |   39.81 KB |
-| cedar (prost)   |    43.92 µs |         190 |   35.64 KB |
-| duramen (prost) |    2.864 µs |          40 |   5.975 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    42.34 µs |      156 |      29 |   123.3 KB |
+| duramen         |    1.255 µs |        8 |       9 |   8.384 KB |
+| cedar (serde)   |    51.42 µs |      298 |      29 |   146.1 KB |
+| duramen (serde) |     6.73 µs |      154 |       9 |   24.49 KB |
+| duramen (facet) |    8.207 µs |       98 |      19 |   49.62 KB |
+| cedar (prost)   |    44.59 µs |      190 |      29 |   128.6 KB |
+| duramen (prost) |    2.905 µs |       40 |       9 |   13.87 KB |
 
 #### [example_5b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/example_use_cases/policies_5b.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    65.55 µs |         223 |   46.11 KB |
-| duramen         |    2.139 µs |          16 |      736 B |
-| cedar (serde)   |    84.12 µs |         521 |   93.76 KB |
-| duramen (serde) |    13.97 µs |         308 |   26.24 KB |
-| duramen (facet) |    15.88 µs |         195 |   74.65 KB |
-| cedar (prost)   |     68.3 µs |         294 |    53.4 KB |
-| duramen (prost) |    6.429 µs |          91 |   10.38 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    62.92 µs |      223 |      36 |     166 KB |
+| duramen         |    2.181 µs |       16 |      11 |   16.83 KB |
+| cedar (serde)   |    84.12 µs |      521 |      36 |   213.6 KB |
+| duramen (serde) |    13.25 µs |      308 |      11 |   42.33 KB |
+| duramen (facet) |    15.92 µs |      195 |      22 |   92.68 KB |
+| cedar (prost)   |    68.42 µs |      294 |      36 |   173.2 KB |
+| duramen (prost) |    6.511 µs |       91 |      11 |   26.47 KB |
 
 #### [ip_1](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/ip/policies_1.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    37.47 µs |         149 |   27.71 KB |
-| duramen         |    858.3 ns |           5 |      384 B |
-| cedar (serde)   |    44.11 µs |         244 |   44.22 KB |
-| duramen (serde) |    4.497 µs |         106 |   14.69 KB |
-| duramen (facet) |    5.455 µs |          64 |   25.91 KB |
-| cedar (prost)   |    38.53 µs |         172 |   32.29 KB |
-| duramen (prost) |    2.333 µs |          31 |   5.462 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    36.85 µs |      149 |      27 |   120.1 KB |
+| duramen         |    873.9 ns |        5 |       8 |   4.704 KB |
+| cedar (serde)   |    44.24 µs |      244 |      27 |   136.6 KB |
+| duramen (serde) |    4.371 µs |      106 |       8 |   19.01 KB |
+| duramen (facet) |     5.58 µs |       64 |      17 |   31.62 KB |
+| cedar (prost)   |    39.07 µs |      172 |      27 |   124.7 KB |
+| duramen (prost) |    2.291 µs |       31 |       8 |   9.782 KB |
 
 #### [ip_2](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/ip/policies_2.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    42.87 µs |         162 |   31.06 KB |
-| duramen         |    1.192 µs |           8 |      480 B |
-| cedar (serde)   |    50.94 µs |         287 |    53.6 KB |
-| duramen (serde) |    6.042 µs |         139 |   16.79 KB |
-| duramen (facet) |    7.179 µs |          86 |   33.31 KB |
-| cedar (prost)   |    43.75 µs |         193 |   36.09 KB |
-| duramen (prost) |    3.153 µs |          42 |    5.98 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    42.04 µs |      162 |      29 |     124 KB |
+| duramen         |    1.203 µs |        8 |       9 |   8.384 KB |
+| cedar (serde)   |    51.31 µs |      287 |      29 |   146.6 KB |
+| duramen (serde) |    6.165 µs |      139 |       9 |   24.69 KB |
+| duramen (facet) |     7.22 µs |       86 |      18 |   42.61 KB |
+| cedar (prost)   |    44.29 µs |      193 |      29 |   129.1 KB |
+| duramen (prost) |     3.11 µs |       42 |       9 |   13.88 KB |
 
 #### [ip_3](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/ip/policies_3.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    39.92 µs |         153 |   29.11 KB |
-| duramen         |    889.6 ns |           5 |      384 B |
-| cedar (serde)   |    46.44 µs |         247 |   46.96 KB |
-| duramen (serde) |    4.498 µs |         104 |   15.07 KB |
-| duramen (facet) |    5.458 µs |          62 |   24.31 KB |
-| cedar (prost)   |    40.48 µs |         175 |    33.7 KB |
-| duramen (prost) |    2.458 µs |          31 |   5.446 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    38.97 µs |      153 |      28 |   121.8 KB |
+| duramen         |    910.4 ns |        5 |       8 |   4.704 KB |
+| cedar (serde)   |    46.61 µs |      247 |      28 |   139.7 KB |
+| duramen (serde) |    4.372 µs |      104 |       9 |   19.58 KB |
+| duramen (facet) |    5.456 µs |       62 |      18 |   30.21 KB |
+| cedar (prost)   |    40.86 µs |      175 |      28 |   126.4 KB |
+| duramen (prost) |    2.478 µs |       31 |       9 |      10 KB |
 
 #### [multi_1](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_1.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    45.69 µs |         177 |   37.46 KB |
-| duramen         |     1.24 µs |           2 |      288 B |
-| cedar (serde)   |    56.58 µs |         308 |   63.14 KB |
-| duramen (serde) |    6.504 µs |         135 |    15.5 KB |
-| duramen (facet) |    7.443 µs |          73 |   27.39 KB |
-| cedar (prost)   |    47.07 µs |         207 |   42.45 KB |
-| duramen (prost) |    3.529 µs |          40 |    5.89 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    44.85 µs |      177 |      29 |   132.6 KB |
+| duramen         |    1.261 µs |        2 |      10 |   9.216 KB |
+| cedar (serde)   |    56.37 µs |      308 |      29 |   158.3 KB |
+| duramen (serde) |    6.294 µs |      135 |      10 |   24.42 KB |
+| duramen (facet) |    7.318 µs |       73 |      20 |   39.07 KB |
+| cedar (prost)   |    47.44 µs |      207 |      29 |   137.6 KB |
+| duramen (prost) |    3.529 µs |       40 |      10 |   14.81 KB |
 
 #### [multi_2](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_2.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    41.21 µs |         161 |   31.19 KB |
-| duramen         |    1.105 µs |           2 |      288 B |
-| cedar (serde)   |    48.55 µs |         262 |    50.1 KB |
-| duramen (serde) |    5.486 µs |         114 |   14.48 KB |
-| duramen (facet) |    6.457 µs |          62 |      25 KB |
-| cedar (prost)   |     42.1 µs |         185 |   35.95 KB |
-| duramen (prost) |    2.957 µs |          31 |   5.304 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    40.04 µs |      161 |      28 |   126.2 KB |
+| duramen         |    1.136 µs |        2 |      10 |   9.216 KB |
+| cedar (serde)   |    48.51 µs |      262 |      28 |   145.1 KB |
+| duramen (serde) |    5.402 µs |      114 |      10 |   23.41 KB |
+| duramen (facet) |    6.457 µs |       62 |      19 |   36.16 KB |
+| cedar (prost)   |    42.47 µs |      185 |      28 |     131 KB |
+| duramen (prost) |    2.873 µs |       31 |      10 |   14.23 KB |
 
 #### [multi_3](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_3.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    54.57 µs |         204 |   36.16 KB |
-| duramen         |    1.496 µs |           6 |      416 B |
-| cedar (serde)   |     65.2 µs |         380 |   63.93 KB |
-| duramen (serde) |    8.687 µs |         192 |   20.36 KB |
-| duramen (facet) |    10.31 µs |         113 |   45.11 KB |
-| cedar (prost)   |    55.86 µs |         247 |    42.1 KB |
-| duramen (prost) |    4.058 µs |          52 |   8.404 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |     52.4 µs |      204 |      32 |     132 KB |
+| duramen         |    1.527 µs |        6 |      10 |   9.344 KB |
+| cedar (serde)   |    65.49 µs |      380 |      32 |   159.7 KB |
+| duramen (serde) |    8.562 µs |      192 |      10 |   29.29 KB |
+| duramen (facet) |    10.14 µs |      113 |      21 |   56.81 KB |
+| cedar (prost)   |     55.6 µs |      247 |      32 |   137.9 KB |
+| duramen (prost) |    4.098 µs |       52 |      10 |   17.33 KB |
 
 #### [multi_4](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_4.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    72.69 µs |         279 |   49.52 KB |
-| duramen         |     2.48 µs |          10 |      544 B |
-| cedar (serde)   |    92.84 µs |         582 |   98.42 KB |
-| duramen (serde) |    15.07 µs |         326 |    30.8 KB |
-| duramen (facet) |    17.59 µs |         189 |   73.76 KB |
-| cedar (prost)   |     75.2 µs |         344 |   57.51 KB |
-| duramen (prost) |     6.61 µs |          77 |   13.49 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    69.94 µs |      279 |      38 |   149.8 KB |
+| duramen         |    2.521 µs |       10 |      12 |   18.68 KB |
+| cedar (serde)   |    91.96 µs |      582 |      38 |   198.7 KB |
+| duramen (serde) |    15.03 µs |      326 |      12 |   48.95 KB |
+| duramen (facet) |    17.55 µs |      189 |      26 |   97.43 KB |
+| cedar (prost)   |    75.49 µs |      344 |      38 |   157.7 KB |
+| duramen (prost) |    6.652 µs |       77 |      12 |   31.63 KB |
 
 #### [multi_5](https://github.com/cedar-policy/cedar-integration-tests/blob/main/tests/multi/policies_5.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    59.09 µs |         226 |   37.49 KB |
-| duramen         |    1.775 µs |           7 |      448 B |
-| cedar (serde)   |    69.82 µs |         418 |   66.98 KB |
-| duramen (serde) |     9.83 µs |         212 |    25.3 KB |
-| duramen (facet) |    11.63 µs |         123 |   52.38 KB |
-| cedar (prost)   |    59.91 µs |         268 |   43.76 KB |
-| duramen (prost) |    4.353 µs |          48 |   12.17 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    56.17 µs |      226 |      34 |   134.8 KB |
+| duramen         |    1.817 µs |        7 |      11 |   16.54 KB |
+| cedar (serde)   |    70.15 µs |      418 |      34 |   164.3 KB |
+| duramen (serde) |    9.788 µs |      212 |      11 |    41.4 KB |
+| duramen (facet) |    11.75 µs |      123 |      23 |   72.11 KB |
+| cedar (prost)   |    60.08 µs |      268 |      34 |   141.1 KB |
+| duramen (prost) |    4.394 µs |       48 |      11 |   28.27 KB |
 
 #### [parser_testfile](https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/parser/testfiles/policies.cedar)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    744.6 µs |        3534 |   722.9 KB |
-| duramen         |    40.77 µs |         149 |   6.308 KB |
-| cedar (serde)   |      736 µs |        3534 |   722.9 KB |
-| duramen (serde) |    40.81 µs |         149 |   6.308 KB |
-| duramen (facet) |    40.68 µs |         149 |   6.308 KB |
-| cedar (prost)   |    738.3 µs |        3534 |   722.9 KB |
-| duramen (prost) |    40.85 µs |         149 |   6.308 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    740.6 µs |     3534 |     516 |    1.08 MB |
+| duramen         |    41.39 µs |      149 |      21 |   301.4 KB |
+| cedar (serde)   |    738.1 µs |     3534 |     516 |    1.08 MB |
+| duramen (serde) |    41.27 µs |      149 |      21 |   301.4 KB |
+| duramen (facet) |    41.39 µs |      149 |      21 |   301.4 KB |
+| cedar (prost)   |    740.6 µs |     3534 |     516 |    1.08 MB |
+| duramen (prost) |    41.35 µs |      149 |      21 |   301.4 KB |
 
 #### corpus_502da
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    72.75 µs |         224 |   73.29 KB |
-| duramen         |    5.347 µs |          18 |      800 B |
-| cedar (serde)   |    100.9 µs |         441 |   131.5 KB |
-| duramen (serde) |    18.42 µs |         206 |    27.9 KB |
-| duramen (facet) |    21.11 µs |         139 |   54.89 KB |
-| cedar (prost)   |    76.03 µs |         267 |   83.66 KB |
-| duramen (prost) |    14.11 µs |          73 |   16.72 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    71.75 µs |      224 |      45 |   190.8 KB |
+| duramen         |    5.347 µs |       18 |      10 |   9.728 KB |
+| cedar (serde)   |    101.2 µs |      441 |      61 |   249.5 KB |
+| duramen (serde) |    18.42 µs |      206 |      10 |   36.83 KB |
+| duramen (facet) |    21.28 µs |      139 |      22 |   68.79 KB |
+| cedar (prost)   |    76.11 µs |      267 |      45 |   201.1 KB |
+| duramen (prost) |    14.11 µs |       73 |      10 |   25.64 KB |
 
 #### corpus_c7e64
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |     91.2 µs |         239 |   53.75 KB |
-| duramen         |     4.89 µs |          14 |      672 B |
-| cedar (serde)   |    120.8 µs |         538 |     108 KB |
-| duramen (serde) |    16.31 µs |         254 |   29.16 KB |
-| duramen (facet) |     19.4 µs |         162 |   60.86 KB |
-| cedar (prost)   |    96.21 µs |         378 |   68.36 KB |
-| duramen (prost) |    15.51 µs |         179 |   17.69 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    90.29 µs |      239 |      86 |     181 KB |
+| duramen         |    4.933 µs |       14 |      13 |   33.15 KB |
+| cedar (serde)   |    120.9 µs |      538 |     134 |   237.9 KB |
+| duramen (serde) |    16.05 µs |      254 |      31 |   63.37 KB |
+| duramen (facet) |    19.49 µs |      162 |      43 |     100 KB |
+| cedar (prost)   |    96.83 µs |      378 |      86 |   195.6 KB |
+| duramen (prost) |    15.63 µs |      179 |      49 |   53.63 KB |
 
 #### corpus_f4174
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    94.66 µs |         238 |   54.77 KB |
-| duramen         |    5.307 µs |          14 |      672 B |
-| cedar (serde)   |      126 µs |         537 |   110.3 KB |
-| duramen (serde) |    17.22 µs |         254 |   29.97 KB |
-| duramen (facet) |    20.36 µs |         162 |   61.25 KB |
-| cedar (prost)   |    100.4 µs |         377 |   70.36 KB |
-| duramen (prost) |    16.34 µs |         179 |    18.4 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    93.66 µs |      238 |      87 |   182.5 KB |
+| duramen         |    5.349 µs |       14 |      14 |   37.24 KB |
+| cedar (serde)   |    126.4 µs |      537 |     135 |   240.7 KB |
+| duramen (serde) |    17.26 µs |      254 |      32 |   68.27 KB |
+| duramen (facet) |    20.61 µs |      162 |      44 |   104.5 KB |
+| cedar (prost)   |    100.5 µs |      377 |      87 |     198 KB |
+| duramen (prost) |    16.34 µs |      179 |      50 |   58.43 KB |
 
 ### Schema
 
 #### [sandbox_a](https://github.com/cedar-policy/cedar-integration-tests/blob/main/sample-data/sandbox_a/schema.cedarschema)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |      394 µs |        2232 |   716.6 KB |
-| duramen         |    4.029 µs |           2 |      288 B |
-| cedar (serde)   |    459.4 µs |        2941 |   920.4 KB |
-| duramen (serde) |    26.61 µs |         543 |    63.1 KB |
-| duramen (facet) |    29.65 µs |         323 |   96.35 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    395.9 µs |     2232 |     987 |   1.244 MB |
+| duramen         |    4.071 µs |        2 |      14 |   36.86 KB |
+| cedar (serde)   |    458.2 µs |     2941 |    1054 |   1.479 MB |
+| duramen (serde) |    25.35 µs |      543 |      14 |   99.67 KB |
+| duramen (facet) |    29.27 µs |      323 |      24 |     137 KB |
 
 #### [sandbox_b](https://github.com/cedar-policy/cedar-integration-tests/blob/main/sample-data/sandbox_b/schema.cedarschema)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    427.5 µs |        2454 |   785.3 KB |
-| duramen         |    4.488 µs |           2 |      288 B |
-| cedar (serde)   |    500.1 µs |        3259 |   1.034 MB |
-| duramen (serde) |    32.04 µs |         643 |   82.48 KB |
-| duramen (facet) |    33.87 µs |         386 |   123.6 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    428.6 µs |     2454 |    1067 |   1.336 MB |
+| duramen         |    4.571 µs |        2 |      14 |   36.86 KB |
+| cedar (serde)   |    498.1 µs |     3259 |    1139 |   1.624 MB |
+| duramen (serde) |    30.07 µs |      643 |      14 |     119 KB |
+| duramen (facet) |    33.57 µs |      386 |      25 |   164.3 KB |
 
 #### [sandbox_b_exts](https://github.com/cedar-policy/cedar-integration-tests/blob/main/sample-data/sandbox_b/schema_exts.cedarschema)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    485.1 µs |        2783 |   893.4 KB |
-| duramen         |    5.154 µs |           2 |      288 B |
-| cedar (serde)   |    561.3 µs |        3611 |   1.147 MB |
-| duramen (serde) |    33.13 µs |         673 |   84.88 KB |
-| duramen (facet) |    35.59 µs |         406 |   127.4 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    486.7 µs |     2783 |    1216 |   1.515 MB |
+| duramen         |    5.154 µs |        2 |      14 |   36.86 KB |
+| cedar (serde)   |    558.6 µs |     3611 |    1291 |   1.811 MB |
+| duramen (serde) |    32.08 µs |      673 |      14 |   121.4 KB |
+| duramen (facet) |    35.72 µs |      406 |      25 |   168.1 KB |
 
 #### [validator_testfile](https://github.com/cedar-policy/cedar/blob/v4.8.2/cedar-policy-core/src/validator/cedar_schema/testfiles/example.cedarschema)
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    264.5 µs |        1465 |     459 KB |
-| duramen         |    2.614 µs |           2 |      288 B |
-| cedar (serde)   |    291.5 µs |        1839 |   595.6 KB |
-| duramen (serde) |    15.13 µs |         306 |   51.96 KB |
-| duramen (facet) |    16.97 µs |         194 |   71.18 KB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    262.4 µs |     1465 |     624 |     805 KB |
+| duramen         |    2.656 µs |        2 |      12 |   18.43 KB |
+| cedar (serde)   |      291 µs |     1839 |     633 |   944.7 KB |
+| duramen (serde) |    14.92 µs |      306 |      12 |   69.29 KB |
+| duramen (facet) |    16.92 µs |      194 |      22 |   90.58 KB |
 
 #### corpus_011ec
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |       72 ms |      465123 |   156.7 MB |
-| duramen         |    342.6 µs |           2 |      288 B |
-| cedar (serde)   |    73.87 ms |      479176 |   159.1 MB |
-| duramen (serde) |    1.024 ms |       13317 |   1.222 MB |
-| duramen (facet) |    1.018 ms |        8222 |   2.088 MB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    72.35 ms |   465123 |  216675 |   250.4 MB |
+| duramen         |    327.1 µs |        2 |      26 |   2.359 MB |
+| cedar (serde)   |    74.38 ms |   477968 |  219492 |   252.8 MB |
+| duramen (serde) |    1.008 ms |    13317 |    2515 |   3.856 MB |
+| duramen (facet) |    992.7 µs |     8222 |    2531 |   4.869 MB |
 
 #### corpus_37250
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |    16.58 ms |       97157 |   32.03 MB |
-| duramen         |    158.8 µs |           2 |      288 B |
-| cedar (serde)   |     18.1 ms |      116265 |   35.15 MB |
-| duramen (serde) |    1.142 ms |       25442 |   1.487 MB |
-| duramen (facet) |    1.127 ms |       15634 |   3.257 MB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    16.59 ms |    97157 |   44429 |   51.33 MB |
+| duramen         |    164.6 µs |        2 |      24 |   1.179 MB |
+| cedar (serde)   |    18.02 ms |   116265 |   45092 |   54.94 MB |
+| duramen (serde) |    1.142 ms |    25442 |     245 |   2.758 MB |
+| duramen (facet) |    1.132 ms |    15634 |     261 |    4.66 MB |
 
 #### corpus_bd2fe
 
-| Implementation  |        Time | Alloc Count | Alloc Size |
-|-----------------|-------------|-------------|------------|
-| cedar           |     19.5 ms |      113977 |   37.63 MB |
-| duramen         |    212.1 µs |           2 |      288 B |
-| cedar (serde)   |    21.24 ms |      136078 |   41.18 MB |
-| duramen (serde) |    1.368 ms |       29724 |   1.681 MB |
-| duramen (facet) |    1.355 ms |       18223 |   3.771 MB |
+| Implementation  |        Time |   Allocs |   Grows |     Memory |
+|-----------------|-------------|----------|---------|------------|
+| cedar           |    19.49 ms |   113977 |   51565 |   60.56 MB |
+| duramen         |    195.6 µs |        2 |      25 |   2.097 MB |
+| cedar (serde)   |    21.01 ms |   136078 |   52263 |   64.63 MB |
+| duramen (serde) |    1.368 ms |    29724 |     266 |    3.89 MB |
+| duramen (facet) |    1.345 ms |    18223 |     282 |    6.11 MB |
 
 ## License
 
