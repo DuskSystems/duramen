@@ -59,6 +59,7 @@ unused_result_ok = "deny"
 
 # Performance
 string_lit_chars_any = "deny"
+inline_always = "allow"
 
 # Clarity
 allow_attributes = "deny"
