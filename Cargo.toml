@@ -213,7 +213,11 @@ arbitrary = { workspace = true, optional = true, features = ["derive"] }
 [dev-dependencies]
 # Upstream
 cedar-policy = { workspace = true, features = ["protobufs"] }
-cedar-policy-core = { workspace = true, features = ["ipaddr", "decimal", "datetime"] }
+cedar-policy-core = { workspace = true, features = [
+  "ipaddr",
+  "decimal",
+  "datetime",
+] }
 
 # Serialization
 serde_json = { workspace = true }
@@ -292,12 +296,20 @@ harness = false
 required-features = ["facet"]
 
 [[bench]]
-name = "divan"
+name = "cedar_divan"
+harness = false
+
+[[bench]]
+name = "cedar_gungraun"
+harness = false
+
+[[bench]]
+name = "duramen_divan"
 harness = false
 required-features = ["serde", "facet", "prost"]
 
 [[bench]]
-name = "gungraun"
+name = "duramen_gungraun"
 harness = false
 required-features = ["serde", "facet", "prost"]
 
