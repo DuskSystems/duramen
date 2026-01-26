@@ -1,0 +1,34 @@
+--- a/cedar-lean-ffi/build.rs
++++ b/cedar-lean-ffi/build.rs
+@@ -14,28 +14,12 @@
+  * limitations under the License.
+  */
+
+-use cargo_metadata::MetadataCommand;
+ use std::path::{Path, PathBuf};
+
+ const CEDAR_LEAN_DIR: &str = "../cedar-lean";
+ const LEAN_BUILD_DIR: &str = "../cedar-lean/.lake/build/lib";
++
+ fn main() {
+-    let metadata = MetadataCommand::new().exec().unwrap();
+-    let cedar_proto_include_dir = match metadata
+-        .packages
+-        .iter()
+-        .find(|p| p.name.as_str() == "cedar-policy")
+-    {
+-        Some(cedar_policy_pkg) => {
+-            let package_path = PathBuf::from(&cedar_policy_pkg.manifest_path)
+-                .parent()
+-                .unwrap()
+-                .to_path_buf();
+-            package_path.join("protobuf_schema")
+-        }
+-        None => panic!(
+-            "Build script requires cedar-policy as a dependency. No matching dependency found"
+-        ),
+-    };
++    let cedar_proto_include_dir = PathBuf::from(std::env::var("CEDAR_PROTO_DIR").unwrap());
+     let cedar_proto_include_dir = cedar_proto_include_dir.to_str().unwrap();
+
+     // Get the location of the lean library

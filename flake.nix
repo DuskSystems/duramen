@@ -13,13 +13,23 @@
         nixpkgs.follows = "nixpkgs";
       };
     };
+
+    lean4-nix = {
+      url = "github:lenianiva/lean4-nix";
+
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
   };
 
   # nix flake show
   outputs =
     {
+      self,
       nixpkgs,
       rust-overlay,
+      lean4-nix,
       ...
     }:
 
@@ -33,7 +43,7 @@
           inherit system;
 
           overlays = [
-            rust-overlay.overlays.default
+            self.overlays.default
           ];
         }
       );
@@ -41,6 +51,30 @@
       perSystemPkgs = f: perSystem (system: f (systemPkgs.${system}));
     in
     {
+      overlays = {
+        default = nixpkgs.lib.composeManyExtensions [
+          rust-overlay.overlays.default
+          lean4-nix.tags."v4.24.0".lean-bin
+
+          (final: prev: {
+            cedar = prev.callPackage ./pkgs/cedar { };
+            cedar-lean = prev.callPackage ./pkgs/cedar-lean { };
+            cedar-lean-cli = prev.callPackage ./pkgs/cedar-lean-cli { };
+          })
+        ];
+      };
+
+      packages = perSystemPkgs (pkgs: {
+        # nix build .#cedar
+        cedar = pkgs.cedar;
+
+        # nix build .#cedar-lean
+        cedar-lean = pkgs.cedar-lean;
+
+        # nix build .#cedar-lean-cli
+        cedar-lean-cli = pkgs.cedar-lean-cli;
+      });
+
       devShells = perSystemPkgs (pkgs: {
         # nix develop
         default = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; } {
@@ -96,6 +130,10 @@
             cargo-show-asm
             vscode-extensions.vadimcn.vscode-lldb.adapter
 
+            # Cedar
+            cedar
+            cedar-lean-cli
+
             # GitHub
             zizmor
 
@@ -141,6 +179,10 @@
             cargo-deny
             cargo-hack
             cargo-nextest
+
+            # Cedar
+            cedar
+            cedar-lean-cli
 
             # GitHub
             zizmor
