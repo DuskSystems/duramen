@@ -1,0 +1,25 @@
+[package]
+name = "duramen-parser"
+description = "Duramen parser"
+include = ["/src"]
+publish = false
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = ["duramen-common/std", "duramen-lexer/std", "duramen-cst/std"]
+
+[dependencies]
+duramen-common = { workspace = true }
+duramen-lexer = { workspace = true }
+duramen-cst = { workspace = true }

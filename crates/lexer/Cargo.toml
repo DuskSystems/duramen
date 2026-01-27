@@ -1,0 +1,23 @@
+[package]
+name = "duramen-lexer"
+description = "Duramen lexer"
+include = ["/src"]
+publish = false
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = ["duramen-common/std"]
+
+[dependencies]
+duramen-common = { workspace = true }

@@ -1,7 +1,7 @@
 # https://doc.rust-lang.org/cargo/reference/workspaces.html
 [workspace]
 resolver = "3"
-members = ["."]
+members = [".", "crates/*"]
 
 [workspace.package]
 version = "0.1.0"
@@ -39,8 +39,11 @@ style = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 
 # Correctness
+arithmetic_side_effects = "deny"
 expect_used = "deny"
+fallible_impl_from = "deny"
 future_not_send = "deny"
+indexing_slicing = "deny"
 non_zero_suggestions = "deny"
 panic = "deny"
 rest_pat_in_fully_bound_structs = "deny"
@@ -107,12 +110,52 @@ should_implement_trait = "allow"
 too_many_lines = "allow"
 unsafe_derive_deserialize = "allow"
 
+[workspace.dependencies]
+duramen-common = { path = "crates/common", default-features = false }
+duramen-lexer = { path = "crates/lexer", default-features = false }
+duramen-cst = { path = "crates/cst", default-features = false }
+duramen-parser = { path = "crates/parser", default-features = false }
+duramen-ast = { path = "crates/ast", default-features = false }
+duramen-est = { path = "crates/est", default-features = false }
+duramen-validator = { path = "crates/validator", default-features = false }
+
+# Upstream
+cedar-policy = { version = "=4.8.2", default-features = false }
+cedar-policy-core = { version = "=4.8.2", default-features = false }
+
+# SIMD
+memchr = { version = "2.7", default-features = false }
+
+# Diagnostics
+# FIXME: https://github.com/rust-lang/annotate-snippets-rs/issues/359
+annotate-snippets = { git = "https://github.com/CathalMullan/annotate-snippets-rs", branch = "main", default-features = false }
+anstream = { version = "0.6", default-features = false }
+
+# Serialization
+serde = { version = "1.0", default-features = false }
+serde_json = { version = "1.0", default-features = false }
+facet = { version = "0.43", default-features = false }
+facet-json = { version = "0.43", default-features = false }
+prost = { version = "0.14", default-features = false }
+
+# Testing
+insta = { version = "1.46", default-features = false }
+datatest-stable = { version = "0.3", default-features = false }
+similar-asserts = { version = "1.7", default-features = false }
+
+# Benchmarking
+divan = { package = "codspeed-divan-compat", version = "4.3", default-features = false }
+
+# Fuzzing
+arbitrary = { version = "1.4", default-features = false }
+libfuzzer-sys = { version = "0.4", default-features = false }
+
 # https://doc.rust-lang.org/cargo/reference/manifest.html
 [package]
 name = "duramen"
 description = "A Cedar implementation"
 include = ["/src"]
-publish = true
+publish = false
 
 version.workspace = true
 edition.workspace = true
@@ -128,6 +171,15 @@ workspace = true
 [features]
 default = ["std"]
 std = []
+
+[dependencies]
+duramen-common = { workspace = true }
+duramen-lexer = { workspace = true }
+duramen-cst = { workspace = true }
+duramen-parser = { workspace = true }
+duramen-ast = { workspace = true }
+duramen-est = { workspace = true }
+duramen-validator = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true

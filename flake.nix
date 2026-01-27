@@ -130,6 +130,9 @@
             cargo-show-asm
             vscode-extensions.vadimcn.vscode-lldb.adapter
 
+            # Build
+            protobuf
+
             # Cedar
             cedar
             cedar-lean-cli
@@ -180,6 +183,9 @@
             cargo-hack
             cargo-nextest
 
+            # Build
+            protobuf
+
             # Cedar
             cedar
             cedar-lean-cli
@@ -224,6 +230,9 @@
             cargo-codspeed
             cargo-fuzz
             cargo-llvm-cov
+
+            # Build
+            protobuf
           ];
         };
 
@@ -252,6 +261,9 @@
             wild
             sccache
             cargo-hack
+
+            # Build
+            protobuf
           ];
         };
       });

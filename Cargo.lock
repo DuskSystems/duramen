@@ -5,3 +5,63 @@ version = 4
 [[package]]
 name = "duramen"
 version = "0.1.0"
+dependencies = [
+ "duramen-ast",
+ "duramen-common",
+ "duramen-cst",
+ "duramen-est",
+ "duramen-lexer",
+ "duramen-parser",
+ "duramen-validator",
+]
+
+[[package]]
+name = "duramen-ast"
+version = "0.1.0"
+dependencies = [
+ "duramen-common",
+ "duramen-cst",
+]
+
+[[package]]
+name = "duramen-common"
+version = "0.1.0"
+
+[[package]]
+name = "duramen-cst"
+version = "0.1.0"
+dependencies = [
+ "duramen-common",
+]
+
+[[package]]
+name = "duramen-est"
+version = "0.1.0"
+dependencies = [
+ "duramen-ast",
+ "duramen-common",
+]
+
+[[package]]
+name = "duramen-lexer"
+version = "0.1.0"
+dependencies = [
+ "duramen-common",
+]
+
+[[package]]
+name = "duramen-parser"
+version = "0.1.0"
+dependencies = [
+ "duramen-common",
+ "duramen-cst",
+ "duramen-lexer",
+]
+
+[[package]]
+name = "duramen-validator"
+version = "0.1.0"
+dependencies = [
+ "duramen-ast",
+ "duramen-common",
+]
