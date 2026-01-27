@@ -59,6 +59,7 @@ try_err = "deny"
 unused_result_ok = "deny"
 
 # Performance
+inline_always = "allow"
 string_lit_chars_any = "deny"
 
 # Clarity

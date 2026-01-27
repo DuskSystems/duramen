@@ -1,55 +1,59 @@
+use crate::lookup::ByteLookup;
+
 /// Cursor for traversing the source.
 pub struct Cursor<'a> {
     source: &'a str,
+    bytes: &'a [u8],
     position: usize,
 }
 
 impl<'a> Cursor<'a> {
     /// Creates a new cursor at the start of the source.
     #[must_use]
+    #[inline]
     pub const fn new(source: &'a str) -> Self {
         Self {
             source,
+            bytes: source.as_bytes(),
             position: 0,
         }
     }
 
     /// Returns the current byte position.
     #[must_use]
+    #[inline(always)]
     pub const fn position(&self) -> usize {
         self.position
     }
 
     /// Returns the current byte.
     #[must_use]
+    #[inline(always)]
     pub fn current(&self) -> Option<u8> {
-        self.source.as_bytes().get(self.position).copied()
+        self.bytes.get(self.position).copied()
     }
 
     /// Returns the next byte.
     #[must_use]
+    #[inline(always)]
     pub fn peek(&self) -> Option<u8> {
-        self.source
-            .as_bytes()
-            .get(self.position.checked_add(1)?)
-            .copied()
+        self.bytes.get(self.position.checked_add(1)?).copied()
     }
 
     /// Advance by one byte.
+    #[inline(always)]
     pub const fn bump(&mut self) {
-        if let Some(position) = self.position.checked_add(1) {
-            self.position = position;
-        }
+        self.position = self.position.saturating_add(1);
     }
 
     /// Advance by `n` bytes.
-    pub fn bump_n(&mut self, n: u8) {
-        for _ in 0..n {
-            self.bump();
-        }
+    #[inline(always)]
+    pub const fn bump_n(&mut self, n: usize) {
+        self.position = self.position.saturating_add(n);
     }
 
     /// Advance by one UTF-8 character.
+    #[inline]
     pub fn bump_char(&mut self) {
         if let Some(remaining) = self.source.get(self.position..)
             && let Some(char) = remaining.chars().next()
@@ -61,110 +65,95 @@ impl<'a> Cursor<'a> {
 
     /// Returns a slice from `start` to current position.
     #[must_use]
+    #[inline]
     pub fn slice(&self, start: usize) -> Option<&'a str> {
         self.source.get(start..self.position)
     }
 
     /// Skips whitespace characters.
+    #[inline]
     pub fn skip_whitespace(&mut self) {
-        while self.is_whitespace() {
-            self.bump();
+        while let Some(&byte) = self.bytes.get(self.position) {
+            if !ByteLookup::is_whitespace(byte) {
+                break;
+            }
+
+            self.position = self.position.saturating_add(1);
         }
     }
 
     /// Skips to end of line.
+    #[inline]
     pub fn skip_line(&mut self) {
-        let Some(remaining) = self.source.as_bytes().get(self.position..) else {
+        let Some(remaining) = self.bytes.get(self.position..) else {
             return;
         };
 
-        if let Some(offset) = memchr::memchr2(b'\n', b'\r', remaining)
-            && let Some(position) = self.position.checked_add(offset)
-        {
-            self.position = position;
+        if let Some(offset) = memchr::memchr2(b'\n', b'\r', remaining) {
+            self.position = self.position.saturating_add(offset);
         } else {
-            self.position = self.source.len();
+            self.position = self.bytes.len();
         }
     }
 
     /// Scans a string literal after the opening quote.
     ///
     /// Returns `true` if properly terminated, `false` if unterminated.
+    #[inline]
     pub fn scan_string(&mut self) -> bool {
-        let bytes = self.source.as_bytes();
-
         loop {
-            let Some(remaining) = bytes.get(self.position..) else {
+            let Some(remaining) = self.bytes.get(self.position..) else {
                 return false;
             };
 
             let Some(offset) = memchr::memchr2(b'"', b'\\', remaining) else {
-                self.position = self.source.len();
+                self.position = self.bytes.len();
                 return false;
             };
 
-            let Some(position) = self.position.checked_add(offset) else {
+            self.position = self.position.saturating_add(offset);
+
+            let Some(&byte) = self.bytes.get(self.position) else {
                 return false;
             };
 
-            self.position = position;
+            if byte == b'"' {
+                self.position = self.position.saturating_add(1);
+                return true;
+            }
 
-            match self.current() {
-                Some(b'"') => {
-                    self.bump();
-                    return true;
-                }
-                Some(b'\\') => {
-                    self.bump();
-                    self.bump_char();
-                }
-                _ => return false,
+            // Skip escaped character
+            self.position = self.position.saturating_add(1);
+            if let Some(remaining) = self.source.get(self.position..)
+                && let Some(char) = remaining.chars().next()
+            {
+                self.position = self.position.saturating_add(char.len_utf8());
             }
         }
     }
 
     /// Scans an identifier.
+    #[inline]
     pub fn scan_identifier(&mut self) {
-        while self.is_identifier_continue() {
-            self.bump();
+        while let Some(&byte) = self.bytes.get(self.position) {
+            if !ByteLookup::is_identifier_continue(byte) {
+                break;
+            }
+
+            self.position = self.position.saturating_add(1);
         }
     }
 
     /// Scans an integer.
+    #[inline]
     pub fn scan_integer(&mut self) {
-        while self.is_digit() {
-            self.bump();
+        while let Some(&byte) = self.bytes.get(self.position) {
+            if !ByteLookup::is_digit(byte) {
+                break;
+            }
+
+            self.position = self.position.saturating_add(1);
         }
-    }
-
-    /// Checks if current byte is whitespace.
-    #[must_use]
-    pub fn is_whitespace(&self) -> bool {
-        matches!(
-            self.current(),
-            Some(b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C)
-        )
-    }
-
-    /// Checks if current byte is a digit.
-    #[must_use]
-    pub fn is_digit(&self) -> bool {
-        matches!(self.current(), Some(b'0'..=b'9'))
-    }
-
-    /// Checks if current byte can start an identifier.
-    #[must_use]
-    pub fn is_identifier_start(&self) -> bool {
-        matches!(self.current(), Some(b'A'..=b'Z' | b'a'..=b'z' | b'_'))
-    }
-
-    /// Checks if current byte can continue an identifier.
-    #[must_use]
-    pub fn is_identifier_continue(&self) -> bool {
-        matches!(
-            self.current(),
-            Some(b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'_')
-        )
     }
 }
 
