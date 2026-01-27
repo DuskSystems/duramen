@@ -17,7 +17,19 @@ workspace = true
 
 [features]
 default = ["std"]
-std = ["duramen-common/std"]
+std = ["memchr/std"]
 
 [dependencies]
-duramen-common = { workspace = true }
+# SIMD
+memchr = { workspace = true }
+
+[dev-dependencies]
+# Benchmarking
+divan = { workspace = true }
+
+# RNG
+rand = { workspace = true }
+
+[[bench]]
+name = "throughput"
+harness = false

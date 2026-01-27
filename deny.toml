@@ -18,6 +18,7 @@ include-dev = true
 unused-allowed-license = "deny"
 allow = [
   "Apache-2.0",
+  "MIT",
 ]
 
 # https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html
