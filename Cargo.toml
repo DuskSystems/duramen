@@ -138,6 +138,9 @@ facet = { version = "0.43", default-features = false }
 facet-json = { version = "0.43", default-features = false }
 prost = { version = "0.14", default-features = false }
 
+# RNG
+rand = { version = "0.9", default-features = false, features = ["small_rng"] }
+
 # Testing
 insta = { version = "1.46", default-features = false }
 datatest-stable = { version = "0.3", default-features = false }

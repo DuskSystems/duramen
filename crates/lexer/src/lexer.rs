@@ -1,0 +1,175 @@
+use crate::cursor::Cursor;
+use crate::token::{Token, TokenKind};
+
+/// Lexer for source code.
+pub struct Lexer<'a> {
+    cursor: Cursor<'a>,
+}
+
+impl<'a> Lexer<'a> {
+    /// Creates a new lexer for the given source.
+    #[must_use]
+    pub const fn new(source: &'a str) -> Self {
+        Self {
+            cursor: Cursor::new(source),
+        }
+    }
+
+    /// Returns the next token.
+    pub fn next_token(&mut self) -> Option<Token> {
+        self.cursor.current()?;
+
+        let start = self.cursor.position();
+        let kind = self.scan_token();
+        let len = self.cursor.position().checked_sub(start)?;
+
+        Some(Token::new(kind, len))
+    }
+
+    /// Scans the next token.
+    fn scan_token(&mut self) -> TokenKind {
+        // Whitespace
+        if self.cursor.is_whitespace() {
+            self.cursor.skip_whitespace();
+            return TokenKind::Whitespace;
+        }
+
+        // Identifier or Keyword
+        if self.cursor.is_identifier_start() {
+            let start = self.cursor.position();
+            self.cursor.scan_identifier();
+
+            let Some(text) = self.cursor.slice(start) else {
+                return TokenKind::Unknown;
+            };
+
+            return TokenKind::from_identifier(text);
+        }
+
+        // Integer
+        if self.cursor.is_digit() {
+            self.cursor.scan_integer();
+            return TokenKind::Integer;
+        }
+
+        let Some(current) = self.cursor.current() else {
+            return TokenKind::Unknown;
+        };
+
+        // String
+        if current == b'"' {
+            self.cursor.bump();
+
+            if self.cursor.scan_string() {
+                return TokenKind::String;
+            }
+
+            return TokenKind::StringUnterminated;
+        }
+
+        // Comment
+        if current == b'/' && self.cursor.peek() == Some(b'/') {
+            self.cursor.bump_n(2);
+            self.cursor.skip_line();
+            return TokenKind::Comment;
+        }
+
+        // Punctuation
+        if let Some((kind, len)) = TokenKind::from_punctuation(current, self.cursor.peek()) {
+            self.cursor.bump_n(len);
+            return kind;
+        }
+
+        // Unknown character
+        self.cursor.bump_char();
+
+        TokenKind::Unknown
+    }
+}
+
+impl Iterator for Lexer<'_> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next_token()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty() {
+        let mut lexer = Lexer::new("");
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn whitespace() {
+        let mut lexer = Lexer::new("  \t\n");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Whitespace, 4)));
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn integer() {
+        let mut lexer = Lexer::new("12345");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Integer, 5)));
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn string() {
+        let mut lexer = Lexer::new(r#""hello""#);
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::String, 7)));
+        assert_eq!(lexer.next(), None);
+
+        let mut lexer = Lexer::new(r#""unterminated"#);
+        assert_eq!(
+            lexer.next(),
+            Some(Token::new(TokenKind::StringUnterminated, 13))
+        );
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn identifier() {
+        let mut lexer = Lexer::new("foo_bar");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Identifier, 7)));
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn keyword() {
+        let mut lexer = Lexer::new("permit");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Permit, 6)));
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn comment() {
+        let mut lexer = Lexer::new("// comment");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Comment, 10)));
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn punctuation() {
+        let mut lexer = Lexer::new("::==");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Colon2, 2)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Equal2, 2)));
+        assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn unknown() {
+        let mut lexer = Lexer::new("#");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Unknown, 1)));
+        assert_eq!(lexer.next(), None);
+
+        let mut lexer = Lexer::new("🦀");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Unknown, 4)));
+        assert_eq!(lexer.next(), None);
+    }
+}
