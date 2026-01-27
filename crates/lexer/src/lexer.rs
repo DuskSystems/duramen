@@ -1,4 +1,5 @@
 use crate::cursor::Cursor;
+use crate::lookup::ByteLookup;
 use crate::token::{Token, TokenKind};
 
 /// Lexer for source code.
@@ -16,6 +17,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Returns the next token.
+    #[inline]
     pub fn next_token(&mut self) -> Option<Token> {
         self.cursor.current()?;
 
@@ -27,15 +29,20 @@ impl<'a> Lexer<'a> {
     }
 
     /// Scans the next token.
+    #[inline]
     fn scan_token(&mut self) -> TokenKind {
+        let Some(current) = self.cursor.current() else {
+            return TokenKind::Unknown;
+        };
+
         // Whitespace
-        if self.cursor.is_whitespace() {
+        if ByteLookup::is_whitespace(current) {
             self.cursor.skip_whitespace();
             return TokenKind::Whitespace;
         }
 
         // Identifier or Keyword
-        if self.cursor.is_identifier_start() {
+        if ByteLookup::is_identifier_start(current) {
             let start = self.cursor.position();
             self.cursor.scan_identifier();
 
@@ -47,14 +54,10 @@ impl<'a> Lexer<'a> {
         }
 
         // Integer
-        if self.cursor.is_digit() {
+        if ByteLookup::is_digit(current) {
             self.cursor.scan_integer();
             return TokenKind::Integer;
         }
-
-        let Some(current) = self.cursor.current() else {
-            return TokenKind::Unknown;
-        };
 
         // String
         if current == b'"' {
@@ -76,7 +79,7 @@ impl<'a> Lexer<'a> {
 
         // Punctuation
         if let Some((kind, len)) = TokenKind::from_punctuation(current, self.cursor.peek()) {
-            self.cursor.bump_n(len);
+            self.cursor.bump_n(len as usize);
             return kind;
         }
 
