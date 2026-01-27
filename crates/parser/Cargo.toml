@@ -17,9 +17,9 @@ workspace = true
 
 [features]
 default = ["std"]
-std = ["duramen-common/std", "duramen-lexer/std", "duramen-cst/std"]
+std = ["duramen-cst/std", "duramen-diagnostics/std", "duramen-lexer/std"]
 
 [dependencies]
-duramen-common = { workspace = true }
-duramen-lexer = { workspace = true }
 duramen-cst = { workspace = true }
+duramen-diagnostics = { workspace = true }
+duramen-lexer = { workspace = true }

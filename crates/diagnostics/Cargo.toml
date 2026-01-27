@@ -1,6 +1,6 @@
 [package]
-name = "duramen-common"
-description = "Duramen common utilities"
+name = "duramen-diagnostics"
+description = "Duramen diagnostic types and rendering"
 include = ["/src"]
 publish = false
 
@@ -17,4 +17,8 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["annotate-snippets/std"]
+
+[dependencies]
+# Rendering
+annotate-snippets = { workspace = true }

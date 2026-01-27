@@ -1,4 +1,4 @@
-# `duramen-common`
+# `duramen-diagnostics`
 
 ## Reading
 

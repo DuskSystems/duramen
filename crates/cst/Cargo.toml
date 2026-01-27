@@ -17,7 +17,6 @@ workspace = true
 
 [features]
 default = ["std"]
-std = ["duramen-common/std"]
+std = []
 
 [dependencies]
-duramen-common = { workspace = true }

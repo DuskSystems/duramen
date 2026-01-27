@@ -112,12 +112,12 @@ too_many_lines = "allow"
 unsafe_derive_deserialize = "allow"
 
 [workspace.dependencies]
-duramen-common = { path = "crates/common", default-features = false }
-duramen-lexer = { path = "crates/lexer", default-features = false }
-duramen-cst = { path = "crates/cst", default-features = false }
-duramen-parser = { path = "crates/parser", default-features = false }
 duramen-ast = { path = "crates/ast", default-features = false }
+duramen-cst = { path = "crates/cst", default-features = false }
+duramen-diagnostics = { path = "crates/diagnostics", default-features = false }
 duramen-est = { path = "crates/est", default-features = false }
+duramen-lexer = { path = "crates/lexer", default-features = false }
+duramen-parser = { path = "crates/parser", default-features = false }
 duramen-validator = { path = "crates/validator", default-features = false }
 
 # Upstream
@@ -177,12 +177,12 @@ default = ["std"]
 std = []
 
 [dependencies]
-duramen-common = { workspace = true }
-duramen-lexer = { workspace = true }
-duramen-cst = { workspace = true }
-duramen-parser = { workspace = true }
 duramen-ast = { workspace = true }
+duramen-cst = { workspace = true }
+duramen-diagnostics = { workspace = true }
 duramen-est = { workspace = true }
+duramen-lexer = { workspace = true }
+duramen-parser = { workspace = true }
 duramen-validator = { workspace = true }
 
 [package.metadata.docs.rs]

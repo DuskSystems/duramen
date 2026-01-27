@@ -44,3 +44,7 @@ allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 unknown-registry = "deny"
 unknown-git = "deny"
 unused-allowed-source = "deny"
+allow-git = [
+  # FIXME: https://github.com/rust-lang/annotate-snippets-rs/issues/359
+  "https://github.com/CathalMullan/annotate-snippets-rs"
+]
