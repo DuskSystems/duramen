@@ -212,6 +212,10 @@ dependencies = [
 [[package]]
 name = "duramen-cst"
 version = "0.1.0"
+dependencies = [
+ "duramen-lexer",
+ "syntree",
+]
 
 [[package]]
 name = "duramen-diagnostics"
@@ -533,6 +537,12 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "syntree"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00c99c9cda412afe293a6b962af651b4594161ba88c1affe7ef66459ea040a06"
 
 [[package]]
 name = "terminal_size"

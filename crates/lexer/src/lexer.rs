@@ -117,29 +117,29 @@ mod tests {
 
     #[test]
     fn integer() {
-        let mut lexer = Lexer::new("12345");
-        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Integer, 5)));
+        let mut lexer = Lexer::new("365");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Integer, 3)));
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn string() {
-        let mut lexer = Lexer::new(r#""hello""#);
+        let mut lexer = Lexer::new(r#""alice""#);
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::String, 7)));
         assert_eq!(lexer.next(), None);
 
-        let mut lexer = Lexer::new(r#""unterminated"#);
+        let mut lexer = Lexer::new(r#""VacationPhoto94.jpg"#);
         assert_eq!(
             lexer.next(),
-            Some(Token::new(TokenKind::StringUnterminated, 13))
+            Some(Token::new(TokenKind::StringUnterminated, 20))
         );
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn identifier() {
-        let mut lexer = Lexer::new("foo_bar");
-        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Identifier, 7)));
+        let mut lexer = Lexer::new("department");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Identifier, 10)));
         assert_eq!(lexer.next(), None);
     }
 
@@ -152,8 +152,8 @@ mod tests {
 
     #[test]
     fn comment() {
-        let mut lexer = Lexer::new("// comment");
-        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Comment, 10)));
+        let mut lexer = Lexer::new("// jane's friends view-permission policy");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Comment, 40)));
         assert_eq!(lexer.next(), None);
     }
 
@@ -161,7 +161,15 @@ mod tests {
     fn punctuation() {
         let mut lexer = Lexer::new("::==");
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Colon2, 2)));
-        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Equal2, 2)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Eq2, 2)));
+        assert_eq!(lexer.next(), None);
+
+        let mut lexer = Lexer::new(".");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Dot, 1)));
+        assert_eq!(lexer.next(), None);
+
+        let mut lexer = Lexer::new(">=");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::GtEq, 2)));
         assert_eq!(lexer.next(), None);
     }
 

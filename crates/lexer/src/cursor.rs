@@ -181,11 +181,11 @@ mod tests {
 
     #[test]
     fn skip_line() {
-        let mut cursor = Cursor::new("hello\nworld");
+        let mut cursor = Cursor::new("view-permission policy\npermit");
         cursor.skip_line();
         assert_eq!(cursor.current(), Some(b'\n'));
 
-        let mut cursor = Cursor::new("hello");
+        let mut cursor = Cursor::new("view-permission policy");
         cursor.skip_line();
         assert_eq!(cursor.current(), None);
 
@@ -196,11 +196,11 @@ mod tests {
 
     #[test]
     fn scan_string() {
-        let mut cursor = Cursor::new("hello\"x");
+        let mut cursor = Cursor::new("alice\";");
         assert!(cursor.scan_string());
-        assert_eq!(cursor.current(), Some(b'x'));
+        assert_eq!(cursor.current(), Some(b';'));
 
-        let mut cursor = Cursor::new("one\\\"two\"x");
+        let mut cursor = Cursor::new("jane\\\"s_photo\"x");
         assert!(cursor.scan_string());
         assert_eq!(cursor.current(), Some(b'x'));
 
@@ -208,22 +208,22 @@ mod tests {
         assert!(cursor.scan_string());
         assert_eq!(cursor.current(), Some(b'x'));
 
-        let mut cursor = Cursor::new("hello");
+        let mut cursor = Cursor::new("VacationPhoto94.jpg");
         assert!(!cursor.scan_string());
         assert_eq!(cursor.current(), None);
     }
 
     #[test]
     fn scan_identifier() {
-        let mut cursor = Cursor::new("abc123_!");
+        let mut cursor = Cursor::new("jobLevel;");
         cursor.scan_identifier();
-        assert_eq!(cursor.current(), Some(b'!'));
+        assert_eq!(cursor.current(), Some(b';'));
     }
 
     #[test]
     fn scan_integer() {
-        let mut cursor = Cursor::new("12345x");
+        let mut cursor = Cursor::new("365 ");
         cursor.scan_integer();
-        assert_eq!(cursor.current(), Some(b'x'));
+        assert_eq!(cursor.current(), Some(b' '));
     }
 }

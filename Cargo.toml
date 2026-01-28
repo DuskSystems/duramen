@@ -124,6 +124,9 @@ duramen-validator = { path = "crates/validator", default-features = false }
 cedar-policy = { version = "=4.8.2", default-features = false }
 cedar-policy-core = { version = "=4.8.2", default-features = false }
 
+# CST
+syntree = { version = "0.18", default-features = false }
+
 # SIMD
 memchr = { version = "2.7", default-features = false }
 

@@ -25,14 +25,29 @@ pub enum TokenKind {
     String,
     /// Unterminated string: `"hello`
     StringUnterminated,
-
     /// Identifier: `name`
     Identifier,
 
+    /// `action`
+    Action,
+    /// `appliesTo`
+    AppliesTo,
+    /// `attributes`
+    Attributes,
+    /// `Bool`
+    Bool,
+    /// `context`
+    Context,
     /// `else`
     Else,
+    /// `entity`
+    Entity,
+    /// `enum`
+    Enum,
     /// `false`
     False,
+    /// `forbid`
+    Forbid,
     /// `has`
     Has,
     /// `if`
@@ -43,45 +58,37 @@ pub enum TokenKind {
     Is,
     /// `like`
     Like,
-    /// `then`
-    Then,
-    /// `true`
-    True,
-
-    /// `action`
-    Action,
-    /// `context`
-    Context,
-    /// `forbid`
-    Forbid,
+    /// `Long`
+    Long,
+    /// `namespace`
+    Namespace,
     /// `permit`
     Permit,
     /// `principal`
     Principal,
     /// `resource`
     Resource,
+    /// `Set`
+    Set,
+    /// `String` (type keyword)
+    StringType,
+    /// `tags`
+    Tags,
+    /// `then`
+    Then,
+    /// `true`
+    True,
+    /// `type`
+    Type,
     /// `unless`
     Unless,
     /// `when`
     When,
 
-    /// `appliesTo`
-    AppliesTo,
-    /// `entity`
-    Entity,
-    /// `enum`
-    Enum,
-    /// `namespace`
-    Namespace,
-    /// `tags`
-    Tags,
-    /// `type`
-    Type,
-
     /// `(`
-    OpenParenthesis,
+    OpenParen,
     /// `)`
-    CloseParenthesis,
+    CloseParen,
     /// `{`
     OpenBrace,
     /// `}`
@@ -106,34 +113,30 @@ pub enum TokenKind {
     /// `;`
     Semicolon,
 
-    /// `&`
-    Ampersand,
     /// `&&`
-    Ampersand2,
+    Amp2,
     /// `!`
-    Exclamation,
+    Bang,
     /// `!=`
-    NotEqual,
+    BangEq,
     /// `=`
-    Equal,
+    Eq,
     /// `==`
-    Equal2,
+    Eq2,
     /// `>`
-    GreaterThan,
+    Gt,
     /// `>=`
-    GreaterThanOrEqual,
+    GtEq,
     /// `<`
-    LessThan,
+    Lt,
     /// `<=`
-    LessThanOrEqual,
+    LtEq,
     /// `-`
     Minus,
-    /// `||`
-    Pipe2,
     /// `%`
     Percent,
-    /// `|`
-    Pipe,
+    /// `||`
+    Pipe2,
     /// `+`
     Plus,
     /// `/`
@@ -155,29 +158,34 @@ impl TokenKind {
     #[must_use]
     pub fn from_identifier(text: &str) -> Self {
         match text {
+            "action" => Self::Action,
+            "appliesTo" => Self::AppliesTo,
+            "attributes" => Self::Attributes,
+            "Bool" => Self::Bool,
+            "context" => Self::Context,
             "else" => Self::Else,
+            "entity" => Self::Entity,
+            "enum" => Self::Enum,
             "false" => Self::False,
+            "forbid" => Self::Forbid,
             "has" => Self::Has,
             "if" => Self::If,
             "in" => Self::In,
             "is" => Self::Is,
             "like" => Self::Like,
-            "then" => Self::Then,
-            "true" => Self::True,
-            "action" => Self::Action,
-            "context" => Self::Context,
-            "forbid" => Self::Forbid,
+            "Long" => Self::Long,
+            "namespace" => Self::Namespace,
             "permit" => Self::Permit,
             "principal" => Self::Principal,
             "resource" => Self::Resource,
+            "Set" => Self::Set,
+            "String" => Self::StringType,
+            "tags" => Self::Tags,
+            "then" => Self::Then,
+            "true" => Self::True,
+            "type" => Self::Type,
             "unless" => Self::Unless,
             "when" => Self::When,
-            "appliesTo" => Self::AppliesTo,
-            "entity" => Self::Entity,
-            "enum" => Self::Enum,
-            "namespace" => Self::Namespace,
-            "tags" => Self::Tags,
-            "type" => Self::Type,
             _ => Self::Identifier,
         }
     }
@@ -186,36 +194,34 @@ impl TokenKind {
     #[must_use]
     pub const fn from_punctuation(current: u8, next: Option<u8>) -> Option<(Self, u8)> {
         let (kind, len) = match current {
-            b'(' => (Self::OpenParenthesis, 1),
-            b')' => (Self::CloseParenthesis, 1),
+            b'(' => (Self::OpenParen, 1),
+            b')' => (Self::CloseParen, 1),
             b'{' => (Self::OpenBrace, 1),
             b'}' => (Self::CloseBrace, 1),
             b'[' => (Self::OpenBracket, 1),
             b']' => (Self::CloseBracket, 1),
-            b',' => (Self::Comma, 1),
-            b';' => (Self::Semicolon, 1),
             b'@' => (Self::At, 1),
+            b':' if matches!(next, Some(b':')) => (Self::Colon2, 2),
+            b':' => (Self::Colon, 1),
+            b',' => (Self::Comma, 1),
             b'.' => (Self::Dot, 1),
             b'?' => (Self::Question, 1),
+            b';' => (Self::Semicolon, 1),
+            b'&' if matches!(next, Some(b'&')) => (Self::Amp2, 2),
+            b'|' if matches!(next, Some(b'|')) => (Self::Pipe2, 2),
+            b'!' if matches!(next, Some(b'=')) => (Self::BangEq, 2),
+            b'!' => (Self::Bang, 1),
+            b'=' if matches!(next, Some(b'=')) => (Self::Eq2, 2),
+            b'=' => (Self::Eq, 1),
+            b'<' if matches!(next, Some(b'=')) => (Self::LtEq, 2),
+            b'<' => (Self::Lt, 1),
+            b'>' if matches!(next, Some(b'=')) => (Self::GtEq, 2),
+            b'>' => (Self::Gt, 1),
             b'+' => (Self::Plus, 1),
             b'-' => (Self::Minus, 1),
             b'*' => (Self::Star, 1),
             b'/' => (Self::Slash, 1),
             b'%' => (Self::Percent, 1),
-            b':' if matches!(next, Some(b':')) => (Self::Colon2, 2),
-            b':' => (Self::Colon, 1),
-            b'=' if matches!(next, Some(b'=')) => (Self::Equal2, 2),
-            b'=' => (Self::Equal, 1),
-            b'!' if matches!(next, Some(b'=')) => (Self::NotEqual, 2),
-            b'!' => (Self::Exclamation, 1),
-            b'<' if matches!(next, Some(b'=')) => (Self::LessThanOrEqual, 2),
-            b'<' => (Self::LessThan, 1),
-            b'>' if matches!(next, Some(b'=')) => (Self::GreaterThanOrEqual, 2),
-            b'>' => (Self::GreaterThan, 1),
-            b'&' if matches!(next, Some(b'&')) => (Self::Ampersand2, 2),
-            b'&' => (Self::Ampersand, 1),
-            b'|' if matches!(next, Some(b'|')) => (Self::Pipe2, 2),
-            b'|' => (Self::Pipe, 1),
             _ => return None,
         };
 

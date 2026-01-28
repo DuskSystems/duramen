@@ -17,6 +17,10 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["duramen-lexer/std", "syntree/std"]
 
 [dependencies]
+duramen-lexer = { workspace = true }
+
+# CST
+syntree = { workspace = true, features = ["alloc"] }
