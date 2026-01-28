@@ -5,91 +5,91 @@ use duramen_lexer::TokenKind;
 /// Syntax kinds for Cedar schemas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SchemaSyntax {
-    /// String: `"hello"`
+    /// String literal: `"hello"`.
     String,
-    /// Identifier: `name`
+    /// Identifier: `name`.
     Identifier,
 
-    /// `action`
+    /// Keyword: `action`.
     Action,
-    /// `appliesTo`
+    /// Keyword: `appliesTo`.
     AppliesTo,
-    /// `attributes`
+    /// Keyword: `attributes`.
     Attributes,
-    /// `Bool`
+    /// Keyword: `Bool`.
     Bool,
-    /// `context`
+    /// Keyword: `context`.
     Context,
-    /// `entity`
+    /// Keyword: `entity`.
     Entity,
-    /// `enum`
+    /// Keyword: `enum`.
     Enum,
-    /// `false`
+    /// Keyword: `false`.
     False,
-    /// `in`
+    /// Keyword: `in`.
     In,
-    /// `Long`
+    /// Keyword: `Long`.
     Long,
-    /// `namespace`
+    /// Keyword: `namespace`.
     Namespace,
-    /// `principal`
+    /// Keyword: `principal`.
     Principal,
-    /// `resource`
+    /// Keyword: `resource`.
     Resource,
-    /// `Set`
+    /// Keyword: `Set`.
     Set,
-    /// `String` (type keyword)
+    /// Keyword: `String`.
     StringType,
-    /// `tags`
+    /// Keyword: `tags`.
     Tags,
-    /// `true`
+    /// Keyword: `true`.
     True,
-    /// `type`
+    /// Keyword: `type`.
     Type,
 
-    /// `(`
+    /// Open parenthesis: `(`.
     OpenParen,
-    /// `)`
+    /// Close parenthesis: `)`.
     CloseParen,
-    /// `{`
+    /// Open brace: `{`.
     OpenBrace,
-    /// `}`
+    /// Close brace: `}`.
     CloseBrace,
-    /// `[`
+    /// Open bracket: `[`.
     OpenBracket,
-    /// `]`
+    /// Close bracket: `]`.
     CloseBracket,
 
-    /// `@`
+    /// At sign: `@`.
     At,
-    /// `:`
+    /// Colon: `:`.
     Colon,
-    /// `::`
+    /// Double colon: `::`.
     Colon2,
-    /// `,`
+    /// Comma: `,`.
     Comma,
-    /// `?`
+    /// Question mark: `?`.
     Question,
-    /// `;`
+    /// Semicolon: `;`.
     Semicolon,
 
-    /// `=`
+    /// Equals: `=`.
     Eq,
-    /// `>`
+    /// Greater than: `>`.
     Gt,
-    /// `<`
+    /// Less than: `<`.
     Lt,
 
-    /// Comment: `// ...`
+    /// Line comment: `// ...`.
     Comment,
-    /// Whitespace
+    /// Whitespace.
     Whitespace,
 
-    /// End of file
+    /// End of file.
     Eof,
-    /// Unknown token
+    /// Unrecognized token.
     Unknown,
-    /// Error node
+    /// Error node.
     Error,
 
     /// Root node.

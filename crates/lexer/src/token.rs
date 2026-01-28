@@ -1,3 +1,5 @@
+use core::fmt;
+
 /// A token produced by the lexer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Token {
@@ -19,137 +21,137 @@ impl Token {
 /// The kind of token.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
-    /// Integer: `123`
+    /// Integer literal: `123`.
     Integer,
-    /// String: `"hello"`
+    /// String literal: `"hello"`.
     String,
-    /// Unterminated string: `"hello`
+    /// Unterminated string: `"hello`.
     StringUnterminated,
-    /// Identifier: `name`
+    /// Identifier: `name`.
     Identifier,
 
-    /// `action`
+    /// Keyword: `action`.
     Action,
-    /// `appliesTo`
+    /// Keyword: `appliesTo`.
     AppliesTo,
-    /// `attributes`
+    /// Keyword: `attributes`.
     Attributes,
-    /// `Bool`
+    /// Keyword: `Bool`.
     Bool,
-    /// `context`
+    /// Keyword: `context`.
     Context,
-    /// `else`
+    /// Keyword: `else`.
     Else,
-    /// `entity`
+    /// Keyword: `entity`.
     Entity,
-    /// `enum`
+    /// Keyword: `enum`.
     Enum,
-    /// `false`
+    /// Keyword: `false`.
     False,
-    /// `forbid`
+    /// Keyword: `forbid`.
     Forbid,
-    /// `has`
+    /// Keyword: `has`.
     Has,
-    /// `if`
+    /// Keyword: `if`.
     If,
-    /// `in`
+    /// Keyword: `in`.
     In,
-    /// `is`
+    /// Keyword: `is`.
     Is,
-    /// `like`
+    /// Keyword: `like`.
     Like,
-    /// `Long`
+    /// Keyword: `Long`.
     Long,
-    /// `namespace`
+    /// Keyword: `namespace`.
     Namespace,
-    /// `permit`
+    /// Keyword: `permit`.
     Permit,
-    /// `principal`
+    /// Keyword: `principal`.
     Principal,
-    /// `resource`
+    /// Keyword: `resource`.
     Resource,
-    /// `Set`
+    /// Keyword: `Set`.
     Set,
-    /// `String` (type keyword)
+    /// Keyword: `String`.
     StringType,
-    /// `tags`
+    /// Keyword: `tags`.
     Tags,
-    /// `then`
+    /// Keyword: `then`.
     Then,
-    /// `true`
+    /// Keyword: `true`.
     True,
-    /// `type`
+    /// Keyword: `type`.
     Type,
-    /// `unless`
+    /// Keyword: `unless`.
     Unless,
-    /// `when`
+    /// Keyword: `when`.
     When,
 
-    /// `(`
+    /// Open parenthesis: `(`.
     OpenParen,
-    /// `)`
+    /// Close parenthesis: `)`.
     CloseParen,
-    /// `{`
+    /// Open brace: `{`.
     OpenBrace,
-    /// `}`
+    /// Close brace: `}`.
     CloseBrace,
-    /// `[`
+    /// Open bracket: `[`.
     OpenBracket,
-    /// `]`
+    /// Close bracket: `]`.
     CloseBracket,
 
-    /// `@`
+    /// At sign: `@`.
     At,
-    /// `:`
+    /// Colon: `:`.
     Colon,
-    /// `::`
+    /// Double colon: `::`.
     Colon2,
-    /// `,`
+    /// Comma: `,`.
     Comma,
-    /// `.`
+    /// Dot: `.`.
     Dot,
-    /// `?`
+    /// Question mark: `?`.
     Question,
-    /// `;`
+    /// Semicolon: `;`.
     Semicolon,
 
-    /// `&&`
+    /// Logical and: `&&`.
     Amp2,
-    /// `!`
+    /// Logical not: `!`.
     Bang,
-    /// `!=`
+    /// Not equal: `!=`.
     BangEq,
-    /// `=`
+    /// Equals: `=`.
     Eq,
-    /// `==`
+    /// Double equals: `==`.
     Eq2,
-    /// `>`
+    /// Greater than: `>`.
     Gt,
-    /// `>=`
+    /// Greater than or equal: `>=`.
     GtEq,
-    /// `<`
+    /// Less than: `<`.
     Lt,
-    /// `<=`
+    /// Less than or equal: `<=`.
     LtEq,
-    /// `-`
+    /// Minus: `-`.
     Minus,
-    /// `%`
+    /// Percent: `%`.
     Percent,
-    /// `||`
+    /// Logical or: `||`.
     Pipe2,
-    /// `+`
+    /// Plus: `+`.
     Plus,
-    /// `/`
+    /// Slash: `/`.
     Slash,
-    /// `*`
+    /// Star: `*`.
     Star,
 
-    /// Comment: `// ...`
+    /// Line comment: `// ...`.
     Comment,
-    /// Whitespace
+    /// Whitespace.
     Whitespace,
 
-    /// Unknown token
+    /// Unrecognized token.
     Unknown,
 }
 
@@ -232,5 +234,77 @@ impl TokenKind {
     #[must_use]
     pub const fn is_trivial(self) -> bool {
         matches!(self, Self::Whitespace | Self::Comment)
+    }
+}
+
+impl fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let text = match self {
+            Self::Integer => "integer",
+            Self::String => "string",
+            Self::StringUnterminated => "unterminated string",
+            Self::Identifier => "identifier",
+            Self::Action => "`action`",
+            Self::AppliesTo => "`appliesTo`",
+            Self::Attributes => "`attributes`",
+            Self::Bool => "`Bool`",
+            Self::Context => "`context`",
+            Self::Else => "`else`",
+            Self::Entity => "`entity`",
+            Self::Enum => "`enum`",
+            Self::False => "`false`",
+            Self::Forbid => "`forbid`",
+            Self::Has => "`has`",
+            Self::If => "`if`",
+            Self::In => "`in`",
+            Self::Is => "`is`",
+            Self::Like => "`like`",
+            Self::Long => "`Long`",
+            Self::Namespace => "`namespace`",
+            Self::Permit => "`permit`",
+            Self::Principal => "`principal`",
+            Self::Resource => "`resource`",
+            Self::Set => "`Set`",
+            Self::StringType => "`String`",
+            Self::Tags => "`tags`",
+            Self::Then => "`then`",
+            Self::True => "`true`",
+            Self::Type => "`type`",
+            Self::Unless => "`unless`",
+            Self::When => "`when`",
+            Self::OpenParen => "`(`",
+            Self::CloseParen => "`)`",
+            Self::OpenBrace => "`{`",
+            Self::CloseBrace => "`}`",
+            Self::OpenBracket => "`[`",
+            Self::CloseBracket => "`]`",
+            Self::At => "`@`",
+            Self::Colon => "`:`",
+            Self::Colon2 => "`::`",
+            Self::Comma => "`,`",
+            Self::Dot => "`.`",
+            Self::Question => "`?`",
+            Self::Semicolon => "`;`",
+            Self::Amp2 => "`&&`",
+            Self::Bang => "`!`",
+            Self::BangEq => "`!=`",
+            Self::Eq => "`=`",
+            Self::Eq2 => "`==`",
+            Self::Gt => "`>`",
+            Self::GtEq => "`>=`",
+            Self::Lt => "`<`",
+            Self::LtEq => "`<=`",
+            Self::Minus => "`-`",
+            Self::Percent => "`%`",
+            Self::Pipe2 => "`||`",
+            Self::Plus => "`+`",
+            Self::Slash => "`/`",
+            Self::Star => "`*`",
+            Self::Comment => "comment",
+            Self::Whitespace => "whitespace",
+            Self::Unknown => "unknown",
+        };
+
+        f.write_str(text)
     }
 }

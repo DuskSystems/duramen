@@ -1,3 +1,7 @@
+//! # `duramen`
+//!
+//! A Cedar implementation.
+
 #![no_std]
 
 #[cfg(feature = "std")]

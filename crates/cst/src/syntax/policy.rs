@@ -5,117 +5,117 @@ use duramen_lexer::TokenKind;
 /// Syntax kinds for Cedar policies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PolicySyntax {
-    /// Integer: `123`
+    /// Integer literal: `123`.
     Integer,
-    /// String: `"hello"`
+    /// String literal: `"hello"`.
     String,
-    /// Identifier: `name`
+    /// Identifier: `name`.
     Identifier,
 
-    /// `action`
+    /// Keyword: `action`.
     Action,
-    /// `context`
+    /// Keyword: `context`.
     Context,
-    /// `else`
+    /// Keyword: `else`.
     Else,
-    /// `false`
+    /// Keyword: `false`.
     False,
-    /// `forbid`
+    /// Keyword: `forbid`.
     Forbid,
-    /// `has`
+    /// Keyword: `has`.
     Has,
-    /// `if`
+    /// Keyword: `if`.
     If,
-    /// `in`
+    /// Keyword: `in`.
     In,
-    /// `is`
+    /// Keyword: `is`.
     Is,
-    /// `like`
+    /// Keyword: `like`.
     Like,
-    /// `permit`
+    /// Keyword: `permit`.
     Permit,
-    /// `principal`
+    /// Keyword: `principal`.
     Principal,
-    /// `resource`
+    /// Keyword: `resource`.
     Resource,
-    /// `then`
+    /// Keyword: `then`.
     Then,
-    /// `true`
+    /// Keyword: `true`.
     True,
-    /// `unless`
+    /// Keyword: `unless`.
     Unless,
-    /// `when`
+    /// Keyword: `when`.
     When,
 
-    /// `(`
+    /// Open parenthesis: `(`.
     OpenParen,
-    /// `)`
+    /// Close parenthesis: `)`.
     CloseParen,
-    /// `{`
+    /// Open brace: `{`.
     OpenBrace,
-    /// `}`
+    /// Close brace: `}`.
     CloseBrace,
-    /// `[`
+    /// Open bracket: `[`.
     OpenBracket,
-    /// `]`
+    /// Close bracket: `]`.
     CloseBracket,
 
-    /// `@`
+    /// At sign: `@`.
     At,
-    /// `:`
+    /// Colon: `:`.
     Colon,
-    /// `::`
+    /// Double colon: `::`.
     Colon2,
-    /// `,`
+    /// Comma: `,`.
     Comma,
-    /// `.`
+    /// Dot: `.`.
     Dot,
-    /// `?`
+    /// Question mark: `?`.
     Question,
-    /// `;`
+    /// Semicolon: `;`.
     Semicolon,
 
-    /// `&&`
+    /// Logical and: `&&`.
     Amp2,
-    /// `!`
+    /// Logical not: `!`.
     Bang,
-    /// `!=`
+    /// Not equal: `!=`.
     BangEq,
-    /// `=`
+    /// Equals: `=`.
     Eq,
-    /// `==`
+    /// Double equals: `==`.
     Eq2,
-    /// `>`
+    /// Greater than: `>`.
     Gt,
-    /// `>=`
+    /// Greater than or equal: `>=`.
     GtEq,
-    /// `<`
+    /// Less than: `<`.
     Lt,
-    /// `<=`
+    /// Less than or equal: `<=`.
     LtEq,
-    /// `-`
+    /// Minus: `-`.
     Minus,
-    /// `%`
+    /// Percent: `%`.
     Percent,
-    /// `||`
+    /// Logical or: `||`.
     Pipe2,
-    /// `+`
+    /// Plus: `+`.
     Plus,
-    /// `/`
+    /// Slash: `/`.
     Slash,
-    /// `*`
+    /// Star: `*`.
     Star,
 
-    /// Comment: `// ...`
+    /// Line comment: `// ...`.
     Comment,
-    /// Whitespace
+    /// Whitespace.
     Whitespace,
 
-    /// End of file
+    /// End of file.
     Eof,
-    /// Unknown token
+    /// Unrecognized token.
     Unknown,
-    /// Error node
+    /// Error node.
     Error,
 
     /// Root node.
