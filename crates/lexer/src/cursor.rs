@@ -159,6 +159,8 @@ impl<'a> Cursor<'a> {
 
 #[cfg(test)]
 mod tests {
+    use duramen_test::assert_eq;
+
     use super::*;
 
     #[test]

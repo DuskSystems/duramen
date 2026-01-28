@@ -100,6 +100,8 @@ impl Iterator for Lexer<'_> {
 
 #[cfg(test)]
 mod tests {
+    use duramen_test::assert_eq;
+
     use super::*;
 
     #[test]

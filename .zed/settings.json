@@ -4,7 +4,9 @@
 
   "file_scan_exclusions": [
     "**/.direnv",
-    "**/.git"
+    "**/.git",
+    "**/cedar",
+    "**/cedar-integration-tests",
   ],
 
   "languages": {

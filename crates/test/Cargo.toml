@@ -1,0 +1,26 @@
+[package]
+name = "duramen-test"
+description = "Duramen test utilities"
+publish = false
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Diagnostics
+anstream = { workspace = true }
+
+# Filesystem
+walkdir = { workspace = true }
+
+# Testing
+insta = { workspace = true }
+similar-asserts = { workspace = true }

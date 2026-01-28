@@ -23,3 +23,22 @@ std = ["duramen-cst/std", "duramen-diagnostics/std", "duramen-lexer/std"]
 duramen-cst = { workspace = true }
 duramen-diagnostics = { workspace = true }
 duramen-lexer = { workspace = true }
+
+[dev-dependencies]
+duramen-test = { workspace = true }
+
+# Testing
+datatest-stable = { workspace = true }
+similar-asserts = { workspace = true }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[test]]
+name = "corpus"
+harness = false
+
+# TODO
+# [[bench]]
+# name = "corpus"
+# harness = false

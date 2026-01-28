@@ -1,7 +1,7 @@
 # https://doc.rust-lang.org/cargo/reference/workspaces.html
 [workspace]
 resolver = "3"
-members = [".", "crates/*"]
+members = [".", "crates/*", "fuzz"]
 
 [workspace.package]
 version = "0.1.0"
@@ -119,6 +119,7 @@ duramen-diagnostics = { path = "crates/diagnostics", default-features = false }
 duramen-est = { path = "crates/est", default-features = false }
 duramen-lexer = { path = "crates/lexer", default-features = false }
 duramen-parser = { path = "crates/parser", default-features = false }
+duramen-test = { path = "crates/test", default-features = false }
 duramen-validator = { path = "crates/validator", default-features = false }
 
 # Upstream
@@ -145,6 +146,9 @@ prost = { version = "0.14", default-features = false }
 
 # RNG
 rand = { version = "0.9", default-features = false, features = ["small_rng"] }
+
+# Filesystem
+walkdir = { version = "2.5", default-features = false }
 
 # Testing
 insta = { version = "1.46", default-features = false }

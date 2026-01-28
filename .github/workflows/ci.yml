@@ -28,6 +28,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -45,6 +46,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -63,6 +65,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -81,6 +84,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -112,6 +116,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -128,31 +133,31 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
 
-  # TODO
-  # fuzz:
-  #   name: Fuzz
-  #   needs: setup
-  #   runs-on: ubuntu-24.04
-  #   permissions:
-  #     actions: write # sccache
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-  #       with:
-  #         persist-credentials: false
-  #
-  #     - name: Setup
-  #       uses: ./.github/actions/setup
-  #
-  #     - name: Run fuzzing
-  #       run: ./scripts/fuzz.sh
-  #
-  #     - name: Upload artifacts
-  #       if: failure()
-  #       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-  #       with:
-  #         name: fuzz-artifacts
-  #         path: fuzz/artifacts
+  fuzz:
+    name: Fuzz
+    needs: setup
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # sccache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: true
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Run fuzzing
+        run: ./scripts/fuzz.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts
 
   benches:
     name: Benchmarks
@@ -166,6 +171,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          submodules: true
 
       - name: Setup
         uses: ./.github/actions/setup

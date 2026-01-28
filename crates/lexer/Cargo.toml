@@ -24,6 +24,8 @@ std = ["memchr/std"]
 memchr = { workspace = true }
 
 [dev-dependencies]
+duramen-test = { workspace = true }
+
 # Benchmarking
 divan = { workspace = true }
 
