@@ -1,3 +1,7 @@
+//! # `duramen-diagnostics`
+//!
+//! Provides reporting for Cedar.
+
 #![expect(dead_code, reason = "TODO")]
 #![no_std]
 extern crate alloc;

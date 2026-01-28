@@ -94,6 +94,7 @@ redundant_test_prefix = "deny"
 
 # Documentation
 doc_include_without_cfg = "deny"
+doc_paragraphs_missing_punctuation = "deny"
 missing_errors_doc = "deny"
 missing_panics_doc = "deny"
 

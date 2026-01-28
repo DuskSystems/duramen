@@ -1,3 +1,13 @@
+//! # `duramen-cst`
+//!
+//! Defines concrete syntax tree types for Cedar.
+//!
+//! ## Design
+//!
+//! - Preserves all source including whitespace and comments.
+//! - References the source text.
+//! - May contain structural errors or missing fields.
+
 #![no_std]
 
 #[cfg(feature = "std")]
