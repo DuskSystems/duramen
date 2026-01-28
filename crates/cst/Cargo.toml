@@ -17,6 +17,8 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["syntree/std"]
 
 [dependencies]
+# CST
+syntree = { workspace = true, features = ["alloc"] }
