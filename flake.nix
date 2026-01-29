@@ -122,7 +122,6 @@
             cargo-hack
             cargo-insta
             cargo-llvm-cov
-            cargo-nextest
             cargo-outdated
             cargo-semver-checks
             cargo-codspeed
@@ -181,7 +180,6 @@
             tombi
             cargo-deny
             cargo-hack
-            cargo-nextest
 
             # Build
             protobuf

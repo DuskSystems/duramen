@@ -1,7 +1,7 @@
 use core::hint::black_box;
 
-use divan::AllocProfiler;
 use divan::counter::BytesCount;
+use divan::{AllocProfiler, Bencher};
 use duramen_lexer::Lexer;
 use rand::rngs::SmallRng;
 use rand::{Rng as _, SeedableRng as _};
@@ -17,7 +17,7 @@ fn main() {
 }
 
 #[divan::bench]
-fn integers(bencher: divan::Bencher<'_, '_>) {
+fn integers(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -33,7 +33,7 @@ fn integers(bencher: divan::Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn strings(bencher: divan::Bencher<'_, '_>) {
+fn strings(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -53,7 +53,7 @@ fn strings(bencher: divan::Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn identifiers(bencher: divan::Bencher<'_, '_>) {
+fn identifiers(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -80,7 +80,7 @@ fn identifiers(bencher: divan::Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn punctuation(bencher: divan::Bencher<'_, '_>) {
+fn punctuation(bencher: Bencher<'_, '_>) {
     const PUNCTUATIONS: &[u8] = b"(){}[],;:.@?+-*/%=!<>&|";
 
     let mut rng = SmallRng::seed_from_u64(SEED);
@@ -101,7 +101,7 @@ fn punctuation(bencher: divan::Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn comments(bencher: divan::Bencher<'_, '_>) {
+fn comments(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -121,7 +121,7 @@ fn comments(bencher: divan::Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn whitespace(bencher: divan::Bencher<'_, '_>) {
+fn whitespace(bencher: Bencher<'_, '_>) {
     const WHITESPACES: &[u8] = b" \t\n";
 
     let mut rng = SmallRng::seed_from_u64(SEED);
