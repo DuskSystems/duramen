@@ -1,6 +1,9 @@
 use alloc::string::String;
 
-use duramen_cst::{PolicyBuilder, PolicySyntax, PolicyTree};
+use duramen_cst::accessors::CstNode as _;
+use duramen_cst::accessors::policy::Policies;
+use duramen_cst::syntax::policy::PolicySyntax;
+use duramen_cst::{PolicyBuilder, PolicyTree};
 use duramen_lexer::{Lexer, Token, TokenKind};
 
 use crate::advance::Advance;
@@ -11,6 +14,16 @@ pub struct PolicyParseResult {
 }
 
 impl PolicyParseResult {
+    #[must_use]
+    pub const fn tree(&self) -> &PolicyTree {
+        &self.tree
+    }
+
+    #[must_use]
+    pub fn policies(&self) -> Option<Policies<'_>> {
+        self.tree.first().and_then(Policies::cast)
+    }
+
     #[must_use]
     pub fn print(&self, source: &str) -> String {
         let mut output = String::with_capacity(self.tree.capacity());
