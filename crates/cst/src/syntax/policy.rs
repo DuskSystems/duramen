@@ -329,6 +329,12 @@ impl PolicySyntax {
         matches!(self, Self::Whitespace | Self::Comment)
     }
 
+    /// Checks if this is an error token.
+    #[must_use]
+    pub const fn is_error(self) -> bool {
+        matches!(self, Self::Error)
+    }
+
     /// Checks if this is an identifier.
     #[must_use]
     pub const fn is_identifier(self) -> bool {

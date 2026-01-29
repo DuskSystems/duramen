@@ -1,6 +1,9 @@
 use alloc::string::String;
 
-use duramen_cst::{SchemaBuilder, SchemaSyntax, SchemaTree};
+use duramen_cst::accessors::CstNode as _;
+use duramen_cst::accessors::schema::Schema;
+use duramen_cst::syntax::schema::SchemaSyntax;
+use duramen_cst::{SchemaBuilder, SchemaTree};
 use duramen_lexer::{Lexer, Token, TokenKind};
 
 use crate::advance::Advance;
@@ -11,6 +14,16 @@ pub struct SchemaParseResult {
 }
 
 impl SchemaParseResult {
+    #[must_use]
+    pub const fn tree(&self) -> &SchemaTree {
+        &self.tree
+    }
+
+    #[must_use]
+    pub fn schema(&self) -> Option<Schema<'_>> {
+        self.tree.first().and_then(Schema::cast)
+    }
+
     #[must_use]
     pub fn print(&self, source: &str) -> String {
         let mut output = String::with_capacity(self.tree.capacity());

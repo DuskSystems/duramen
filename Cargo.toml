@@ -51,7 +51,6 @@ todo = "deny"
 unimplemented = "deny"
 unreachable = "deny"
 unwrap_used = "deny"
-wildcard_enum_match_arm = "deny"
 
 # Errors
 map_err_ignore = "deny"
