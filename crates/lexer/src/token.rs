@@ -235,6 +235,84 @@ impl TokenKind {
     pub const fn is_trivial(self) -> bool {
         matches!(self, Self::Whitespace | Self::Comment)
     }
+
+    /// Checks if this is a keyword token.
+    #[must_use]
+    pub const fn is_keyword(self) -> bool {
+        matches!(
+            self,
+            Self::Action
+                | Self::AppliesTo
+                | Self::Attributes
+                | Self::Bool
+                | Self::Context
+                | Self::Else
+                | Self::Entity
+                | Self::Enum
+                | Self::False
+                | Self::Forbid
+                | Self::Has
+                | Self::If
+                | Self::In
+                | Self::Is
+                | Self::Like
+                | Self::Long
+                | Self::Namespace
+                | Self::Permit
+                | Self::Principal
+                | Self::Resource
+                | Self::Set
+                | Self::StringType
+                | Self::Tags
+                | Self::Then
+                | Self::True
+                | Self::Type
+                | Self::Unless
+                | Self::When
+        )
+    }
+
+    /// Checks if this is a scope variable keyword.
+    #[must_use]
+    pub const fn is_variable(self) -> bool {
+        matches!(
+            self,
+            Self::Principal | Self::Action | Self::Resource | Self::Context
+        )
+    }
+
+    /// Checks if this is a comparison operator.
+    #[must_use]
+    pub const fn is_comparison(self) -> bool {
+        matches!(
+            self,
+            Self::Lt | Self::LtEq | Self::Gt | Self::GtEq | Self::Eq2 | Self::BangEq | Self::In
+        )
+    }
+
+    /// Checks if this is a literal token.
+    #[must_use]
+    pub const fn is_literal(self) -> bool {
+        matches!(
+            self,
+            Self::True | Self::False | Self::Integer | Self::String | Self::StringUnterminated
+        )
+    }
+
+    /// Checks if this is a schema declaration keyword.
+    #[must_use]
+    pub const fn is_declaration(self) -> bool {
+        matches!(
+            self,
+            Self::Entity | Self::Action | Self::Type | Self::Namespace
+        )
+    }
+
+    /// Checks if this can be used as an identifier.
+    #[must_use]
+    pub const fn is_identifier(self) -> bool {
+        matches!(self, Self::Identifier) || self.is_keyword()
+    }
 }
 
 impl fmt::Display for TokenKind {

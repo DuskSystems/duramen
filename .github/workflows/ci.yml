@@ -185,9 +185,8 @@ jobs:
           mode: simulation
           run: ./scripts/bench-run.sh
 
-      # TODO
-      # - name: Run benchmarks (Memory)
-      #   uses: CodSpeedHQ/action@efce601fed058209a5b98d4681771cc176692038 # v4.10.0
-      #   with:
-      #     mode: memory
-      #     run: ./scripts/bench-run.sh
+      - name: Run benchmarks (Memory)
+        uses: CodSpeedHQ/action@efce601fed058209a5b98d4681771cc176692038 # v4.10.0
+        with:
+          mode: memory
+          run: ./scripts/bench-run.sh

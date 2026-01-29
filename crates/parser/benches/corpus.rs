@@ -1,3 +1,5 @@
+#![expect(clippy::unwrap_used, reason = "Benchmarks")]
+
 use core::hint::black_box;
 
 use divan::counter::ItemsCount;
@@ -14,20 +16,28 @@ fn main() {
 
 #[divan::bench]
 fn policy(bencher: Bencher<'_, '_>) {
-    let files = &*POLICIES;
-    bencher.counter(ItemsCount::new(files.len())).bench(|| {
-        for source in files {
-            drop(black_box(PolicyParser::new(source).parse()));
+    let sources: Vec<_> = POLICIES
+        .iter()
+        .map(|path| std::fs::read_to_string(path).unwrap())
+        .collect();
+
+    bencher.counter(ItemsCount::new(sources.len())).bench(|| {
+        for source in &sources {
+            black_box(PolicyParser::new(source).parse());
         }
     });
 }
 
 #[divan::bench]
 fn schema(bencher: Bencher<'_, '_>) {
-    let files = &*SCHEMAS;
-    bencher.counter(ItemsCount::new(files.len())).bench(|| {
-        for source in files {
-            drop(black_box(SchemaParser::new(source).parse()));
+    let sources: Vec<_> = SCHEMAS
+        .iter()
+        .map(|path| std::fs::read_to_string(path).unwrap())
+        .collect();
+
+    bencher.counter(ItemsCount::new(sources.len())).bench(|| {
+        for source in &sources {
+            black_box(SchemaParser::new(source).parse());
         }
     });
 }

@@ -42,7 +42,7 @@ datatest_stable::harness! {
 
 fn policy(path: &Path) -> datatest_stable::Result<()> {
     let source = std::fs::read_to_string(path)?;
-    let result = PolicyParser::new(&source).parse()?;
+    let result = PolicyParser::new(&source).parse();
 
     let printed = result.print(&source);
     assert_eq!(printed, source, "Roundtrip failed");
@@ -52,7 +52,7 @@ fn policy(path: &Path) -> datatest_stable::Result<()> {
 
 fn schema(path: &Path) -> datatest_stable::Result<()> {
     let source = std::fs::read_to_string(path)?;
-    let result = SchemaParser::new(&source).parse()?;
+    let result = SchemaParser::new(&source).parse();
 
     let printed = result.print(&source);
     assert_eq!(printed, source, "Roundtrip failed");
