@@ -1,8 +1,6 @@
 #!/usr/bin/env -S nix develop .#ci-nightly --command bash
 set -euxo pipefail
 
-TIME="${1:-30}"
-
 rm -rf fuzz/artifacts
 rm -rf fuzz/corpus
 
@@ -13,6 +11,7 @@ for TARGET in $(cargo fuzz list); do
   cargo fuzz run "${TARGET}" \
     -- \
     -timeout=0.0001 \
-    -max_total_time="${TIME}" \
-    -fork="$(nproc)"
+    -max_total_time=30 \
+    -fork="$(nproc)" \
+    "${@}"
 done

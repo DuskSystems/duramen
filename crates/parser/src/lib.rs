@@ -13,6 +13,8 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
+mod advance;
+
 mod policy;
 pub use policy::{PolicyParseResult, PolicyParser};
 

@@ -2,7 +2,7 @@
 //!
 //! Test utilities for duramen.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
 #[doc(hidden)]
@@ -58,7 +58,7 @@ pub const CEDAR_SCHEMA_PARSER_TESTS: &str = concat!(
     "/../../cedar/cedar-policy-core/src/validator/cedar_schema/testfiles"
 );
 
-pub static POLICIES: LazyLock<Vec<String>> = LazyLock::new(|| {
+pub static POLICIES: LazyLock<Vec<PathBuf>> = LazyLock::new(|| {
     walk(
         &[
             CEDAR_CORPUS,
@@ -69,20 +69,20 @@ pub static POLICIES: LazyLock<Vec<String>> = LazyLock::new(|| {
     )
 });
 
-pub static SCHEMAS: LazyLock<Vec<String>> = LazyLock::new(|| {
+pub static SCHEMAS: LazyLock<Vec<PathBuf>> = LazyLock::new(|| {
     walk(
         &[CEDAR_CORPUS, CEDAR_SAMPLE_DATA, CEDAR_SCHEMA_PARSER_TESTS],
         "cedarschema",
     )
 });
 
-fn walk(directories: &[&str], extension: &str) -> Vec<String> {
+fn walk(directories: &[&str], extension: &str) -> Vec<PathBuf> {
     directories
         .iter()
         .filter(|path| Path::new(path).exists())
         .flat_map(WalkDir::new)
         .filter_map(Result::ok)
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == extension))
-        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .map(|entry| entry.path().to_path_buf())
         .collect()
 }
