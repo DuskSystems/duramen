@@ -219,6 +219,17 @@ impl<T: Default> Expr<T> {
     }
 
     #[must_use]
+    pub fn is_in(expr: Self, entity_type: EntityType, container: Self) -> Self
+    where
+        Self: Clone,
+    {
+        Self::and(
+            Self::is(expr.clone(), entity_type),
+            Self::binary(BinaryOp::In, expr, container),
+        )
+    }
+
+    #[must_use]
     pub fn like(expr: Self, pattern: Pattern) -> Self {
         Self::new(
             ExprKind::Like {

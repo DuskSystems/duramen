@@ -351,6 +351,7 @@ name = "duramen-fuzz"
 version = "0.1.0"
 dependencies = [
  "duramen-lexer",
+ "duramen-lower",
  "duramen-parser",
  "libfuzzer-sys",
 ]
@@ -362,6 +363,20 @@ dependencies = [
  "codspeed-divan-compat",
  "duramen-test",
  "memchr",
+ "rand",
+]
+
+[[package]]
+name = "duramen-lower"
+version = "0.1.0"
+dependencies = [
+ "codspeed-divan-compat",
+ "datatest-stable",
+ "duramen-ast",
+ "duramen-cst",
+ "duramen-diagnostics",
+ "duramen-parser",
+ "duramen-test",
  "rand",
 ]
 

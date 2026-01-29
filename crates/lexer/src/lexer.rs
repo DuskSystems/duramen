@@ -16,6 +16,19 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// Returns the current byte offset.
+    #[must_use]
+    #[inline(always)]
+    pub const fn offset(&self) -> usize {
+        self.cursor.position()
+    }
+
+    /// Sets the byte offset.
+    #[inline(always)]
+    pub const fn set_offset(&mut self, offset: usize) {
+        self.cursor.set_position(offset);
+    }
+
     /// Returns the next token.
     #[inline]
     pub fn next_token(&mut self) -> Option<Token> {

@@ -117,6 +117,7 @@ duramen-cst = { path = "crates/cst", default-features = false }
 duramen-diagnostics = { path = "crates/diagnostics", default-features = false }
 duramen-est = { path = "crates/est", default-features = false }
 duramen-lexer = { path = "crates/lexer", default-features = false }
+duramen-lower = { path = "crates/lower", default-features = false }
 duramen-parser = { path = "crates/parser", default-features = false }
 duramen-test = { path = "crates/test", default-features = false }
 duramen-validator = { path = "crates/validator", default-features = false }

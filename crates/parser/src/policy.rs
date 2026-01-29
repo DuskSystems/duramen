@@ -21,7 +21,7 @@ impl PolicyParseResult {
 
     #[must_use]
     pub fn policies(&self) -> Option<Policies<'_>> {
-        self.tree.first().and_then(Policies::cast)
+        self.tree.children().find_map(Policies::cast)
     }
 
     #[must_use]
@@ -764,52 +764,68 @@ impl<'a> PolicyParser<'a> {
     /// User::"alice"
     /// ```
     fn name(&mut self) -> Result<(), duramen_cst::Error> {
-        let checkpoint = self.builder.checkpoint()?;
+        let outer_checkpoint = self.builder.checkpoint()?;
+        let name_checkpoint = self.builder.checkpoint()?;
 
         if self.current.kind.is_identifier() {
             self.bump()?;
 
             while self.current.kind == TokenKind::Colon2 {
+                let is_entity_ref = self.peek_entity_ref();
+
+                if is_entity_ref {
+                    self.builder
+                        .close_at(&name_checkpoint, PolicySyntax::Name)?;
+
+                    self.advance.push(self.position);
+                    self.bump()?;
+
+                    if self.current.kind == TokenKind::String {
+                        self.bump()?;
+
+                        self.advance.pop(self.position, self.current.kind);
+                        self.builder
+                            .close_at(&outer_checkpoint, PolicySyntax::EntityReference)?;
+
+                        return Ok(());
+                    } else if self.current.kind == TokenKind::OpenBrace {
+                        self.bump()?;
+
+                        while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
+                            self.advance.push(self.position);
+                            self.record_entry()?;
+
+                            if self.current.kind == TokenKind::Comma {
+                                self.bump()?;
+                            } else {
+                                self.advance.pop(self.position, self.current.kind);
+                                break;
+                            }
+
+                            self.advance.pop(self.position, self.current.kind);
+                        }
+
+                        if self.current.kind == TokenKind::CloseBrace {
+                            self.bump()?;
+                        }
+
+                        self.advance.pop(self.position, self.current.kind);
+                        self.builder
+                            .close_at(&outer_checkpoint, PolicySyntax::EntityReference)?;
+
+                        return Ok(());
+                    }
+
+                    self.advance.pop(self.position, self.current.kind);
+                    break;
+                }
+
                 self.advance.push(self.position);
                 self.bump()?;
 
                 if self.current.kind.is_identifier() {
                     self.bump()?;
                     self.advance.pop(self.position, self.current.kind);
-                } else if self.current.kind == TokenKind::String {
-                    self.bump()?;
-
-                    self.advance.pop(self.position, self.current.kind);
-                    self.builder
-                        .close_at(&checkpoint, PolicySyntax::EntityReference)?;
-
-                    return Ok(());
-                } else if self.current.kind == TokenKind::OpenBrace {
-                    self.bump()?;
-
-                    while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-                        self.advance.push(self.position);
-                        self.record_entry()?;
-
-                        if self.current.kind == TokenKind::Comma {
-                            self.bump()?;
-                        } else {
-                            self.advance.pop(self.position, self.current.kind);
-                            break;
-                        }
-
-                        self.advance.pop(self.position, self.current.kind);
-                    }
-
-                    if self.current.kind == TokenKind::CloseBrace {
-                        self.bump()?;
-                    }
-
-                    self.advance.pop(self.position, self.current.kind);
-                    self.builder
-                        .close_at(&checkpoint, PolicySyntax::EntityReference)?;
-
-                    return Ok(());
                 } else {
                     self.advance.pop(self.position, self.current.kind);
                     break;
@@ -817,7 +833,26 @@ impl<'a> PolicyParser<'a> {
             }
         }
 
-        self.builder.close_at(&checkpoint, PolicySyntax::Name)?;
+        self.builder
+            .close_at(&outer_checkpoint, PolicySyntax::Name)?;
+
         Ok(())
+    }
+
+    fn peek_entity_ref(&mut self) -> bool {
+        let saved = self.lexer.offset();
+
+        let result = loop {
+            match self.lexer.next() {
+                Some(token) if token.kind.is_trivial() => {}
+                Some(token) => {
+                    break matches!(token.kind, TokenKind::String | TokenKind::OpenBrace);
+                }
+                None => break false,
+            }
+        };
+
+        self.lexer.set_offset(saved);
+        result
     }
 }

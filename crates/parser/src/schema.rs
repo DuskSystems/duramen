@@ -21,7 +21,7 @@ impl SchemaParseResult {
 
     #[must_use]
     pub fn schema(&self) -> Option<Schema<'_>> {
-        self.tree.first().and_then(Schema::cast)
+        self.tree.children().find_map(Schema::cast)
     }
 
     #[must_use]
@@ -157,20 +157,65 @@ impl<'a> SchemaParser<'a> {
         }
     }
 
-    /// Parses a declaration: entity, action, or type.
-    fn declaration(&mut self) -> Result<(), duramen_cst::Error> {
-        while self.current.kind == TokenKind::At {
-            self.advance.push(self.position);
-            self.annotation()?;
-            self.advance.pop(self.position, self.current.kind);
+    fn nested_namespace(&mut self) -> Result<(), duramen_cst::Error> {
+        self.builder.open(SchemaSyntax::NamespaceDeclaration)?;
+
+        self.bump()?;
+        self.name()?;
+
+        if self.current.kind == TokenKind::OpenBrace {
+            self.bump()?;
+
+            while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
+                self.advance.push(self.position);
+                self.declaration()?;
+                self.advance.pop(self.position, self.current.kind);
+            }
+
+            if self.current.kind == TokenKind::CloseBrace {
+                self.bump()?;
+            }
         }
 
+        self.builder.close()?;
+        Ok(())
+    }
+
+    fn declaration(&mut self) -> Result<(), duramen_cst::Error> {
         if self.current.kind == TokenKind::Entity {
             self.entity_declaration()
         } else if self.current.kind == TokenKind::Action {
             self.action_declaration()
         } else if self.current.kind == TokenKind::Type {
             self.type_declaration()
+        } else if self.current.kind == TokenKind::Namespace {
+            self.nested_namespace()
+        } else if self.current.kind == TokenKind::At {
+            let checkpoint = self.builder.checkpoint()?;
+
+            while self.current.kind == TokenKind::At {
+                self.advance.push(self.position);
+                self.annotation()?;
+                self.advance.pop(self.position, self.current.kind);
+            }
+
+            if self.current.kind == TokenKind::Entity {
+                self.entity_declaration_body()?;
+                self.builder
+                    .close_at(&checkpoint, SchemaSyntax::EntityDeclaration)?;
+            } else if self.current.kind == TokenKind::Action {
+                self.action_declaration_body()?;
+                self.builder
+                    .close_at(&checkpoint, SchemaSyntax::ActionDeclaration)?;
+            } else if self.current.kind == TokenKind::Type {
+                self.type_declaration_body()?;
+                self.builder
+                    .close_at(&checkpoint, SchemaSyntax::TypeDeclaration)?;
+            } else {
+                self.builder.close_at(&checkpoint, SchemaSyntax::Error)?;
+            }
+
+            Ok(())
         } else {
             self.builder.open(SchemaSyntax::Error)?;
             while self.current.len > 0 {
@@ -230,7 +275,12 @@ impl<'a> SchemaParser<'a> {
     /// ```
     fn entity_declaration(&mut self) -> Result<(), duramen_cst::Error> {
         self.builder.open(SchemaSyntax::EntityDeclaration)?;
+        self.entity_declaration_body()?;
+        self.builder.close()?;
+        Ok(())
+    }
 
+    fn entity_declaration_body(&mut self) -> Result<(), duramen_cst::Error> {
         self.bump()?;
 
         self.name_list()?;
@@ -293,7 +343,6 @@ impl<'a> SchemaParser<'a> {
             self.bump()?;
         }
 
-        self.builder.close()?;
         Ok(())
     }
 
@@ -365,7 +414,12 @@ impl<'a> SchemaParser<'a> {
     /// ```
     fn action_declaration(&mut self) -> Result<(), duramen_cst::Error> {
         self.builder.open(SchemaSyntax::ActionDeclaration)?;
+        self.action_declaration_body()?;
+        self.builder.close()?;
+        Ok(())
+    }
 
+    fn action_declaration_body(&mut self) -> Result<(), duramen_cst::Error> {
         self.bump()?;
 
         self.action_name_list()?;
@@ -386,7 +440,6 @@ impl<'a> SchemaParser<'a> {
             self.bump()?;
         }
 
-        self.builder.close()?;
         Ok(())
     }
 
@@ -538,7 +591,12 @@ impl<'a> SchemaParser<'a> {
     /// ```
     fn type_declaration(&mut self) -> Result<(), duramen_cst::Error> {
         self.builder.open(SchemaSyntax::TypeDeclaration)?;
+        self.type_declaration_body()?;
+        self.builder.close()?;
+        Ok(())
+    }
 
+    fn type_declaration_body(&mut self) -> Result<(), duramen_cst::Error> {
         self.bump()?;
 
         if self.current.kind.is_identifier() {
@@ -555,7 +613,6 @@ impl<'a> SchemaParser<'a> {
             self.bump()?;
         }
 
-        self.builder.close()?;
         Ok(())
     }
 
@@ -580,6 +637,32 @@ impl<'a> SchemaParser<'a> {
             }
 
             self.builder.close_at(&checkpoint, SchemaSyntax::SetType)?;
+        } else if self.current.kind == TokenKind::Enum {
+            self.bump()?;
+
+            if self.current.kind == TokenKind::OpenBracket {
+                self.bump()?;
+
+                while self.current.len > 0 && self.current.kind != TokenKind::CloseBracket {
+                    if self.current.kind != TokenKind::String {
+                        break;
+                    }
+
+                    self.bump()?;
+
+                    if self.current.kind == TokenKind::Comma {
+                        self.bump()?;
+                    } else {
+                        break;
+                    }
+                }
+
+                if self.current.kind == TokenKind::CloseBracket {
+                    self.bump()?;
+                }
+            }
+
+            self.builder.close_at(&checkpoint, SchemaSyntax::EnumType)?;
         } else if self.current.kind == TokenKind::OpenBrace {
             self.bump()?;
 

@@ -18,6 +18,7 @@ workspace = true
 
 [dependencies]
 duramen-lexer = { path = "../crates/lexer" }
+duramen-lower = { path = "../crates/lower" }
 duramen-parser = { path = "../crates/parser" }
 
 # Fuzzing
@@ -31,15 +32,29 @@ doc = false
 bench = false
 
 [[bin]]
-name = "policy"
-path = "fuzz_targets/policy.rs"
+name = "lower_policy"
+path = "fuzz_targets/lower_policy.rs"
 test = false
 doc = false
 bench = false
 
 [[bin]]
-name = "schema"
-path = "fuzz_targets/schema.rs"
+name = "lower_schema"
+path = "fuzz_targets/lower_schema.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_policy"
+path = "fuzz_targets/parse_policy.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "parse_schema"
+path = "fuzz_targets/parse_schema.rs"
 test = false
 doc = false
 bench = false
