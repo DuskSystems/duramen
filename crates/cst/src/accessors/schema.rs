@@ -149,6 +149,19 @@ impl<'a> ActionDecl<'a> {
         self.node.children().filter_map(Name::cast)
     }
 
+    pub fn action_names<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
+        self.node.children().filter_map(|child| {
+            if child.value() == SchemaSyntax::String {
+                let text = &source[child.range()];
+                text.get(1..text.len().saturating_sub(1))
+            } else if let Some(name) = Name::cast(child) {
+                name.basename(source)
+            } else {
+                None
+            }
+        })
+    }
+
     pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
         self.node.children().filter_map(Annotation::cast)
     }
@@ -182,15 +195,29 @@ impl<'a> TypeDecl<'a> {
 
     #[must_use]
     pub fn type_expr(&self) -> Option<TypeExpr<'a>> {
-        self.node.children().find_map(TypeExpr::cast)
+        let mut skipped_name = false;
+        self.node
+            .children()
+            .filter(move |node| {
+                if node.value() == SchemaSyntax::Name && !skipped_name {
+                    skipped_name = true;
+                    false
+                } else {
+                    true
+                }
+            })
+            .find_map(TypeExpr::cast)
     }
 }
 
 cst_node!(Annotation, SchemaSyntax::Annotation);
-impl<'a> Annotation<'a> {
+impl Annotation<'_> {
     #[must_use]
-    pub fn name(&self) -> Option<Name<'a>> {
-        self.node.children().find_map(Name::cast)
+    pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
+        self.node
+            .children()
+            .find(|node| node.value() == SchemaSyntax::Identifier)
+            .map(|node| &source[node.range()])
     }
 
     #[must_use]
@@ -379,6 +406,15 @@ impl<'a> Name<'a> {
 
     #[must_use]
     pub fn basename<'s>(&self, source: &'s str) -> Option<&'s str> {
+        if let Some(string_node) = self
+            .node
+            .children()
+            .find(|node| node.value() == SchemaSyntax::String)
+        {
+            let text = &source[string_node.range()];
+            return text.get(1..text.len().saturating_sub(1));
+        }
+
         self.node
             .children()
             .filter(|node| {

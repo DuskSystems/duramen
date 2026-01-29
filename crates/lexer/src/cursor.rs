@@ -26,6 +26,12 @@ impl<'a> Cursor<'a> {
         self.position
     }
 
+    /// Sets the byte position.
+    #[inline(always)]
+    pub const fn set_position(&mut self, position: usize) {
+        self.position = position;
+    }
+
     /// Returns the current byte.
     #[must_use]
     #[inline(always)]

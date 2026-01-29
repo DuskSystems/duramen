@@ -338,7 +338,7 @@ impl PolicySyntax {
     /// Checks if this is an identifier.
     #[must_use]
     pub const fn is_identifier(self) -> bool {
-        matches!(self, Self::Identifier)
+        matches!(self, Self::Identifier) || self.is_keyword()
     }
 
     /// Checks if this is a literal token.
@@ -372,6 +372,14 @@ impl PolicySyntax {
                 | Self::True
                 | Self::Unless
                 | Self::When
+        )
+    }
+
+    #[must_use]
+    pub const fn is_reserved_word(self) -> bool {
+        matches!(
+            self,
+            Self::If | Self::Then | Self::Else | Self::True | Self::False
         )
     }
 

@@ -58,10 +58,13 @@ impl<'a> Policy<'a> {
 }
 
 cst_node!(Annotation, PolicySyntax::Annotation);
-impl<'a> Annotation<'a> {
+impl Annotation<'_> {
     #[must_use]
-    pub fn name(&self) -> Option<Name<'a>> {
-        self.node.children().find_map(Name::cast)
+    pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
+        self.node
+            .children()
+            .find(|node| node.value() == PolicySyntax::Identifier)
+            .map(|node| &source[node.range()])
     }
 
     #[must_use]
@@ -101,7 +104,21 @@ impl<'a> VariableDef<'a> {
 
     #[must_use]
     pub fn constraint(&self) -> Option<Expression<'a>> {
-        self.node.children().find_map(Expression::cast)
+        let mut found_operator = false;
+        for child in self.node.children() {
+            match child.value() {
+                PolicySyntax::Eq2 | PolicySyntax::In => {
+                    found_operator = true;
+                }
+                _ if found_operator => {
+                    if let Some(expr) = Expression::cast(child) {
+                        return Some(expr);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
     }
 
     #[must_use]
@@ -152,7 +169,7 @@ impl<'a> Name<'a> {
     pub fn segments<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node
             .children()
-            .filter(|node| node.value() == PolicySyntax::Identifier)
+            .filter(|node| node.value().is_identifier())
             .map(|node| &source[node.range()])
     }
 
@@ -160,7 +177,7 @@ impl<'a> Name<'a> {
     pub fn is_qualified(&self) -> bool {
         self.node
             .children()
-            .filter(|node| node.value() == PolicySyntax::Identifier)
+            .filter(|node| node.value().is_identifier())
             .nth(1)
             .is_some()
     }
@@ -169,7 +186,7 @@ impl<'a> Name<'a> {
     pub fn basename<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .filter(|node| node.value() == PolicySyntax::Identifier)
+            .filter(|node| node.value().is_identifier())
             .last()
             .map(|node| &source[node.range()])
     }
@@ -178,7 +195,7 @@ impl<'a> Name<'a> {
         let segments: alloc::vec::Vec<_> = self
             .node
             .children()
-            .filter(|node| node.value() == PolicySyntax::Identifier)
+            .filter(|node| node.value().is_identifier())
             .collect();
 
         let count = segments.len().saturating_sub(1);
@@ -186,6 +203,24 @@ impl<'a> Name<'a> {
             .into_iter()
             .take(count)
             .map(|node| &source[node.range()])
+    }
+
+    #[must_use]
+    pub fn has_reserved_segment(&self) -> bool {
+        self.node
+            .children()
+            .any(|node| node.value().is_reserved_word())
+    }
+
+    #[must_use]
+    pub fn first_reserved_segment<'s>(
+        &self,
+        source: &'s str,
+    ) -> Option<(&'s str, core::ops::Range<usize>)> {
+        self.node
+            .children()
+            .find(|node| node.value().is_reserved_word())
+            .map(|node| (&source[node.range()], node.range()))
     }
 }
 
@@ -345,6 +380,7 @@ pub enum Expression<'a> {
     Paren(ParenExpression<'a>),
     List(ListExpression<'a>),
     Record(RecordExpression<'a>),
+    Name(Name<'a>),
 }
 
 impl<'a> CstNode<'a> for Expression<'a> {
@@ -370,6 +406,7 @@ impl<'a> CstNode<'a> for Expression<'a> {
                 | PolicySyntax::Parenthesized
                 | PolicySyntax::List
                 | PolicySyntax::Record
+                | PolicySyntax::Name
         )
     }
 
@@ -392,6 +429,7 @@ impl<'a> CstNode<'a> for Expression<'a> {
             PolicySyntax::Parenthesized => ParenExpression::cast(node).map(Self::Paren),
             PolicySyntax::List => ListExpression::cast(node).map(Self::List),
             PolicySyntax::Record => RecordExpression::cast(node).map(Self::Record),
+            PolicySyntax::Name => Name::cast(node).map(Self::Name),
             _ => None,
         }
     }
@@ -415,6 +453,7 @@ impl<'a> CstNode<'a> for Expression<'a> {
             Self::Paren(expr) => expr.syntax(),
             Self::List(expr) => expr.syntax(),
             Self::Record(expr) => expr.syntax(),
+            Self::Name(name) => name.syntax(),
         }
     }
 }
@@ -538,23 +577,37 @@ impl<'a> HasExpression<'a> {
     }
 
     #[must_use]
-    pub fn field<'s>(&self, source: &'s str) -> Option<&'s str> {
+    pub fn field<'s>(&self, source: &'s str) -> Option<(&'s str, bool)> {
         self.node
             .children()
             .find(|child| {
-                matches!(
-                    child.value(),
-                    PolicySyntax::Identifier | PolicySyntax::String
-                )
+                child.value().is_token()
+                    && !child.value().is_trivial()
+                    && child.value() != PolicySyntax::Has
             })
             .map(|child| {
                 let text = &source[child.range()];
                 if child.value() == PolicySyntax::String {
-                    text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
+                    (
+                        text.get(1..text.len().saturating_sub(1)).unwrap_or(text),
+                        true,
+                    )
                 } else {
-                    text
+                    (text, false)
                 }
             })
+    }
+
+    #[must_use]
+    pub fn is_field_reserved(&self) -> bool {
+        self.node
+            .children()
+            .find(|child| {
+                child.value().is_token()
+                    && !child.value().is_trivial()
+                    && child.value() != PolicySyntax::Has
+            })
+            .is_some_and(|child| child.value().is_reserved_word())
     }
 }
 
@@ -597,11 +650,16 @@ impl<'a> IsExpression<'a> {
 
     #[must_use]
     pub fn in_expr(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
-            .nth(1)
+        let mut found_in = false;
+        for child in self.node.children() {
+            if child.value() == PolicySyntax::In {
+                found_in = true;
+            } else if found_in && let Some(expr) = Expression::cast(child) {
+                return Some(expr);
+            }
+        }
+
+        None
     }
 }
 
@@ -678,13 +736,37 @@ impl FieldAccess<'_> {
     pub fn field<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|child| child.value() == PolicySyntax::Identifier)
+            .find(|child| {
+                child.value().is_token()
+                    && !child.value().is_trivial()
+                    && child.value() != PolicySyntax::Dot
+            })
             .map(|child| &source[child.range()])
+    }
+
+    #[must_use]
+    pub fn is_field_reserved(&self) -> bool {
+        self.node
+            .children()
+            .find(|child| {
+                child.value().is_token()
+                    && !child.value().is_trivial()
+                    && child.value() != PolicySyntax::Dot
+            })
+            .is_some_and(|child| child.value().is_reserved_word())
     }
 }
 
 cst_node!(MethodCall, PolicySyntax::MethodCall);
 impl<'a> MethodCall<'a> {
+    #[must_use]
+    pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
+        self.node
+            .children()
+            .find(|child| child.value() == PolicySyntax::Identifier || child.value().is_keyword())
+            .map(|child| &source[child.range()])
+    }
+
     pub fn arguments(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
         self.node
             .children()
@@ -828,23 +910,29 @@ impl<'a> RecordExpression<'a> {
 cst_node!(RecordEntry, PolicySyntax::RecordEntry);
 impl<'a> RecordEntry<'a> {
     #[must_use]
-    pub fn key<'s>(&self, source: &'s str) -> Option<&'s str> {
+    pub fn key<'s>(&self, source: &'s str) -> Option<(&'s str, bool)> {
         self.node
             .children()
-            .find(|child| {
-                matches!(
-                    child.value(),
-                    PolicySyntax::Identifier | PolicySyntax::String
-                )
-            })
+            .find(|child| child.value().is_token() && !child.value().is_trivial())
             .map(|child| {
                 let text = &source[child.range()];
                 if child.value() == PolicySyntax::String {
-                    text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
+                    (
+                        text.get(1..text.len().saturating_sub(1)).unwrap_or(text),
+                        true,
+                    )
                 } else {
-                    text
+                    (text, false)
                 }
             })
+    }
+
+    #[must_use]
+    pub fn is_key_reserved(&self) -> bool {
+        self.node
+            .children()
+            .find(|child| child.value().is_token() && !child.value().is_trivial())
+            .is_some_and(|child| child.value().is_reserved_word())
     }
 
     #[must_use]
