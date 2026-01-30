@@ -23,6 +23,7 @@ std = []
 duramen-ast = { workspace = true }
 duramen-cst = { workspace = true }
 duramen-diagnostics = { workspace = true }
+duramen-lexer = { workspace = true }
 
 [dev-dependencies]
 duramen-parser = { workspace = true }

@@ -612,6 +612,7 @@ dependencies = [
  "duramen-ast",
  "duramen-cst",
  "duramen-diagnostics",
+ "duramen-lexer",
  "duramen-parser",
  "duramen-test",
  "rand",

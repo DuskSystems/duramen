@@ -147,6 +147,9 @@ impl<'a> SchemaParser<'a> {
                 if self.current.kind == TokenKind::CloseBrace {
                     self.bump()?;
                 }
+            } else {
+                self.builder.open(SchemaSyntax::Error)?;
+                self.builder.close()?;
             }
 
             self.builder
@@ -180,6 +183,9 @@ impl<'a> SchemaParser<'a> {
             if self.current.kind == TokenKind::CloseBrace {
                 self.bump()?;
             }
+        } else {
+            self.builder.open(SchemaSyntax::Error)?;
+            self.builder.close()?;
         }
 
         Ok(())
@@ -349,6 +355,9 @@ impl<'a> SchemaParser<'a> {
 
         if self.current.kind == TokenKind::Semicolon {
             self.bump()?;
+        } else {
+            self.builder.open(SchemaSyntax::Error)?;
+            self.builder.close()?;
         }
 
         Ok(())
@@ -446,6 +455,9 @@ impl<'a> SchemaParser<'a> {
 
         if self.current.kind == TokenKind::Semicolon {
             self.bump()?;
+        } else {
+            self.builder.open(SchemaSyntax::Error)?;
+            self.builder.close()?;
         }
 
         Ok(())
@@ -613,12 +625,18 @@ impl<'a> SchemaParser<'a> {
 
         if self.current.kind == TokenKind::Eq {
             self.bump()?;
+        } else {
+            self.builder.open(SchemaSyntax::Error)?;
+            self.builder.close()?;
         }
 
         self.type_expr()?;
 
         if self.current.kind == TokenKind::Semicolon {
             self.bump()?;
+        } else {
+            self.builder.open(SchemaSyntax::Error)?;
+            self.builder.close()?;
         }
 
         Ok(())
@@ -786,16 +804,14 @@ impl<'a> SchemaParser<'a> {
     /// Action::"view"
     /// ```
     fn qualified_name(&mut self) -> Result<(), duramen_cst::Error> {
-        self.name()?;
-
-        if self.current.kind == TokenKind::Colon2 {
+        if self.current.kind == TokenKind::String {
             self.bump()?;
+        } else {
+            self.name()?;
 
             if self.current.kind == TokenKind::String {
                 self.bump()?;
             }
-        } else if self.current.kind == TokenKind::String {
-            self.bump()?;
         }
 
         Ok(())
