@@ -310,11 +310,18 @@ impl<'a> ActionParents<'a> {
     pub fn qualified_names<'s>(
         &self,
         source: &'s str,
-    ) -> impl Iterator<Item = (Name<'a>, Option<&'s str>)> + use<'a, 's> {
+    ) -> impl Iterator<Item = (Option<Name<'a>>, Option<&'s str>)> + use<'a, 's> {
         let mut children = self.node.children().peekable();
         core::iter::from_fn(move || {
             loop {
                 let child = children.next()?;
+
+                if child.value() == SchemaSyntax::String {
+                    let text = &source[child.range()];
+                    let eid = text.get(1..text.len().saturating_sub(1));
+                    return Some((None, eid));
+                }
+
                 let Some(name) = Name::cast(child) else {
                     continue;
                 };
@@ -340,7 +347,7 @@ impl<'a> ActionParents<'a> {
                     _ => None,
                 };
 
-                return Some((name, eid));
+                return Some((Some(name), eid));
             }
         })
     }

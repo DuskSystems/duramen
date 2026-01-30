@@ -48,9 +48,14 @@ impl<'a> Lexer<'a> {
             return TokenKind::Unknown;
         };
 
-        // Whitespace
+        // ASCII whitespace
         if ByteLookup::is_whitespace(current) {
             self.cursor.skip_whitespace();
+            return TokenKind::Whitespace;
+        }
+
+        // Unicode whitespace
+        if current >= 0x80 && self.cursor.skip_unicode_whitespace() {
             return TokenKind::Whitespace;
         }
 

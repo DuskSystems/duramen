@@ -28,12 +28,36 @@ impl<'a> SchemaLowerer<'a> {
         mut self,
         tree: &cst::SchemaTree,
     ) -> Result<(ast::schema::Schema, Diagnostics), Diagnostics> {
+        self.collect_parse_errors(tree);
         let value = self.lower_schema(tree);
 
         if self.diagnostics.has_error() {
             Err(self.diagnostics)
+        } else if value.is_empty() && has_non_trivial_content(self.source) {
+            self.diagnostics
+                .push(Diagnostic::error("expected schema declaration"));
+
+            Err(self.diagnostics)
         } else {
             Ok((value, self.diagnostics))
+        }
+    }
+
+    fn collect_parse_errors(&mut self, tree: &cst::SchemaTree) {
+        for node in tree.children() {
+            self.collect_errors_in_subtree(&node);
+        }
+    }
+
+    fn collect_errors_in_subtree(&mut self, node: &cst::SchemaNode<'_>) {
+        if node.value() == cst::syntax::schema::SchemaSyntax::Error {
+            self.diagnostics.push(
+                Diagnostic::error("syntax error").with_label(node.range(), "unexpected token"),
+            );
+        }
+
+        for child in node.children() {
+            self.collect_errors_in_subtree(&child);
         }
     }
 
@@ -330,36 +354,56 @@ impl<'a> SchemaLowerer<'a> {
         let mut result = Vec::new();
 
         for (name, eid) in parents.qualified_names(self.source) {
-            if let Some(eid) = eid {
-                let unescaped_eid = StringUnescaper::new(eid).unescape().unwrap_or_else(|| {
-                    self.diagnostics.push(Diagnostic::invalid_string_escape(
-                        "invalid escape sequence in action member",
-                        name.range(),
-                    ));
+            match (name, eid) {
+                (None, Some(eid)) => {
+                    let unescaped_eid = StringUnescaper::new(eid).unescape().unwrap_or_else(|| {
+                        self.diagnostics.push(Diagnostic::invalid_string_escape(
+                            "invalid escape sequence in action member",
+                            parents.range(),
+                        ));
 
-                    String::from(eid)
-                });
-                let action_name = ast::common::Id::new(unescaped_eid);
+                        String::from(eid)
+                    });
 
-                let groups: Vec<ast::common::Id> = name
-                    .segments(self.source)
-                    .map(|segment| ast::common::Id::new(String::from(segment)))
-                    .collect();
+                    let action_name = ast::common::Id::new(unescaped_eid);
+                    result.push(ast::schema::ActionRef::simple(action_name));
+                }
 
-                result.push(ast::schema::ActionRef::new(action_name, groups));
-            } else {
-                let Some(basename) = name.basename(self.source) else {
-                    continue;
-                };
+                (Some(name), Some(eid)) => {
+                    let unescaped_eid = StringUnescaper::new(eid).unescape().unwrap_or_else(|| {
+                        self.diagnostics.push(Diagnostic::invalid_string_escape(
+                            "invalid escape sequence in action member",
+                            name.range(),
+                        ));
 
-                let action_name = ast::common::Id::new(String::from(basename));
+                        String::from(eid)
+                    });
+                    let action_name = ast::common::Id::new(unescaped_eid);
 
-                let groups: Vec<ast::common::Id> = name
-                    .namespace(self.source)
-                    .map(|segment| ast::common::Id::new(String::from(segment)))
-                    .collect();
+                    let groups: Vec<ast::common::Id> = name
+                        .segments(self.source)
+                        .map(|segment| ast::common::Id::new(String::from(segment)))
+                        .collect();
 
-                result.push(ast::schema::ActionRef::new(action_name, groups));
+                    result.push(ast::schema::ActionRef::new(action_name, groups));
+                }
+
+                (Some(name), None) => {
+                    let Some(basename) = name.basename(self.source) else {
+                        continue;
+                    };
+
+                    let action_name = ast::common::Id::new(String::from(basename));
+
+                    let groups: Vec<ast::common::Id> = name
+                        .namespace(self.source)
+                        .map(|segment| ast::common::Id::new(String::from(segment)))
+                        .collect();
+
+                    result.push(ast::schema::ActionRef::new(action_name, groups));
+                }
+
+                (None, None) => {}
             }
         }
 
@@ -573,4 +617,9 @@ fn lower_type_reference(
 ) -> Option<ast::schema::Type> {
     let name = lower_name(name, source)?;
     Some(ast::schema::Type::named(name))
+}
+
+fn has_non_trivial_content(source: &str) -> bool {
+    use duramen_lexer::Lexer;
+    Lexer::new(source).any(|token| !token.kind.is_trivial())
 }

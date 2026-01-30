@@ -76,7 +76,7 @@ impl<'a> Cursor<'a> {
         self.source.get(start..self.position)
     }
 
-    /// Skips whitespace characters.
+    /// Skips ASCII whitespace characters.
     #[inline]
     pub fn skip_whitespace(&mut self) {
         while let Some(&byte) = self.bytes.get(self.position) {
@@ -86,6 +86,38 @@ impl<'a> Cursor<'a> {
 
             self.position = self.position.saturating_add(1);
         }
+    }
+
+    /// Skips Unicode whitespace characters.
+    #[inline]
+    pub fn skip_unicode_whitespace(&mut self) -> bool {
+        let Some(remaining) = self.source.get(self.position..) else {
+            return false;
+        };
+
+        let Some(char) = remaining.chars().next() else {
+            return false;
+        };
+
+        if !char.is_whitespace() {
+            return false;
+        }
+
+        self.position = self.position.saturating_add(char.len_utf8());
+
+        while let Some(remaining) = self.source.get(self.position..) {
+            let Some(char) = remaining.chars().next() else {
+                break;
+            };
+
+            if !char.is_whitespace() {
+                break;
+            }
+
+            self.position = self.position.saturating_add(char.len_utf8());
+        }
+
+        true
     }
 
     /// Skips to end of line.

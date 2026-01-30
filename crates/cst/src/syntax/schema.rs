@@ -319,6 +319,7 @@ impl SchemaSyntax {
                 | Self::True
                 | Self::False
                 | Self::In
+                | Self::Tags
         )
     }
 
