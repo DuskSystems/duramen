@@ -115,7 +115,6 @@ impl ActionDecl {
     }
 
     #[must_use]
-    #[expect(clippy::indexing_slicing, reason = "TODO")]
     pub fn primary_name(&self) -> &Id {
         &self.names[0]
     }

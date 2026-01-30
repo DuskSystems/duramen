@@ -43,19 +43,19 @@ impl<'a> Cursor<'a> {
     #[must_use]
     #[inline(always)]
     pub fn peek(&self) -> Option<u8> {
-        self.bytes.get(self.position.checked_add(1)?).copied()
+        self.bytes.get(self.position + 1).copied()
     }
 
     /// Advance by one byte.
     #[inline(always)]
     pub const fn bump(&mut self) {
-        self.position = self.position.saturating_add(1);
+        self.position = self.position + 1;
     }
 
     /// Advance by `n` bytes.
     #[inline(always)]
     pub const fn bump_n(&mut self, n: usize) {
-        self.position = self.position.saturating_add(n);
+        self.position = self.position + n;
     }
 
     /// Advance by one UTF-8 character.
@@ -63,9 +63,8 @@ impl<'a> Cursor<'a> {
     pub fn bump_char(&mut self) {
         if let Some(remaining) = self.source.get(self.position..)
             && let Some(char) = remaining.chars().next()
-            && let Some(position) = self.position.checked_add(char.len_utf8())
         {
-            self.position = position;
+            self.position += char.len_utf8();
         }
     }
 
@@ -76,37 +75,24 @@ impl<'a> Cursor<'a> {
         self.source.get(start..self.position)
     }
 
-    /// Skips ASCII whitespace characters.
-    #[inline]
-    pub fn skip_whitespace(&mut self) {
+    /// Skips whitespace characters.
+    #[inline(always)]
+    pub fn skip_whitespace(&mut self) -> bool {
+        let start = self.position;
+
         while let Some(&byte) = self.bytes.get(self.position) {
-            if !ByteLookup::is_whitespace(byte) {
+            // ASCII
+            if ByteLookup::is_ascii_whitespace(byte) {
+                self.position += 1;
+                continue;
+            }
+
+            if byte < 128 {
                 break;
             }
 
-            self.position = self.position.saturating_add(1);
-        }
-    }
-
-    /// Skips Unicode whitespace characters.
-    #[inline]
-    pub fn skip_unicode_whitespace(&mut self) -> bool {
-        let Some(remaining) = self.source.get(self.position..) else {
-            return false;
-        };
-
-        let Some(char) = remaining.chars().next() else {
-            return false;
-        };
-
-        if !char.is_whitespace() {
-            return false;
-        }
-
-        self.position = self.position.saturating_add(char.len_utf8());
-
-        while let Some(remaining) = self.source.get(self.position..) {
-            let Some(char) = remaining.chars().next() else {
+            // Unicode
+            let Some(char) = self.source[self.position..].chars().next() else {
                 break;
             };
 
@@ -114,21 +100,18 @@ impl<'a> Cursor<'a> {
                 break;
             }
 
-            self.position = self.position.saturating_add(char.len_utf8());
+            self.position += char.len_utf8();
         }
 
-        true
+        self.position > start
     }
 
     /// Skips to end of line.
-    #[inline]
+    #[inline(always)]
     pub fn skip_line(&mut self) {
-        let Some(remaining) = self.bytes.get(self.position..) else {
-            return;
-        };
-
+        let remaining = &self.bytes[self.position..];
         if let Some(offset) = memchr::memchr2(b'\n', b'\r', remaining) {
-            self.position = self.position.saturating_add(offset);
+            self.position += offset;
         } else {
             self.position = self.bytes.len();
         }
@@ -137,60 +120,56 @@ impl<'a> Cursor<'a> {
     /// Scans a string literal after the opening quote.
     ///
     /// Returns `true` if properly terminated, `false` if unterminated.
-    #[inline]
+    #[inline(always)]
     pub fn scan_string(&mut self) -> bool {
         loop {
-            let Some(remaining) = self.bytes.get(self.position..) else {
-                return false;
-            };
-
+            let remaining = &self.bytes[self.position..];
             let Some(offset) = memchr::memchr2(b'"', b'\\', remaining) else {
                 self.position = self.bytes.len();
                 return false;
             };
 
-            self.position = self.position.saturating_add(offset);
+            self.position += offset;
 
-            let Some(&byte) = self.bytes.get(self.position) else {
-                return false;
-            };
-
+            let byte = self.bytes[self.position];
             if byte == b'"' {
-                self.position = self.position.saturating_add(1);
+                self.position += 1;
                 return true;
             }
 
             // Skip escaped character
-            self.position = self.position.saturating_add(1);
-            if let Some(remaining) = self.source.get(self.position..)
-                && let Some(char) = remaining.chars().next()
+            self.position += 1;
+            if let Some(char) = self
+                .source
+                .get(self.position..)
+                .and_then(|str| str.chars().next())
             {
-                self.position = self.position.saturating_add(char.len_utf8());
+                self.position += char.len_utf8();
             }
         }
     }
 
     /// Scans an identifier.
-    #[inline]
+    #[inline(always)]
     pub fn scan_identifier(&mut self) {
         while let Some(&byte) = self.bytes.get(self.position) {
             if !ByteLookup::is_identifier_continue(byte) {
                 break;
             }
 
-            self.position = self.position.saturating_add(1);
+            self.position += 1;
         }
     }
 
     /// Scans an integer.
-    #[inline]
+    #[inline(always)]
     pub fn scan_integer(&mut self) {
         while let Some(&byte) = self.bytes.get(self.position) {
             if !ByteLookup::is_digit(byte) {
                 break;
             }
 
-            self.position = self.position.saturating_add(1);
+            self.position += 1;
         }
     }
 }
@@ -215,6 +194,10 @@ mod tests {
     #[test]
     fn skip_whitespace() {
         let mut cursor = Cursor::new("  \t\n\r\x0B\x0Cx");
+        cursor.skip_whitespace();
+        assert_eq!(cursor.current(), Some(b'x'));
+
+        let mut cursor = Cursor::new("\u{00A0}\u{2003}\u{3000}x");
         cursor.skip_whitespace();
         assert_eq!(cursor.current(), Some(b'x'));
     }

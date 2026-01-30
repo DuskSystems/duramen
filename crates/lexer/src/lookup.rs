@@ -1,8 +1,3 @@
-#![expect(
-    clippy::indexing_slicing,
-    reason = "u8 index into 256 element array cannot panic"
-)]
-
 const WHITESPACE: u8 = 1 << 0;
 const DIGIT: u8 = 1 << 1;
 const IDENTIFIER_START: u8 = 1 << 2;
@@ -37,7 +32,7 @@ impl ByteLookup {
     /// Checks if a byte is whitespace.
     #[must_use]
     #[inline(always)]
-    pub const fn is_whitespace(byte: u8) -> bool {
+    pub const fn is_ascii_whitespace(byte: u8) -> bool {
         FLAGS[byte as usize] & WHITESPACE != 0
     }
 

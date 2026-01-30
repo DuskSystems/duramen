@@ -36,7 +36,7 @@ impl<'a> Lexer<'a> {
 
         let start = self.cursor.position();
         let kind = self.scan_token();
-        let len = self.cursor.position().checked_sub(start)?;
+        let len = self.cursor.position() - start;
 
         Some(Token::new(kind, len))
     }
@@ -48,14 +48,8 @@ impl<'a> Lexer<'a> {
             return TokenKind::Unknown;
         };
 
-        // ASCII whitespace
-        if ByteLookup::is_whitespace(current) {
-            self.cursor.skip_whitespace();
-            return TokenKind::Whitespace;
-        }
-
-        // Unicode whitespace
-        if current >= 0x80 && self.cursor.skip_unicode_whitespace() {
+        // Whitespace
+        if self.cursor.skip_whitespace() {
             return TokenKind::Whitespace;
         }
 

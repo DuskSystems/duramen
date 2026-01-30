@@ -121,19 +121,32 @@ fn lexer_comments(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn lexer_whitespace(bencher: Bencher<'_, '_>) {
-    const WHITESPACES: &[u8] = b" \t\n";
+fn lexer_whitespace_ascii(bencher: Bencher<'_, '_>) {
+    const WHITESPACES: &[char] = &[' ', '\t', '\n', '\r', '\x0B', '\x0C'];
 
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
     for _ in 0..COUNT {
         let index = rng.random_range(0..WHITESPACES.len());
-        let Some(&byte) = WHITESPACES.get(index) else {
-            continue;
-        };
+        input.push(WHITESPACES[index]);
+    }
 
-        input.push(byte as char);
+    bencher
+        .counter(BytesCount::of_str(&input))
+        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+}
+
+#[divan::bench]
+fn lexer_whitespace_unicode(bencher: Bencher<'_, '_>) {
+    const WHITESPACES: &[char] = &['\u{00A0}', '\u{2003}', '\u{2009}', '\u{3000}'];
+
+    let mut rng = SmallRng::seed_from_u64(SEED);
+    let mut input = String::new();
+
+    for _ in 0..COUNT {
+        let index = rng.random_range(0..WHITESPACES.len());
+        input.push(WHITESPACES[index]);
     }
 
     bencher
