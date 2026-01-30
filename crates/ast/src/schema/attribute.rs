@@ -1,20 +1,22 @@
 use super::types::Type;
-use crate::common::Id;
+use crate::common::{Annotations, Id};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct AttributeDecl {
     name: Id,
     required: bool,
     attr_type: Type,
+    annotations: Annotations,
 }
 
 impl AttributeDecl {
     #[must_use]
-    pub const fn new(name: Id, required: bool, attr_type: Type) -> Self {
+    pub const fn new(name: Id, required: bool, attr_type: Type, annotations: Annotations) -> Self {
         Self {
             name,
             required,
             attr_type,
+            annotations,
         }
     }
 
@@ -24,6 +26,7 @@ impl AttributeDecl {
             name,
             required: true,
             attr_type,
+            annotations: Annotations::new(),
         }
     }
 
@@ -33,6 +36,7 @@ impl AttributeDecl {
             name,
             required: false,
             attr_type,
+            annotations: Annotations::new(),
         }
     }
 
@@ -57,7 +61,12 @@ impl AttributeDecl {
     }
 
     #[must_use]
-    pub fn into_parts(self) -> (Id, bool, Type) {
-        (self.name, self.required, self.attr_type)
+    pub const fn annotations(&self) -> &Annotations {
+        &self.annotations
+    }
+
+    #[must_use]
+    pub fn into_parts(self) -> (Id, bool, Type, Annotations) {
+        (self.name, self.required, self.attr_type, self.annotations)
     }
 }

@@ -583,8 +583,23 @@ impl<'a> PolicyParser<'a> {
                     self.bump()?;
                 }
 
-                self.builder
-                    .close_at(&access_checkpoint, PolicySyntax::FieldAccess)?;
+                if self.current.kind == TokenKind::OpenParen {
+                    self.bump()?;
+
+                    if self.current.kind != TokenKind::CloseParen {
+                        self.argument_list()?;
+                    }
+
+                    if self.current.kind == TokenKind::CloseParen {
+                        self.bump()?;
+                    }
+
+                    self.builder
+                        .close_at(&access_checkpoint, PolicySyntax::MethodCall)?;
+                } else {
+                    self.builder
+                        .close_at(&access_checkpoint, PolicySyntax::FieldAccess)?;
+                }
 
                 has_access = true;
                 self.advance.pop(self.position, self.current.kind);

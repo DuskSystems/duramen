@@ -3,14 +3,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::ops::Range;
 
-use duramen_ast::common::{Annotation, Annotations, AnyId, EntityType, Id, Name};
-use duramen_ast::schema::{
-    ActionDecl, ActionRef, AppliesTo, AttributeDecl, EntityDecl, EnumType, Namespace,
-    PrimitiveType, RecordType, Schema, Type, TypeDecl,
-};
-use duramen_cst::SchemaTree;
-use duramen_cst::accessors::{CstNode as _, schema as cst};
+use duramen_cst::accessors::CstNode as _;
 use duramen_diagnostics::{Diagnostic, Diagnostics};
+use {duramen_ast as ast, duramen_cst as cst};
 
 use crate::unescape::StringUnescaper;
 
@@ -29,7 +24,10 @@ impl<'a> SchemaLowerer<'a> {
     }
 
     /// # Errors
-    pub fn lower(mut self, tree: &SchemaTree) -> Result<(Schema, Diagnostics), Diagnostics> {
+    pub fn lower(
+        mut self,
+        tree: &cst::SchemaTree,
+    ) -> Result<(ast::schema::Schema, Diagnostics), Diagnostics> {
         let value = self.lower_schema(tree);
 
         if self.diagnostics.has_error() {
@@ -39,9 +37,12 @@ impl<'a> SchemaLowerer<'a> {
         }
     }
 
-    fn lower_schema(&mut self, tree: &SchemaTree) -> Schema {
-        let Some(schema) = tree.children().find_map(cst::Schema::cast) else {
-            return Schema::empty();
+    fn lower_schema(&mut self, tree: &cst::SchemaTree) -> ast::schema::Schema {
+        let Some(schema) = tree
+            .children()
+            .find_map(cst::accessors::schema::Schema::cast)
+        else {
+            return ast::schema::Schema::empty();
         };
 
         let mut namespaces = Vec::new();
@@ -56,10 +57,13 @@ impl<'a> SchemaLowerer<'a> {
             namespaces.push(namespace);
         }
 
-        Schema::new(namespaces)
+        ast::schema::Schema::new(namespaces)
     }
 
-    fn lower_default_namespace(&mut self, schema: &cst::Schema<'_>) -> Namespace {
+    fn lower_default_namespace(
+        &mut self,
+        schema: &cst::accessors::schema::Schema<'_>,
+    ) -> ast::schema::Namespace {
         let mut entities = Vec::new();
         let mut actions = Vec::new();
         let mut types = Vec::new();
@@ -82,10 +86,13 @@ impl<'a> SchemaLowerer<'a> {
             }
         }
 
-        Namespace::default_namespace(entities, actions, types)
+        ast::schema::Namespace::default_namespace(entities, actions, types)
     }
 
-    fn lower_namespace(&mut self, ns_decl: &cst::NamespaceDecl<'_>) -> Namespace {
+    fn lower_namespace(
+        &mut self,
+        ns_decl: &cst::accessors::schema::NamespaceDecl<'_>,
+    ) -> ast::schema::Namespace {
         let name = ns_decl
             .name()
             .and_then(|name| lower_name(&name, self.source));
@@ -119,16 +126,16 @@ impl<'a> SchemaLowerer<'a> {
             );
         }
 
-        let annotations = lower_annotations_schema(ns_decl);
+        let annotations = self.lower_annotations(ns_decl.annotations());
 
-        Namespace::new(name, entities, actions, types, annotations)
+        ast::schema::Namespace::new(name, entities, actions, types, annotations)
     }
 
-    fn lower_annotations<'b, I>(&mut self, annotations: I) -> Annotations
+    fn lower_annotations<'b, I>(&mut self, annotations: I) -> ast::common::Annotations
     where
-        I: Iterator<Item = cst::Annotation<'b>>,
+        I: Iterator<Item = cst::accessors::schema::Annotation<'b>>,
     {
-        let mut map: BTreeMap<AnyId, Annotation> = BTreeMap::new();
+        let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
         let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
 
         for annotation in annotations {
@@ -159,20 +166,25 @@ impl<'a> SchemaLowerer<'a> {
                 })
             });
 
-            let annotation_value =
-                value.map_or_else(Annotation::without_value, Annotation::with_value);
-            map.insert(AnyId::new(name.into()), annotation_value);
+            let annotation_value = value.map_or_else(
+                ast::common::Annotation::without_value,
+                ast::common::Annotation::with_value,
+            );
+            map.insert(ast::common::AnyId::new(name.into()), annotation_value);
         }
 
-        Annotations::from_map(map)
+        ast::common::Annotations::from_map(map)
     }
 
-    fn lower_entity(&mut self, entity_decl: &cst::EntityDecl<'_>) -> Option<EntityDecl> {
-        let names: Vec<Id> = entity_decl
+    fn lower_entity(
+        &mut self,
+        entity_decl: &cst::accessors::schema::EntityDecl<'_>,
+    ) -> Option<ast::schema::EntityDecl> {
+        let names: Vec<ast::common::Id> = entity_decl
             .names()
             .filter_map(|name| {
                 name.basename(self.source)
-                    .map(|basename| Id::new(String::from(basename)))
+                    .map(|basename| ast::common::Id::new(String::from(basename)))
             })
             .collect();
 
@@ -180,6 +192,17 @@ impl<'a> SchemaLowerer<'a> {
             self.diagnostics
                 .push(Diagnostic::empty_node("entity name", entity_decl.range()));
             return None;
+        }
+
+        let annotations = self.lower_annotations(entity_decl.annotations());
+
+        if entity_decl.enum_type().is_some() {
+            let choices = self.lower_enum_choices(entity_decl);
+            return Some(ast::schema::EntityDecl::enum_entity(
+                names,
+                choices,
+                annotations,
+            ));
         }
 
         let member_of = entity_decl
@@ -199,7 +222,7 @@ impl<'a> SchemaLowerer<'a> {
 
         let attributes = entity_decl
             .attributes()
-            .map_or_else(RecordType::empty, |attrs| {
+            .map_or_else(ast::schema::RecordType::empty, |attrs| {
                 self.lower_attributes(attrs.attributes())
             });
 
@@ -208,9 +231,7 @@ impl<'a> SchemaLowerer<'a> {
             .and_then(|tags| tags.type_expr())
             .and_then(|type_expr| self.lower_type_expr(&type_expr));
 
-        let annotations = self.lower_annotations(entity_decl.annotations());
-
-        Some(EntityDecl::new(
+        Some(ast::schema::EntityDecl::standard(
             names,
             member_of,
             attributes,
@@ -219,10 +240,43 @@ impl<'a> SchemaLowerer<'a> {
         ))
     }
 
-    fn lower_action(&mut self, action_decl: &cst::ActionDecl<'_>) -> Option<ActionDecl> {
-        let names: Vec<Id> = action_decl
+    fn lower_enum_choices(
+        &mut self,
+        entity_decl: &cst::accessors::schema::EntityDecl<'_>,
+    ) -> Vec<ast::common::Id> {
+        let Some(enum_type) = entity_decl.enum_type() else {
+            return Vec::new();
+        };
+
+        let span = enum_type.range();
+        enum_type
+            .variants(self.source)
+            .filter_map(|variant| {
+                StringUnescaper::new(variant)
+                    .unescape()
+                    .map(ast::common::Id::new)
+                    .or_else(|| {
+                        self.diagnostics.push(Diagnostic::invalid_string_escape(
+                            "invalid escape",
+                            span.clone(),
+                        ));
+                        None
+                    })
+            })
+            .collect()
+    }
+
+    fn lower_action(
+        &mut self,
+        action_decl: &cst::accessors::schema::ActionDecl<'_>,
+    ) -> Option<ast::schema::ActionDecl> {
+        let names: Vec<ast::common::Id> = action_decl
             .action_names(self.source)
-            .map(|name| Id::new(String::from(name)))
+            .filter_map(|name| {
+                StringUnescaper::new(name)
+                    .unescape()
+                    .map(ast::common::Id::new)
+            })
             .collect();
 
         if names.is_empty() {
@@ -238,49 +292,84 @@ impl<'a> SchemaLowerer<'a> {
 
         let applies_to = action_decl
             .applies_to()
-            .map_or_else(AppliesTo::empty, |clause| self.lower_applies_to(&clause));
+            .map_or_else(ast::schema::AppliesTo::empty, |clause| {
+                self.lower_applies_to(&clause)
+            });
 
         let annotations = self.lower_annotations(action_decl.annotations());
 
-        Some(ActionDecl::new(names, member_of, applies_to, annotations))
+        Some(ast::schema::ActionDecl::new(
+            names,
+            member_of,
+            applies_to,
+            annotations,
+        ))
     }
 
-    fn lower_type_decl(&mut self, type_decl: &cst::TypeDecl<'_>) -> Option<TypeDecl> {
+    fn lower_type_decl(
+        &mut self,
+        type_decl: &cst::accessors::schema::TypeDecl<'_>,
+    ) -> Option<ast::schema::TypeDecl> {
         let name = type_decl
             .name()
             .and_then(|name| name.basename(self.source))
-            .map(|basename| Id::new(String::from(basename)))?;
+            .map(|basename| ast::common::Id::new(String::from(basename)))?;
 
         let type_expr = type_decl.type_expr()?;
         let type_def = self.lower_type_expr(&type_expr)?;
 
         let annotations = self.lower_annotations(type_decl.annotations());
 
-        Some(TypeDecl::new(name, type_def, annotations))
+        Some(ast::schema::TypeDecl::new(name, type_def, annotations))
     }
 
-    fn lower_action_parents(&self, parents: &cst::ActionParents<'_>) -> Vec<ActionRef> {
+    fn lower_action_parents(
+        &mut self,
+        parents: &cst::accessors::schema::ActionParents<'_>,
+    ) -> Vec<ast::schema::ActionRef> {
         let mut result = Vec::new();
 
-        for (name, _eid) in parents.qualified_names(self.source) {
-            let Some(basename) = name.basename(self.source) else {
-                continue;
-            };
+        for (name, eid) in parents.qualified_names(self.source) {
+            if let Some(eid) = eid {
+                let unescaped_eid = StringUnescaper::new(eid).unescape().unwrap_or_else(|| {
+                    self.diagnostics.push(Diagnostic::invalid_string_escape(
+                        "invalid escape sequence in action member",
+                        name.range(),
+                    ));
 
-            let action_name = Id::new(String::from(basename));
+                    String::from(eid)
+                });
+                let action_name = ast::common::Id::new(unescaped_eid);
 
-            let groups: Vec<Id> = name
-                .namespace(self.source)
-                .map(|segment| Id::new(String::from(segment)))
-                .collect();
+                let groups: Vec<ast::common::Id> = name
+                    .segments(self.source)
+                    .map(|segment| ast::common::Id::new(String::from(segment)))
+                    .collect();
 
-            result.push(ActionRef::new(action_name, groups));
+                result.push(ast::schema::ActionRef::new(action_name, groups));
+            } else {
+                let Some(basename) = name.basename(self.source) else {
+                    continue;
+                };
+
+                let action_name = ast::common::Id::new(String::from(basename));
+
+                let groups: Vec<ast::common::Id> = name
+                    .namespace(self.source)
+                    .map(|segment| ast::common::Id::new(String::from(segment)))
+                    .collect();
+
+                result.push(ast::schema::ActionRef::new(action_name, groups));
+            }
         }
 
         result
     }
 
-    fn lower_applies_to(&mut self, applies_to: &cst::AppliesToClause<'_>) -> AppliesTo {
+    fn lower_applies_to(
+        &mut self,
+        applies_to: &cst::accessors::schema::AppliesToClause<'_>,
+    ) -> ast::schema::AppliesTo {
         let principals = applies_to
             .principal_types()
             .and_then(|principal_types| principal_types.types())
@@ -307,7 +396,7 @@ impl<'a> SchemaLowerer<'a> {
             .context_type()
             .and_then(|context_type| context_type.type_expr())
             .and_then(|type_expr| match self.lower_type_expr(&type_expr) {
-                Some(Type::Record(record)) => Some(record),
+                Some(ast::schema::Type::Record(record)) => Some(record),
                 Some(_) => {
                     self.diagnostics.push(
                         Diagnostic::error("context must be a record type")
@@ -317,27 +406,30 @@ impl<'a> SchemaLowerer<'a> {
                 }
                 None => None,
             })
-            .unwrap_or_else(RecordType::empty);
+            .unwrap_or_else(ast::schema::RecordType::empty);
 
-        AppliesTo::new(principals, resources, context)
+        ast::schema::AppliesTo::new(principals, resources, context)
     }
 
     fn lower_attributes<'b>(
         &mut self,
-        attributes: impl Iterator<Item = cst::AttributeDecl<'b>>,
-    ) -> RecordType {
-        let attrs: Vec<AttributeDecl> = attributes
+        attributes: impl Iterator<Item = cst::accessors::schema::AttributeDecl<'b>>,
+    ) -> ast::schema::RecordType {
+        let attrs: Vec<ast::schema::AttributeDecl> = attributes
             .filter_map(|attr| self.lower_attribute(&attr))
             .collect();
 
-        RecordType::new(attrs)
+        ast::schema::RecordType::new(attrs)
     }
 
-    fn lower_attribute(&mut self, attr: &cst::AttributeDecl<'_>) -> Option<AttributeDecl> {
+    fn lower_attribute(
+        &mut self,
+        attr: &cst::accessors::schema::AttributeDecl<'_>,
+    ) -> Option<ast::schema::AttributeDecl> {
         let name_str = attr.name(self.source)?;
         let name = StringUnescaper::new(name_str)
             .unescape()
-            .map(Id::new)
+            .map(ast::common::Id::new)
             .or_else(|| {
                 self.diagnostics.push(Diagnostic::invalid_string_escape(
                     "invalid escape",
@@ -352,49 +444,76 @@ impl<'a> SchemaLowerer<'a> {
         let type_expr = attr.type_expr()?;
         let attr_type = self.lower_type_expr(&type_expr)?;
 
-        Some(AttributeDecl::new(name, required, attr_type))
+        let annotations = self.lower_annotations(attr.annotations());
+
+        Some(ast::schema::AttributeDecl::new(
+            name,
+            required,
+            attr_type,
+            annotations,
+        ))
     }
 
-    fn lower_type_expr(&mut self, type_expr: &cst::TypeExpr<'_>) -> Option<Type> {
+    fn lower_type_expr(
+        &mut self,
+        type_expr: &cst::accessors::schema::TypeExpr<'_>,
+    ) -> Option<ast::schema::Type> {
         match type_expr {
-            cst::TypeExpr::Primitive(primitive) => lower_primitive(primitive),
-            cst::TypeExpr::Set(set_type) => self.lower_set_type(set_type),
-            cst::TypeExpr::Record(record_type) => Some(self.lower_record_type(record_type)),
-            cst::TypeExpr::Entity(entity_type) => self.lower_entity_type_expr(entity_type),
-            cst::TypeExpr::Enum(enum_type) => self.lower_enum_type(enum_type),
-            cst::TypeExpr::Reference(name) => lower_type_reference(name, self.source),
+            cst::accessors::schema::TypeExpr::Set(set_type) => self.lower_set_type(set_type),
+            cst::accessors::schema::TypeExpr::Record(record_type) => {
+                Some(self.lower_record_type(record_type))
+            }
+            cst::accessors::schema::TypeExpr::Entity(entity_type) => {
+                self.lower_entity_type_expr(entity_type)
+            }
+            cst::accessors::schema::TypeExpr::Enum(enum_type) => self.lower_enum_type(enum_type),
+            cst::accessors::schema::TypeExpr::Reference(name) => {
+                lower_type_reference(name, self.source)
+            }
         }
     }
 
-    fn lower_set_type(&mut self, set_type: &cst::SetType<'_>) -> Option<Type> {
+    fn lower_set_type(
+        &mut self,
+        set_type: &cst::accessors::schema::SetType<'_>,
+    ) -> Option<ast::schema::Type> {
         let element_type = set_type.element_type()?;
         let element = self.lower_type_expr(&element_type)?;
-        Some(Type::set(element))
+        Some(ast::schema::Type::set(element))
     }
 
-    fn lower_record_type(&mut self, record_type: &cst::RecordType<'_>) -> Type {
-        let attrs: Vec<AttributeDecl> = record_type
+    fn lower_record_type(
+        &mut self,
+        record_type: &cst::accessors::schema::RecordType<'_>,
+    ) -> ast::schema::Type {
+        let attrs: Vec<ast::schema::AttributeDecl> = record_type
             .attributes()
             .filter_map(|attr| self.lower_attribute(&attr))
             .collect();
 
-        Type::Record(RecordType::new(attrs))
+        ast::schema::Type::Record(ast::schema::RecordType::new(attrs))
     }
 
-    fn lower_entity_type_expr(&self, entity_type: &cst::EntityType<'_>) -> Option<Type> {
+    fn lower_entity_type_expr(
+        &self,
+        entity_type: &cst::accessors::schema::EntityType<'_>,
+    ) -> Option<ast::schema::Type> {
         let name = entity_type.name()?;
-        let entity_type = lower_name(&name, self.source).map(EntityType::new)?;
-        Some(Type::entity(entity_type))
+        let entity_type = lower_name(&name, self.source).map(ast::common::EntityType::new)?;
+        Some(ast::schema::Type::entity(entity_type))
     }
 
-    fn lower_enum_type(&mut self, enum_type: &cst::EnumType<'_>) -> Option<Type> {
+    fn lower_enum_type(
+        &mut self,
+        enum_type: &cst::accessors::schema::EnumType<'_>,
+    ) -> Option<ast::schema::Type> {
         let span = enum_type.range();
-        let variants: Vec<Id> = enum_type
+        let variants: Vec<ast::common::Id> = enum_type
             .variants(self.source)
             .filter_map(|variant| {
                 StringUnescaper::new(variant)
                     .unescape()
-                    .map(Id::new)
+                    .map(ast::common::Id::new)
                     .or_else(|| {
                         self.diagnostics.push(Diagnostic::invalid_string_escape(
                             "invalid escape",
@@ -411,55 +530,47 @@ impl<'a> SchemaLowerer<'a> {
             return None;
         }
 
-        Some(Type::Enum(EnumType::new(variants)))
+        Some(ast::schema::Type::Enum(ast::schema::EnumType::new(
+            variants,
+        )))
     }
 }
 
-fn is_namespace_empty(namespace: &Namespace) -> bool {
+fn is_namespace_empty(namespace: &ast::schema::Namespace) -> bool {
     namespace.entities().is_empty()
         && namespace.actions().is_empty()
         && namespace.types().is_empty()
 }
 
-fn lower_name(name: &cst::Name<'_>, source: &str) -> Option<Name> {
+fn lower_name(name: &cst::accessors::schema::Name<'_>, source: &str) -> Option<ast::common::Name> {
     let segments: Vec<&str> = name.segments(source).collect();
 
     if segments.is_empty() {
         return None;
     }
 
-    let path: Vec<Id> = segments
+    let path: Vec<ast::common::Id> = segments
         .iter()
         .take(segments.len().saturating_sub(1))
-        .map(|segment| Id::new(String::from(*segment)))
+        .map(|segment| ast::common::Id::new(String::from(*segment)))
         .collect();
 
-    let basename = Id::new(String::from(*segments.last()?));
+    let basename = ast::common::Id::new(String::from(*segments.last()?));
 
-    Some(Name::new(path, basename))
+    Some(ast::common::Name::new(path, basename))
 }
 
-const fn lower_annotations_schema(_ns_decl: &cst::NamespaceDecl<'_>) -> Annotations {
-    Annotations::new()
+fn lower_entity_type(
+    name: &cst::accessors::schema::Name<'_>,
+    source: &str,
+) -> Option<ast::common::EntityType> {
+    lower_name(name, source).map(ast::common::EntityType::new)
 }
 
-fn lower_entity_type(name: &cst::Name<'_>, source: &str) -> Option<EntityType> {
-    lower_name(name, source).map(EntityType::new)
-}
-
-fn lower_primitive(primitive: &cst::PrimitiveType<'_>) -> Option<Type> {
-    let kind = primitive.kind()?;
-
-    let primitive_type = match kind {
-        cst::PrimitiveKind::Bool => PrimitiveType::Bool,
-        cst::PrimitiveKind::Long => PrimitiveType::Long,
-        cst::PrimitiveKind::String => PrimitiveType::String,
-    };
-
-    Some(Type::primitive(primitive_type))
-}
-
-fn lower_type_reference(name: &cst::Name<'_>, source: &str) -> Option<Type> {
+fn lower_type_reference(
+    name: &cst::accessors::schema::Name<'_>,
+    source: &str,
+) -> Option<ast::schema::Type> {
     let name = lower_name(name, source)?;
-    Some(Type::named(name))
+    Some(ast::schema::Type::named(name))
 }

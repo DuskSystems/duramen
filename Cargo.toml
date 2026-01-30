@@ -124,7 +124,6 @@ duramen-validator = { path = "crates/validator", default-features = false }
 
 # Upstream
 cedar-policy = { version = "=4.8.2", default-features = false }
-cedar-policy-core = { version = "=4.8.2", default-features = false }
 
 # CST
 syntree = { version = "0.18", default-features = false }
@@ -140,8 +139,6 @@ anstream = { version = "0.6", default-features = false }
 # Serialization
 serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false }
-facet = { version = "0.43", default-features = false }
-facet-json = { version = "0.43", default-features = false }
 prost = { version = "0.14", default-features = false }
 
 # RNG

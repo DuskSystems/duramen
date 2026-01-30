@@ -28,7 +28,6 @@ duramen-test = { workspace = true }
 
 # Testing
 datatest-stable = { workspace = true }
-similar-asserts = { workspace = true }
 
 # Benchmarking
 divan = { workspace = true }

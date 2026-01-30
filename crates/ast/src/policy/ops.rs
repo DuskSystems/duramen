@@ -10,6 +10,8 @@ pub enum BinaryOp {
     Eq,
     Less,
     LessEq,
+    Greater,
+    GreaterEq,
     Add,
     Sub,
     Mul,

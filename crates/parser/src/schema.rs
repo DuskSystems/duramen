@@ -159,7 +159,12 @@ impl<'a> SchemaParser<'a> {
 
     fn nested_namespace(&mut self) -> Result<(), duramen_cst::Error> {
         self.builder.open(SchemaSyntax::NamespaceDeclaration)?;
+        self.nested_namespace_body()?;
+        self.builder.close()?;
+        Ok(())
+    }
 
+    fn nested_namespace_body(&mut self) -> Result<(), duramen_cst::Error> {
         self.bump()?;
         self.name()?;
 
@@ -177,7 +182,6 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        self.builder.close()?;
         Ok(())
     }
 
@@ -211,6 +215,10 @@ impl<'a> SchemaParser<'a> {
                 self.type_declaration_body()?;
                 self.builder
                     .close_at(&checkpoint, SchemaSyntax::TypeDeclaration)?;
+            } else if self.current.kind == TokenKind::Namespace {
+                self.nested_namespace_body()?;
+                self.builder
+                    .close_at(&checkpoint, SchemaSyntax::NamespaceDeclaration)?;
             } else {
                 self.builder.close_at(&checkpoint, SchemaSyntax::Error)?;
             }
@@ -648,11 +656,16 @@ impl<'a> SchemaParser<'a> {
                         break;
                     }
 
+                    self.advance.push(self.position);
+                    self.builder.open(SchemaSyntax::EnumVariant)?;
                     self.bump()?;
+                    self.builder.close()?;
 
                     if self.current.kind == TokenKind::Comma {
                         self.bump()?;
+                        self.advance.pop(self.position, self.current.kind);
                     } else {
+                        self.advance.pop(self.position, self.current.kind);
                         break;
                     }
                 }
@@ -688,8 +701,6 @@ impl<'a> SchemaParser<'a> {
                 .close_at(&checkpoint, SchemaSyntax::RecordType)?;
         } else {
             self.name()?;
-            self.builder
-                .close_at(&checkpoint, SchemaSyntax::EntityType)?;
         }
 
         Ok(())
@@ -701,13 +712,13 @@ impl<'a> SchemaParser<'a> {
     /// owner?: User
     /// ```
     fn attribute_declaration(&mut self) -> Result<(), duramen_cst::Error> {
+        let checkpoint = self.builder.checkpoint()?;
+
         while self.current.kind == TokenKind::At {
             self.advance.push(self.position);
             self.annotation()?;
             self.advance.pop(self.position, self.current.kind);
         }
-
-        self.builder.open(SchemaSyntax::AttributeDeclaration)?;
 
         if self.current.kind == TokenKind::String || self.current.kind.is_identifier() {
             self.bump()?;
@@ -726,7 +737,8 @@ impl<'a> SchemaParser<'a> {
             self.builder.close()?;
         }
 
-        self.builder.close()?;
+        self.builder
+            .close_at(&checkpoint, SchemaSyntax::AttributeDeclaration)?;
         Ok(())
     }
 

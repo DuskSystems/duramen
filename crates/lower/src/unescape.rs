@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 use core::iter::Peekable;
 use core::str::Chars;
 
-use duramen_ast::policy::{Pattern, PatternElem};
+use duramen_ast as ast;
 
 pub struct StringUnescaper<'a> {
     input: &'a str,
@@ -57,37 +57,41 @@ impl<'a> PatternUnescaper<'a> {
     }
 
     #[must_use]
-    pub fn unescape(self) -> Option<Pattern> {
+    pub fn unescape(self) -> Option<ast::policy::Pattern> {
         let mut elements = Vec::new();
         let mut chars = self.input.chars().peekable();
 
         while let Some(char) = chars.next() {
             if char == '*' {
-                elements.push(PatternElem::Wildcard);
+                elements.push(ast::policy::PatternElem::Wildcard);
                 continue;
             }
 
             if char != '\\' {
-                elements.push(PatternElem::Char(char));
+                elements.push(ast::policy::PatternElem::Char(char));
                 continue;
             }
 
             match chars.next()? {
-                '\\' => elements.push(PatternElem::Char('\\')),
-                '"' => elements.push(PatternElem::Char('"')),
-                '\'' => elements.push(PatternElem::Char('\'')),
-                'n' => elements.push(PatternElem::Char('\n')),
-                'r' => elements.push(PatternElem::Char('\r')),
-                't' => elements.push(PatternElem::Char('\t')),
-                '0' => elements.push(PatternElem::Char('\0')),
-                '*' => elements.push(PatternElem::Char('*')),
-                'x' => elements.push(PatternElem::Char(parse_hex_escape(&mut chars)?)),
-                'u' => elements.push(PatternElem::Char(parse_unicode_escape(&mut chars)?)),
+                '\\' => elements.push(ast::policy::PatternElem::Char('\\')),
+                '"' => elements.push(ast::policy::PatternElem::Char('"')),
+                '\'' => elements.push(ast::policy::PatternElem::Char('\'')),
+                'n' => elements.push(ast::policy::PatternElem::Char('\n')),
+                'r' => elements.push(ast::policy::PatternElem::Char('\r')),
+                't' => elements.push(ast::policy::PatternElem::Char('\t')),
+                '0' => elements.push(ast::policy::PatternElem::Char('\0')),
+                '*' => elements.push(ast::policy::PatternElem::Char('*')),
+                'x' => elements.push(ast::policy::PatternElem::Char(parse_hex_escape(
+                    &mut chars,
+                )?)),
+                'u' => elements.push(ast::policy::PatternElem::Char(parse_unicode_escape(
+                    &mut chars,
+                )?)),
                 _ => return None,
             }
         }
 
-        Some(Pattern::new(elements))
+        Some(ast::policy::Pattern::new(elements))
     }
 }
 

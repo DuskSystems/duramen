@@ -1,3 +1,6 @@
+mod clause;
+pub use clause::{Clause, ClauseKind};
+
 mod constraint;
 pub use constraint::{
     ActionConstraint, EntityReference, PrincipalConstraint, PrincipalOrResourceConstraint,

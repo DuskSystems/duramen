@@ -19,7 +19,7 @@ fn main() {
 }
 
 #[divan::bench]
-fn string(bencher: Bencher<'_, '_>) {
+fn lower_unescape_string(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut inputs = Vec::with_capacity(COUNT);
 
@@ -52,7 +52,7 @@ fn string(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn pattern(bencher: Bencher<'_, '_>) {
+fn lower_unescape_pattern(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut inputs = Vec::with_capacity(COUNT);
 

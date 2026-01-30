@@ -66,6 +66,10 @@ impl<'a> NamespaceDecl<'a> {
         self.node.children().find_map(Name::cast)
     }
 
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
+        self.node.children().filter_map(Annotation::cast)
+    }
+
     pub fn entities(&self) -> impl Iterator<Item = EntityDecl<'a>> + use<'a> {
         self.node
             .children()
@@ -216,7 +220,7 @@ impl Annotation<'_> {
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|node| node.value() == SchemaSyntax::Identifier)
+            .find(|node| node.value() == SchemaSyntax::Identifier || node.value().is_name_keyword())
             .map(|node| &source[node.range()])
     }
 
@@ -354,10 +358,8 @@ impl<'a> AttributeDecl<'a> {
     #[must_use]
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         let child = self.node.children().find(|child| {
-            matches!(
-                child.value(),
-                SchemaSyntax::String | SchemaSyntax::Identifier
-            )
+            let kind = child.value();
+            kind == SchemaSyntax::String || kind == SchemaSyntax::Identifier || kind.is_keyword()
         })?;
 
         let text = &source[child.range()];
@@ -379,6 +381,10 @@ impl<'a> AttributeDecl<'a> {
     #[must_use]
     pub fn type_expr(&self) -> Option<TypeExpr<'a>> {
         self.node.children().find_map(TypeExpr::cast)
+    }
+
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> + use<'a> {
+        self.node.children().filter_map(Annotation::cast)
     }
 }
 
@@ -450,7 +456,6 @@ impl<'a> TypeList<'a> {
 
 #[derive(Debug, Clone, Copy)]
 pub enum TypeExpr<'a> {
-    Primitive(PrimitiveType<'a>),
     Set(SetType<'a>),
     Record(RecordType<'a>),
     Entity(EntityType<'a>),
@@ -480,25 +485,13 @@ impl<'a> CstNode<'a> for TypeExpr<'a> {
             SchemaSyntax::RecordType => RecordType::cast(node).map(Self::Record),
             SchemaSyntax::EntityType => EntityType::cast(node).map(Self::Entity),
             SchemaSyntax::EnumType => EnumType::cast(node).map(Self::Enum),
-            SchemaSyntax::Name => {
-                if let Some(child) = node.children().next()
-                    && matches!(
-                        child.value(),
-                        SchemaSyntax::Bool | SchemaSyntax::Long | SchemaSyntax::StringType
-                    )
-                {
-                    return PrimitiveType::cast(node).map(Self::Primitive);
-                }
-
-                Name::cast(node).map(Self::Reference)
-            }
+            SchemaSyntax::Name => Name::cast(node).map(Self::Reference),
             _ => None,
         }
     }
 
     fn syntax(&self) -> SchemaNode<'a> {
         match self {
-            Self::Primitive(t) => t.syntax(),
             Self::Set(t) => t.syntax(),
             Self::Record(t) => t.syntax(),
             Self::Entity(t) => t.syntax(),
@@ -536,62 +529,10 @@ impl<'a> EnumType<'a> {
     pub fn variants<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node
             .children()
-            .filter(|node| node.value() == SchemaSyntax::String)
+            .filter(|node| node.value() == SchemaSyntax::EnumVariant)
             .filter_map(|node| {
                 let text = &source[node.range()];
                 text.get(1..text.len().saturating_sub(1))
             })
     }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct PrimitiveType<'a> {
-    node: SchemaNode<'a>,
-}
-
-impl<'a> CstNode<'a> for PrimitiveType<'a> {
-    type Syntax = SchemaSyntax;
-
-    fn can_cast(kind: SchemaSyntax) -> bool {
-        kind == SchemaSyntax::Name
-    }
-
-    fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        if node.value() != SchemaSyntax::Name {
-            return None;
-        }
-
-        let next = node.children().next()?;
-        if matches!(
-            next.value(),
-            SchemaSyntax::Bool | SchemaSyntax::Long | SchemaSyntax::StringType
-        ) {
-            Some(Self { node })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> SchemaNode<'a> {
-        self.node
-    }
-}
-
-impl PrimitiveType<'_> {
-    #[must_use]
-    pub fn kind(&self) -> Option<PrimitiveKind> {
-        self.node.children().find_map(|child| match child.value() {
-            SchemaSyntax::Bool => Some(PrimitiveKind::Bool),
-            SchemaSyntax::Long => Some(PrimitiveKind::Long),
-            SchemaSyntax::StringType => Some(PrimitiveKind::String),
-            _ => None,
-        })
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum PrimitiveKind {
-    Bool,
-    Long,
-    String,
 }

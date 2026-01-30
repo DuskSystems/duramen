@@ -63,7 +63,7 @@ impl Annotation<'_> {
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|node| node.value() == PolicySyntax::Identifier)
+            .find(|node| node.value().is_identifier())
             .map(|node| &source[node.range()])
     }
 
@@ -645,7 +645,15 @@ impl<'a> IsExpression<'a> {
 
     #[must_use]
     pub fn entity_type(&self) -> Option<Name<'a>> {
-        self.node.children().find_map(Name::cast)
+        let mut found_is = false;
+        for child in self.node.children() {
+            if child.value() == PolicySyntax::Is {
+                found_is = true;
+            } else if found_is && let Some(name) = Name::cast(child) {
+                return Some(name);
+            }
+        }
+        None
     }
 
     #[must_use]
