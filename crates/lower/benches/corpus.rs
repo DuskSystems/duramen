@@ -16,7 +16,7 @@ fn main() {
 }
 
 #[divan::bench]
-fn policy(bencher: Bencher<'_, '_>) {
+fn lower_policy(bencher: Bencher<'_, '_>) {
     let sources: Vec<_> = POLICIES
         .iter()
         .map(|path| std::fs::read_to_string(path).unwrap())
@@ -38,7 +38,7 @@ fn policy(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn schema(bencher: Bencher<'_, '_>) {
+fn lower_schema(bencher: Bencher<'_, '_>) {
     let sources: Vec<_> = SCHEMAS
         .iter()
         .map(|path| std::fs::read_to_string(path).unwrap())

@@ -17,7 +17,7 @@ fn main() {
 }
 
 #[divan::bench]
-fn integers(bencher: Bencher<'_, '_>) {
+fn lexer_integers(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -33,7 +33,7 @@ fn integers(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn strings(bencher: Bencher<'_, '_>) {
+fn lexer_strings(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -53,7 +53,7 @@ fn strings(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn identifiers(bencher: Bencher<'_, '_>) {
+fn lexer_identifiers(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -80,7 +80,7 @@ fn identifiers(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn punctuation(bencher: Bencher<'_, '_>) {
+fn lexer_punctuation(bencher: Bencher<'_, '_>) {
     const PUNCTUATIONS: &[u8] = b"(){}[],;:.@?+-*/%=!<>&|";
 
     let mut rng = SmallRng::seed_from_u64(SEED);
@@ -101,7 +101,7 @@ fn punctuation(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn comments(bencher: Bencher<'_, '_>) {
+fn lexer_comments(bencher: Bencher<'_, '_>) {
     let mut rng = SmallRng::seed_from_u64(SEED);
     let mut input = String::new();
 
@@ -121,7 +121,7 @@ fn comments(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn whitespace(bencher: Bencher<'_, '_>) {
+fn lexer_whitespace(bencher: Bencher<'_, '_>) {
     const WHITESPACES: &[u8] = b" \t\n";
 
     let mut rng = SmallRng::seed_from_u64(SEED);

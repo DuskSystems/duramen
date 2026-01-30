@@ -1,10 +1,13 @@
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 
+use super::clause::{Clause, ClauseKind};
 use super::constraint::{ActionConstraint, PrincipalConstraint, ResourceConstraint};
 use super::effect::Effect;
 use super::expr::Expr;
+use super::ops::UnaryOp;
 use super::slot::SlotId;
 use crate::common::{Annotations, EntityUid};
 
@@ -42,7 +45,7 @@ pub struct Template {
     principal: PrincipalConstraint,
     action: ActionConstraint,
     resource: ResourceConstraint,
-    condition: Option<Expr>,
+    clauses: Vec<Clause>,
 }
 
 impl Template {
@@ -54,7 +57,7 @@ impl Template {
         principal: PrincipalConstraint,
         action: ActionConstraint,
         resource: ResourceConstraint,
-        condition: Option<Expr>,
+        clauses: Vec<Clause>,
     ) -> Self {
         Self {
             id,
@@ -63,7 +66,7 @@ impl Template {
             principal,
             action,
             resource,
-            condition,
+            clauses,
         }
     }
 
@@ -98,20 +101,42 @@ impl Template {
     }
 
     #[must_use]
-    pub const fn condition(&self) -> Option<&Expr> {
-        self.condition.as_ref()
+    pub fn clauses(&self) -> &[Clause] {
+        &self.clauses
+    }
+
+    #[must_use]
+    pub fn condition(&self) -> Option<Expr> {
+        if self.clauses.is_empty() {
+            return None;
+        }
+
+        let mut iter = self.clauses.iter();
+        let first = iter.next()?;
+        let first_expr = clause_to_expr(first);
+
+        Some(iter.fold(first_expr, |acc, clause| {
+            Expr::and(acc, clause_to_expr(clause))
+        }))
     }
 
     #[must_use]
     pub fn has_slots(&self) -> bool {
         self.principal.constraint().has_slot()
             || self.resource.constraint().has_slot()
-            || self.condition.as_ref().is_some_and(Expr::has_slot)
+            || self.clauses.iter().any(Clause::has_slot)
     }
 
     #[must_use]
     pub fn is_static(&self) -> bool {
         !self.has_slots()
+    }
+}
+
+fn clause_to_expr(clause: &Clause) -> Expr {
+    match clause.kind() {
+        ClauseKind::When => clause.body().clone(),
+        ClauseKind::Unless => Expr::unary(UnaryOp::Not, clause.body().clone()),
     }
 }
 

@@ -17,7 +17,38 @@ workspace = true
 
 [features]
 default = ["std"]
-std = ["duramen-ast/std"]
+std = ["duramen-ast/std", "serde?/std"]
+serde = ["dep:serde"]
 
 [dependencies]
 duramen-ast = { workspace = true }
+
+# Serialization
+serde = { workspace = true, features = ["derive", "alloc"], optional = true }
+
+[dev-dependencies]
+duramen-lower = { workspace = true }
+duramen-parser = { workspace = true }
+duramen-test = { workspace = true }
+
+# Upstream
+cedar-policy = { workspace = true }
+
+# Serialization
+serde_json = { workspace = true }
+
+# Testing
+datatest-stable = { workspace = true }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[test]]
+name = "serde_json_differential"
+harness = false
+required-features = ["serde"]
+
+[[bench]]
+name = "serde_json_corpus"
+harness = false
+required-features = ["serde"]

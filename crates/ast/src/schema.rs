@@ -5,7 +5,7 @@ mod attribute;
 pub use attribute::AttributeDecl;
 
 mod entity_decl;
-pub use entity_decl::EntityDecl;
+pub use entity_decl::{EntityDecl, EnumEntityDecl, StandardEntityDecl};
 
 mod namespace;
 pub use namespace::{Namespace, Schema};
