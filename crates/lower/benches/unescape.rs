@@ -1,5 +1,3 @@
-#![expect(clippy::arithmetic_side_effects, reason = "Benchmarks")]
-
 use core::hint::black_box;
 
 use divan::counter::BytesCount;
