@@ -1,5 +1,4 @@
 use crate::cursor::Cursor;
-use crate::lookup::ByteLookup;
 use crate::token::{Token, TokenKind};
 
 /// Lexer for source code.
@@ -48,57 +47,181 @@ impl<'a> Lexer<'a> {
             return TokenKind::Unknown;
         };
 
-        // Whitespace
-        if self.cursor.skip_whitespace() {
-            return TokenKind::Whitespace;
-        }
-
-        // Identifier or Keyword
-        if ByteLookup::is_identifier_start(current) {
-            let start = self.cursor.position();
-            self.cursor.scan_identifier();
-
-            let Some(text) = self.cursor.slice(start) else {
-                return TokenKind::Unknown;
-            };
-
-            return TokenKind::from_identifier(text);
-        }
-
-        // Integer
-        if ByteLookup::is_digit(current) {
-            self.cursor.scan_integer();
-            return TokenKind::Integer;
-        }
-
-        // String
-        if current == b'"' {
-            self.cursor.bump();
-
-            if self.cursor.scan_string() {
-                return TokenKind::String;
+        match current {
+            // Whitespace
+            b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C => {
+                self.cursor.skip_whitespace();
+                TokenKind::Whitespace
             }
-
-            return TokenKind::StringUnterminated;
+            // Identifier Start
+            b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
+                let start = self.cursor.position();
+                self.cursor.scan_identifier();
+                self.cursor
+                    .slice(start)
+                    .map_or(TokenKind::Unknown, TokenKind::from_identifier)
+            }
+            // Digits
+            b'0'..=b'9' => {
+                self.cursor.scan_integer();
+                TokenKind::Integer
+            }
+            // String
+            b'"' => {
+                self.cursor.bump();
+                if self.cursor.scan_string() {
+                    TokenKind::String
+                } else {
+                    TokenKind::StringUnterminated
+                }
+            }
+            b'/' => {
+                if self.cursor.peek() == Some(b'/') {
+                    self.cursor.bump_n(2);
+                    self.cursor.skip_line();
+                    TokenKind::Comment
+                } else {
+                    self.cursor.bump();
+                    TokenKind::Slash
+                }
+            }
+            b'(' => {
+                self.cursor.bump();
+                TokenKind::OpenParen
+            }
+            b')' => {
+                self.cursor.bump();
+                TokenKind::CloseParen
+            }
+            b'{' => {
+                self.cursor.bump();
+                TokenKind::OpenBrace
+            }
+            b'}' => {
+                self.cursor.bump();
+                TokenKind::CloseBrace
+            }
+            b'[' => {
+                self.cursor.bump();
+                TokenKind::OpenBracket
+            }
+            b']' => {
+                self.cursor.bump();
+                TokenKind::CloseBracket
+            }
+            b'@' => {
+                self.cursor.bump();
+                TokenKind::At
+            }
+            b',' => {
+                self.cursor.bump();
+                TokenKind::Comma
+            }
+            b'.' => {
+                self.cursor.bump();
+                TokenKind::Dot
+            }
+            b'?' => {
+                self.cursor.bump();
+                TokenKind::Question
+            }
+            b';' => {
+                self.cursor.bump();
+                TokenKind::Semicolon
+            }
+            b'+' => {
+                self.cursor.bump();
+                TokenKind::Plus
+            }
+            b'-' => {
+                self.cursor.bump();
+                TokenKind::Minus
+            }
+            b'*' => {
+                self.cursor.bump();
+                TokenKind::Star
+            }
+            b'%' => {
+                self.cursor.bump();
+                TokenKind::Percent
+            }
+            b':' => {
+                if self.cursor.peek() == Some(b':') {
+                    self.cursor.bump_n(2);
+                    TokenKind::Colon2
+                } else {
+                    self.cursor.bump();
+                    TokenKind::Colon
+                }
+            }
+            b'&' => {
+                if self.cursor.peek() == Some(b'&') {
+                    self.cursor.bump_n(2);
+                    TokenKind::Amp2
+                } else {
+                    self.cursor.bump_char();
+                    TokenKind::Unknown
+                }
+            }
+            b'|' => {
+                if self.cursor.peek() == Some(b'|') {
+                    self.cursor.bump_n(2);
+                    TokenKind::Pipe2
+                } else {
+                    self.cursor.bump_char();
+                    TokenKind::Unknown
+                }
+            }
+            b'!' => {
+                if self.cursor.peek() == Some(b'=') {
+                    self.cursor.bump_n(2);
+                    TokenKind::BangEq
+                } else {
+                    self.cursor.bump();
+                    TokenKind::Bang
+                }
+            }
+            b'=' => {
+                if self.cursor.peek() == Some(b'=') {
+                    self.cursor.bump_n(2);
+                    TokenKind::Eq2
+                } else {
+                    self.cursor.bump();
+                    TokenKind::Eq
+                }
+            }
+            b'<' => {
+                if self.cursor.peek() == Some(b'=') {
+                    self.cursor.bump_n(2);
+                    TokenKind::LtEq
+                } else {
+                    self.cursor.bump();
+                    TokenKind::Lt
+                }
+            }
+            b'>' => {
+                if self.cursor.peek() == Some(b'=') {
+                    self.cursor.bump_n(2);
+                    TokenKind::GtEq
+                } else {
+                    self.cursor.bump();
+                    TokenKind::Gt
+                }
+            }
+            // Non ASCII
+            128.. => {
+                if self.cursor.skip_whitespace() {
+                    TokenKind::Whitespace
+                } else {
+                    self.cursor.bump_char();
+                    TokenKind::Unknown
+                }
+            }
+            _ => {
+                self.cursor.bump();
+                TokenKind::Unknown
+            }
         }
-
-        // Comment
-        if current == b'/' && self.cursor.peek() == Some(b'/') {
-            self.cursor.bump_n(2);
-            self.cursor.skip_line();
-            return TokenKind::Comment;
-        }
-
-        // Punctuation
-        if let Some((kind, len)) = TokenKind::from_punctuation(current, self.cursor.peek()) {
-            self.cursor.bump_n(len as usize);
-            return kind;
-        }
-
-        // Unknown character
-        self.cursor.bump_char();
-
-        TokenKind::Unknown
     }
 }
 
