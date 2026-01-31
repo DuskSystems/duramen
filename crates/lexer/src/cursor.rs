@@ -1,5 +1,3 @@
-use crate::lookup::ByteLookup;
-
 /// Cursor for traversing the source.
 pub struct Cursor<'a> {
     source: &'a str,
@@ -82,7 +80,7 @@ impl<'a> Cursor<'a> {
 
         while let Some(&byte) = self.bytes.get(self.position) {
             // ASCII
-            if ByteLookup::is_ascii_whitespace(byte) {
+            if byte.is_ascii_whitespace() || byte == 0x0B {
                 self.position += 1;
                 continue;
             }
@@ -153,7 +151,7 @@ impl<'a> Cursor<'a> {
     #[inline(always)]
     pub fn scan_identifier(&mut self) {
         while let Some(&byte) = self.bytes.get(self.position) {
-            if !ByteLookup::is_identifier_continue(byte) {
+            if !byte.is_ascii_alphanumeric() && byte != b'_' {
                 break;
             }
 
@@ -165,7 +163,7 @@ impl<'a> Cursor<'a> {
     #[inline(always)]
     pub fn scan_integer(&mut self) {
         while let Some(&byte) = self.bytes.get(self.position) {
-            if !ByteLookup::is_digit(byte) {
+            if !byte.is_ascii_digit() {
                 break;
             }
 
