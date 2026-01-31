@@ -22,5 +22,6 @@ anstream = { workspace = true }
 walkdir = { workspace = true }
 
 # Testing
+datatest-stable = { workspace = true }
 insta = { workspace = true }
 similar-asserts = { workspace = true }

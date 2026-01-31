@@ -26,9 +26,6 @@ duramen-lexer = { workspace = true }
 [dev-dependencies]
 duramen-test = { workspace = true }
 
-# Testing
-datatest-stable = { workspace = true }
-
 # Benchmarking
 divan = { workspace = true }
 

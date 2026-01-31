@@ -569,7 +569,6 @@ version = "0.1.0"
 dependencies = [
  "cedar-policy",
  "codspeed-divan-compat",
- "datatest-stable",
  "duramen-ast",
  "duramen-lower",
  "duramen-parser",
@@ -608,7 +607,6 @@ name = "duramen-lower"
 version = "0.1.0"
 dependencies = [
  "codspeed-divan-compat",
- "datatest-stable",
  "duramen-ast",
  "duramen-cst",
  "duramen-diagnostics",
@@ -623,7 +621,6 @@ name = "duramen-parser"
 version = "0.1.0"
 dependencies = [
  "codspeed-divan-compat",
- "datatest-stable",
  "duramen-cst",
  "duramen-lexer",
  "duramen-test",
@@ -634,6 +631,7 @@ name = "duramen-test"
 version = "0.1.0"
 dependencies = [
  "anstream",
+ "datatest-stable",
  "insta",
  "similar-asserts",
  "walkdir",
