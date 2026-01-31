@@ -50,7 +50,7 @@ impl<'a> SchemaLowerer<'a> {
     }
 
     fn collect_errors_in_subtree(&mut self, node: &cst::schema::SchemaNode<'_>) {
-        if node.value() == cst::schema::SchemaSyntax::Error {
+        if node.kind() == cst::schema::SchemaSyntax::Error {
             self.diagnostics.push(
                 Diagnostic::error("syntax error").with_label(node.range(), "unexpected token"),
             );

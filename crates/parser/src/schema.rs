@@ -24,7 +24,7 @@ impl SchemaParseResult {
 
     #[must_use]
     pub fn print(&self, source: &str) -> String {
-        let mut output = String::with_capacity(self.tree.capacity());
+        let mut output = String::with_capacity(source.len());
 
         for node in self.tree.children() {
             let range = node.range();
@@ -47,71 +47,57 @@ pub struct SchemaParser<'a> {
 
 impl<'a> SchemaParser<'a> {
     #[must_use]
-    pub const fn new(source: &'a str) -> Self {
+    pub fn new(source: &'a str) -> Self {
         Self {
             lexer: Lexer::new(source),
             current: Token::new(TokenKind::Unknown, 0),
             position: 0,
-            builder: SchemaBuilder::new(),
+            builder: SchemaBuilder::new(source.len() / 4),
             advance: Advance::new(),
         }
     }
 
-    /// # Panics
-    ///
-    /// Panics on syntree error.
     #[must_use]
-    #[expect(clippy::expect_used, reason = "TODO")]
     pub fn parse(mut self) -> SchemaParseResult {
-        self.bump().expect("tree construction failed");
-        self.schema().expect("tree construction failed");
+        self.bump();
+        self.schema();
 
-        let tree = self.builder.build().expect("tree construction failed");
+        let tree = self.builder.build();
         SchemaParseResult { tree }
     }
 
     /// Consumes the current token and advances to the next non trivial token.
-    fn bump(&mut self) -> Result<(), duramen_cst::Error> {
+    fn bump(&mut self) {
         if self.current.len > 0 {
             self.builder
-                .token(SchemaSyntax::from(self.current.kind), self.current.len)?;
-
-            self.position = self
-                .position
-                .checked_add(self.current.len)
-                .ok_or(duramen_cst::Error::Overflow)?;
+                .token(SchemaSyntax::from(self.current.kind), self.current.len);
+            self.position += self.current.len;
         }
 
         self.current = loop {
             match self.lexer.next() {
                 Some(token) if token.kind.is_trivial() => {
                     self.builder
-                        .token(SchemaSyntax::from(token.kind), token.len)?;
-                    self.position = self
-                        .position
-                        .checked_add(token.len)
-                        .ok_or(duramen_cst::Error::Overflow)?;
+                        .token(SchemaSyntax::from(token.kind), token.len);
+                    self.position += token.len;
                 }
                 Some(token) => break token,
                 None => break Token::new(TokenKind::Unknown, 0),
             }
         };
-
-        Ok(())
     }
 
     /// Parses a schema file.
-    fn schema(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::Schema)?;
+    fn schema(&mut self) {
+        self.builder.open(SchemaSyntax::Schema);
 
         while self.current.len > 0 {
             self.advance.push(self.position);
-            self.namespace()?;
+            self.namespace();
             self.advance.pop(self.position, self.current.kind);
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses a namespace.
@@ -119,117 +105,110 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// namespace Foo { entity Bar; }
     /// ```
-    fn namespace(&mut self) -> Result<(), duramen_cst::Error> {
-        let checkpoint = self.builder.checkpoint()?;
+    fn namespace(&mut self) {
+        let checkpoint = self.builder.checkpoint();
 
         if self.current.kind == TokenKind::CloseBrace {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.bump()?;
-            self.builder.close()?;
-            return Ok(());
+            self.builder.open(SchemaSyntax::Error);
+            self.bump();
+            self.builder.close();
+            return;
         }
 
         if self.current.kind == TokenKind::Namespace {
-            self.bump()?;
-            self.name()?;
+            self.bump();
+            self.name();
 
             if self.current.kind == TokenKind::OpenBrace {
-                self.bump()?;
+                self.bump();
 
                 while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
                     self.advance.push(self.position);
-                    self.declaration()?;
+                    self.declaration();
                     self.advance.pop(self.position, self.current.kind);
                 }
 
                 if self.current.kind == TokenKind::CloseBrace {
-                    self.bump()?;
+                    self.bump();
                 }
             } else {
-                self.builder.open(SchemaSyntax::Error)?;
-                self.builder.close()?;
+                self.builder.open(SchemaSyntax::Error);
+                self.builder.close();
             }
 
             self.builder
-                .close_at(&checkpoint, SchemaSyntax::NamespaceDeclaration)?;
-            Ok(())
+                .wrap(checkpoint, SchemaSyntax::NamespaceDeclaration);
         } else {
-            self.declaration()
+            self.declaration();
         }
     }
 
-    fn nested_namespace(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::NamespaceDeclaration)?;
-        self.nested_namespace_body()?;
-        self.builder.close()?;
-        Ok(())
+    fn nested_namespace(&mut self) {
+        self.builder.open(SchemaSyntax::NamespaceDeclaration);
+        self.nested_namespace_body();
+        self.builder.close();
     }
 
-    fn nested_namespace_body(&mut self) -> Result<(), duramen_cst::Error> {
-        self.bump()?;
-        self.name()?;
+    fn nested_namespace_body(&mut self) {
+        self.bump();
+        self.name();
 
         if self.current.kind == TokenKind::OpenBrace {
-            self.bump()?;
+            self.bump();
 
             while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
                 self.advance.push(self.position);
-                self.declaration()?;
+                self.declaration();
                 self.advance.pop(self.position, self.current.kind);
             }
 
             if self.current.kind == TokenKind::CloseBrace {
-                self.bump()?;
+                self.bump();
             }
         } else {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.builder.close();
         }
-
-        Ok(())
     }
 
-    fn declaration(&mut self) -> Result<(), duramen_cst::Error> {
+    fn declaration(&mut self) {
         if self.current.kind == TokenKind::Entity {
-            self.entity_declaration()
+            self.entity_declaration();
         } else if self.current.kind == TokenKind::Action {
-            self.action_declaration()
+            self.action_declaration();
         } else if self.current.kind == TokenKind::Type {
-            self.type_declaration()
+            self.type_declaration();
         } else if self.current.kind == TokenKind::Namespace {
-            self.nested_namespace()
+            self.nested_namespace();
         } else if self.current.kind == TokenKind::At {
-            let checkpoint = self.builder.checkpoint()?;
+            let checkpoint = self.builder.checkpoint();
 
             while self.current.kind == TokenKind::At {
                 self.advance.push(self.position);
-                self.annotation()?;
+                self.annotation();
                 self.advance.pop(self.position, self.current.kind);
             }
 
             if self.current.kind == TokenKind::Entity {
-                self.entity_declaration_body()?;
+                self.entity_declaration_body();
                 self.builder
-                    .close_at(&checkpoint, SchemaSyntax::EntityDeclaration)?;
+                    .wrap(checkpoint, SchemaSyntax::EntityDeclaration);
             } else if self.current.kind == TokenKind::Action {
-                self.action_declaration_body()?;
+                self.action_declaration_body();
                 self.builder
-                    .close_at(&checkpoint, SchemaSyntax::ActionDeclaration)?;
+                    .wrap(checkpoint, SchemaSyntax::ActionDeclaration);
             } else if self.current.kind == TokenKind::Type {
-                self.type_declaration_body()?;
-                self.builder
-                    .close_at(&checkpoint, SchemaSyntax::TypeDeclaration)?;
+                self.type_declaration_body();
+                self.builder.wrap(checkpoint, SchemaSyntax::TypeDeclaration);
             } else if self.current.kind == TokenKind::Namespace {
-                self.nested_namespace_body()?;
+                self.nested_namespace_body();
                 self.builder
-                    .close_at(&checkpoint, SchemaSyntax::NamespaceDeclaration)?;
+                    .wrap(checkpoint, SchemaSyntax::NamespaceDeclaration);
             } else {
-                self.builder.close_at(&checkpoint, SchemaSyntax::Error)?;
+                self.builder.wrap(checkpoint, SchemaSyntax::Error);
             }
-
-            Ok(())
         } else {
-            self.builder.open(SchemaSyntax::Error)?;
+            self.builder.open(SchemaSyntax::Error);
             while self.current.len > 0 {
                 if self.current.kind == TokenKind::Entity
                     || self.current.kind == TokenKind::Action
@@ -241,12 +220,11 @@ impl<'a> SchemaParser<'a> {
                 }
 
                 self.advance.push(self.position);
-                self.bump()?;
+                self.bump();
                 self.advance.pop(self.position, self.current.kind);
             }
 
-            self.builder.close()?;
-            Ok(())
+            self.builder.close();
         }
     }
 
@@ -255,29 +233,28 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// @doc("description")
     /// ```
-    fn annotation(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::Annotation)?;
+    fn annotation(&mut self) {
+        self.builder.open(SchemaSyntax::Annotation);
 
-        self.bump()?;
+        self.bump();
 
         if self.current.kind.is_identifier() {
-            self.bump()?;
+            self.bump();
         }
 
         if self.current.kind == TokenKind::OpenParen {
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::String {
-                self.bump()?;
+                self.bump();
             }
 
             if self.current.kind == TokenKind::CloseParen {
-                self.bump()?;
+                self.bump();
             }
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses an entity declaration.
@@ -285,28 +262,27 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// entity User in [UserGroup] { department: String, jobLevel: Long };
     /// ```
-    fn entity_declaration(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::EntityDeclaration)?;
-        self.entity_declaration_body()?;
-        self.builder.close()?;
-        Ok(())
+    fn entity_declaration(&mut self) {
+        self.builder.open(SchemaSyntax::EntityDeclaration);
+        self.entity_declaration_body();
+        self.builder.close();
     }
 
-    fn entity_declaration_body(&mut self) -> Result<(), duramen_cst::Error> {
-        self.bump()?;
+    fn entity_declaration_body(&mut self) {
+        self.bump();
 
-        self.name_list()?;
+        self.name_list();
 
         if self.current.kind == TokenKind::In {
-            self.entity_parents()?;
+            self.entity_parents();
         }
 
         if self.current.kind == TokenKind::Enum {
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::OpenBracket {
-                self.builder.open(SchemaSyntax::EnumType)?;
-                self.bump()?;
+                self.builder.open(SchemaSyntax::EnumType);
+                self.bump();
 
                 loop {
                     if self.current.kind == TokenKind::CloseBracket || self.current.len == 0 {
@@ -318,12 +294,12 @@ impl<'a> SchemaParser<'a> {
                     }
 
                     self.advance.push(self.position);
-                    self.builder.open(SchemaSyntax::EnumVariant)?;
-                    self.bump()?;
-                    self.builder.close()?;
+                    self.builder.open(SchemaSyntax::EnumVariant);
+                    self.bump();
+                    self.builder.close();
 
                     if self.current.kind == TokenKind::Comma {
-                        self.bump()?;
+                        self.bump();
                         self.advance.pop(self.position, self.current.kind);
                     } else {
                         self.advance.pop(self.position, self.current.kind);
@@ -332,33 +308,31 @@ impl<'a> SchemaParser<'a> {
                 }
 
                 if self.current.kind == TokenKind::CloseBracket {
-                    self.bump()?;
+                    self.bump();
                 }
 
-                self.builder.close()?;
+                self.builder.close();
             }
         } else {
             if self.current.kind == TokenKind::Eq {
-                self.bump()?;
+                self.bump();
             }
 
             if self.current.kind == TokenKind::OpenBrace {
-                self.entity_attributes()?;
+                self.entity_attributes();
             }
 
             if self.current.kind == TokenKind::Tags {
-                self.entity_tags()?;
+                self.entity_tags();
             }
         }
 
         if self.current.kind == TokenKind::Semicolon {
-            self.bump()?;
+            self.bump();
         } else {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.builder.close();
         }
-
-        Ok(())
     }
 
     /// Parses entity parents.
@@ -366,14 +340,13 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// in [UserGroup, Team]
     /// ```
-    fn entity_parents(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::EntityParents)?;
+    fn entity_parents(&mut self) {
+        self.builder.open(SchemaSyntax::EntityParents);
 
-        self.bump()?;
-        self.type_list()?;
+        self.bump();
+        self.type_list();
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses entity attributes.
@@ -381,17 +354,17 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// { department: String, jobLevel: Long }
     /// ```
-    fn entity_attributes(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::EntityAttributes)?;
+    fn entity_attributes(&mut self) {
+        self.builder.open(SchemaSyntax::EntityAttributes);
 
-        self.bump()?;
+        self.bump();
 
         while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
             self.advance.push(self.position);
-            self.attribute_declaration()?;
+            self.attribute_declaration();
 
             if self.current.kind == TokenKind::Comma {
-                self.bump()?;
+                self.bump();
             } else {
                 self.advance.pop(self.position, self.current.kind);
                 break;
@@ -400,11 +373,10 @@ impl<'a> SchemaParser<'a> {
         }
 
         if self.current.kind == TokenKind::CloseBrace {
-            self.bump()?;
+            self.bump();
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses entity tags.
@@ -412,14 +384,13 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// tags String
     /// ```
-    fn entity_tags(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::EntityTags)?;
+    fn entity_tags(&mut self) {
+        self.builder.open(SchemaSyntax::EntityTags);
 
-        self.bump()?;
-        self.type_expr()?;
+        self.bump();
+        self.type_expr();
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses an action declaration.
@@ -427,38 +398,35 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// action view appliesTo { principal: [User], resource: [Photo] };
     /// ```
-    fn action_declaration(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::ActionDeclaration)?;
-        self.action_declaration_body()?;
-        self.builder.close()?;
-        Ok(())
+    fn action_declaration(&mut self) {
+        self.builder.open(SchemaSyntax::ActionDeclaration);
+        self.action_declaration_body();
+        self.builder.close();
     }
 
-    fn action_declaration_body(&mut self) -> Result<(), duramen_cst::Error> {
-        self.bump()?;
+    fn action_declaration_body(&mut self) {
+        self.bump();
 
-        self.action_name_list()?;
+        self.action_name_list();
 
         if self.current.kind == TokenKind::In {
-            self.action_parents()?;
+            self.action_parents();
         }
 
         if self.current.kind == TokenKind::AppliesTo {
-            self.applies_to_clause()?;
+            self.applies_to_clause();
         }
 
         if self.current.kind == TokenKind::Attributes {
-            self.action_attributes()?;
+            self.action_attributes();
         }
 
         if self.current.kind == TokenKind::Semicolon {
-            self.bump()?;
+            self.bump();
         } else {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.builder.close();
         }
-
-        Ok(())
     }
 
     /// Parses action parents.
@@ -466,13 +434,13 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// in [Action::"read", Action::"write"]
     /// ```
-    fn action_parents(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::ActionParents)?;
+    fn action_parents(&mut self) {
+        self.builder.open(SchemaSyntax::ActionParents);
 
-        self.bump()?;
+        self.bump();
 
         if self.current.kind == TokenKind::OpenBracket {
-            self.bump()?;
+            self.bump();
 
             loop {
                 if self.current.kind == TokenKind::CloseBracket || self.current.len == 0 {
@@ -480,10 +448,10 @@ impl<'a> SchemaParser<'a> {
                 }
 
                 self.advance.push(self.position);
-                self.qualified_name()?;
+                self.qualified_name();
 
                 if self.current.kind == TokenKind::Comma {
-                    self.bump()?;
+                    self.bump();
                 } else {
                     self.advance.pop(self.position, self.current.kind);
                     break;
@@ -492,14 +460,13 @@ impl<'a> SchemaParser<'a> {
             }
 
             if self.current.kind == TokenKind::CloseBracket {
-                self.bump()?;
+                self.bump();
             }
         } else {
-            self.qualified_name()?;
+            self.qualified_name();
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses an appliesTo clause.
@@ -507,20 +474,20 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// appliesTo { principal: [User], resource: [Photo] }
     /// ```
-    fn applies_to_clause(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::AppliesToClause)?;
+    fn applies_to_clause(&mut self) {
+        self.builder.open(SchemaSyntax::AppliesToClause);
 
-        self.bump()?;
+        self.bump();
 
         if self.current.kind == TokenKind::OpenBrace {
-            self.bump()?;
+            self.bump();
 
             while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
                 self.advance.push(self.position);
-                self.applies_to_entry()?;
+                self.applies_to_entry();
 
                 if self.current.kind == TokenKind::Comma {
-                    self.bump()?;
+                    self.bump();
                 } else {
                     self.advance.pop(self.position, self.current.kind);
                     break;
@@ -530,54 +497,51 @@ impl<'a> SchemaParser<'a> {
             }
 
             if self.current.kind == TokenKind::CloseBrace {
-                self.bump()?;
+                self.bump();
             }
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses principal/resource/context entry in appliesTo.
-    fn applies_to_entry(&mut self) -> Result<(), duramen_cst::Error> {
+    fn applies_to_entry(&mut self) {
         if self.current.kind == TokenKind::Principal {
-            self.builder.open(SchemaSyntax::PrincipalTypes)?;
+            self.builder.open(SchemaSyntax::PrincipalTypes);
 
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::Colon {
-                self.bump()?;
-                self.type_list()?;
+                self.bump();
+                self.type_list();
             }
 
-            self.builder.close()?;
+            self.builder.close();
         } else if self.current.kind == TokenKind::Resource {
-            self.builder.open(SchemaSyntax::ResourceTypes)?;
+            self.builder.open(SchemaSyntax::ResourceTypes);
 
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::Colon {
-                self.bump()?;
-                self.type_list()?;
+                self.bump();
+                self.type_list();
             }
 
-            self.builder.close()?;
+            self.builder.close();
         } else if self.current.kind == TokenKind::Context {
-            self.builder.open(SchemaSyntax::ContextType)?;
+            self.builder.open(SchemaSyntax::ContextType);
 
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::Colon {
-                self.bump()?;
-                self.type_expr()?;
+                self.bump();
+                self.type_expr();
             }
 
-            self.builder.close()?;
+            self.builder.close();
         } else {
-            self.bump()?;
+            self.bump();
         }
-
-        Ok(())
     }
 
     /// Parses action attributes.
@@ -585,21 +549,20 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// attributes { }
     /// ```
-    fn action_attributes(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::ActionAttributes)?;
+    fn action_attributes(&mut self) {
+        self.builder.open(SchemaSyntax::ActionAttributes);
 
-        self.bump()?;
+        self.bump();
 
         if self.current.kind == TokenKind::OpenBrace {
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::CloseBrace {
-                self.bump()?;
+                self.bump();
             }
         }
 
-        self.builder.close()?;
-        Ok(())
+        self.builder.close();
     }
 
     /// Parses a type declaration.
@@ -607,37 +570,34 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// type Email = String;
     /// ```
-    fn type_declaration(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(SchemaSyntax::TypeDeclaration)?;
-        self.type_declaration_body()?;
-        self.builder.close()?;
-        Ok(())
+    fn type_declaration(&mut self) {
+        self.builder.open(SchemaSyntax::TypeDeclaration);
+        self.type_declaration_body();
+        self.builder.close();
     }
 
-    fn type_declaration_body(&mut self) -> Result<(), duramen_cst::Error> {
-        self.bump()?;
+    fn type_declaration_body(&mut self) {
+        self.bump();
 
         if self.current.kind.is_identifier() {
-            self.name()?;
+            self.name();
         }
 
         if self.current.kind == TokenKind::Eq {
-            self.bump()?;
+            self.bump();
         } else {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.builder.close();
         }
 
-        self.type_expr()?;
+        self.type_expr();
 
         if self.current.kind == TokenKind::Semicolon {
-            self.bump()?;
+            self.bump();
         } else {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.builder.close();
         }
-
-        Ok(())
     }
 
     /// Parses a type expression.
@@ -645,27 +605,27 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// Set<User>
     /// ```
-    fn type_expr(&mut self) -> Result<(), duramen_cst::Error> {
-        let checkpoint = self.builder.checkpoint()?;
+    fn type_expr(&mut self) {
+        let checkpoint = self.builder.checkpoint();
 
         if self.current.kind == TokenKind::Set {
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::Lt {
-                self.bump()?;
-                self.type_expr()?;
+                self.bump();
+                self.type_expr();
 
                 if self.current.kind == TokenKind::Gt {
-                    self.bump()?;
+                    self.bump();
                 }
             }
 
-            self.builder.close_at(&checkpoint, SchemaSyntax::SetType)?;
+            self.builder.wrap(checkpoint, SchemaSyntax::SetType);
         } else if self.current.kind == TokenKind::Enum {
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::OpenBracket {
-                self.bump()?;
+                self.bump();
 
                 while self.current.len > 0 && self.current.kind != TokenKind::CloseBracket {
                     if self.current.kind != TokenKind::String {
@@ -673,12 +633,12 @@ impl<'a> SchemaParser<'a> {
                     }
 
                     self.advance.push(self.position);
-                    self.builder.open(SchemaSyntax::EnumVariant)?;
-                    self.bump()?;
-                    self.builder.close()?;
+                    self.builder.open(SchemaSyntax::EnumVariant);
+                    self.bump();
+                    self.builder.close();
 
                     if self.current.kind == TokenKind::Comma {
-                        self.bump()?;
+                        self.bump();
                         self.advance.pop(self.position, self.current.kind);
                     } else {
                         self.advance.pop(self.position, self.current.kind);
@@ -687,20 +647,20 @@ impl<'a> SchemaParser<'a> {
                 }
 
                 if self.current.kind == TokenKind::CloseBracket {
-                    self.bump()?;
+                    self.bump();
                 }
             }
 
-            self.builder.close_at(&checkpoint, SchemaSyntax::EnumType)?;
+            self.builder.wrap(checkpoint, SchemaSyntax::EnumType);
         } else if self.current.kind == TokenKind::OpenBrace {
-            self.bump()?;
+            self.bump();
 
             while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
                 self.advance.push(self.position);
-                self.attribute_declaration()?;
+                self.attribute_declaration();
 
                 if self.current.kind == TokenKind::Comma {
-                    self.bump()?;
+                    self.bump();
                 } else {
                     self.advance.pop(self.position, self.current.kind);
                     break;
@@ -710,16 +670,13 @@ impl<'a> SchemaParser<'a> {
             }
 
             if self.current.kind == TokenKind::CloseBrace {
-                self.bump()?;
+                self.bump();
             }
 
-            self.builder
-                .close_at(&checkpoint, SchemaSyntax::RecordType)?;
+            self.builder.wrap(checkpoint, SchemaSyntax::RecordType);
         } else {
-            self.name()?;
+            self.name();
         }
-
-        Ok(())
     }
 
     /// Parses an attribute declaration.
@@ -727,35 +684,34 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// owner?: User
     /// ```
-    fn attribute_declaration(&mut self) -> Result<(), duramen_cst::Error> {
-        let checkpoint = self.builder.checkpoint()?;
+    fn attribute_declaration(&mut self) {
+        let checkpoint = self.builder.checkpoint();
 
         while self.current.kind == TokenKind::At {
             self.advance.push(self.position);
-            self.annotation()?;
+            self.annotation();
             self.advance.pop(self.position, self.current.kind);
         }
 
         if self.current.kind == TokenKind::String || self.current.kind.is_identifier() {
-            self.bump()?;
+            self.bump();
 
             if self.current.kind == TokenKind::Question {
-                self.bump()?;
+                self.bump();
             }
 
             if self.current.kind == TokenKind::Colon {
-                self.bump()?;
-                self.type_expr()?;
+                self.bump();
+                self.type_expr();
             }
         } else if self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.bump()?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.bump();
+            self.builder.close();
         }
 
         self.builder
-            .close_at(&checkpoint, SchemaSyntax::AttributeDeclaration)?;
-        Ok(())
+            .wrap(checkpoint, SchemaSyntax::AttributeDeclaration);
     }
 
     /// Parses a type list.
@@ -763,10 +719,10 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// [User, Admin]
     /// ```
-    fn type_list(&mut self) -> Result<(), duramen_cst::Error> {
+    fn type_list(&mut self) {
         if self.current.kind == TokenKind::OpenBracket {
-            self.builder.open(SchemaSyntax::TypeList)?;
-            self.bump()?;
+            self.builder.open(SchemaSyntax::TypeList);
+            self.bump();
 
             loop {
                 if self.current.kind == TokenKind::CloseBracket || self.current.len == 0 {
@@ -774,10 +730,10 @@ impl<'a> SchemaParser<'a> {
                 }
 
                 self.advance.push(self.position);
-                self.name()?;
+                self.name();
 
                 if self.current.kind == TokenKind::Comma {
-                    self.bump()?;
+                    self.bump();
                 } else {
                     self.advance.pop(self.position, self.current.kind);
                     break;
@@ -786,13 +742,12 @@ impl<'a> SchemaParser<'a> {
             }
 
             if self.current.kind == TokenKind::CloseBracket {
-                self.bump()?;
+                self.bump();
             }
 
-            self.builder.close()?;
-            Ok(())
+            self.builder.close();
         } else {
-            self.name()
+            self.name();
         }
     }
 
@@ -801,18 +756,16 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// Action::"view"
     /// ```
-    fn qualified_name(&mut self) -> Result<(), duramen_cst::Error> {
+    fn qualified_name(&mut self) {
         if self.current.kind == TokenKind::String {
-            self.bump()?;
+            self.bump();
         } else {
-            self.name()?;
+            self.name();
 
             if self.current.kind == TokenKind::String {
-                self.bump()?;
+                self.bump();
             }
         }
-
-        Ok(())
     }
 
     /// Parses a name.
@@ -820,18 +773,18 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// Foo::Bar::Baz
     /// ```
-    fn name(&mut self) -> Result<(), duramen_cst::Error> {
-        let checkpoint = self.builder.checkpoint()?;
+    fn name(&mut self) {
+        let checkpoint = self.builder.checkpoint();
 
         if self.current.kind.is_identifier() {
-            self.bump()?;
+            self.bump();
 
             while self.current.kind == TokenKind::Colon2 {
                 self.advance.push(self.position);
-                self.bump()?;
+                self.bump();
 
                 if self.current.kind.is_identifier() {
-                    self.bump()?;
+                    self.bump();
                     self.advance.pop(self.position, self.current.kind);
                 } else {
                     self.advance.pop(self.position, self.current.kind);
@@ -839,57 +792,49 @@ impl<'a> SchemaParser<'a> {
                 }
             }
 
-            self.builder.close_at(&checkpoint, SchemaSyntax::Name)?;
+            self.builder.wrap(checkpoint, SchemaSyntax::Name);
         } else if self.current.len > 0 {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.bump()?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.bump();
+            self.builder.close();
         }
-
-        Ok(())
     }
 
     /// Parses comma-separated names.
-    fn name_list(&mut self) -> Result<(), duramen_cst::Error> {
-        self.name()?;
+    fn name_list(&mut self) {
+        self.name();
 
         while self.current.kind == TokenKind::Comma {
             self.advance.push(self.position);
-            self.bump()?;
-            self.name()?;
+            self.bump();
+            self.name();
             self.advance.pop(self.position, self.current.kind);
         }
-
-        Ok(())
     }
 
     /// Parses comma-separated action names (identifiers or strings).
-    fn action_name_list(&mut self) -> Result<(), duramen_cst::Error> {
-        self.action_name()?;
+    fn action_name_list(&mut self) {
+        self.action_name();
 
         while self.current.kind == TokenKind::Comma {
             self.advance.push(self.position);
-            self.bump()?;
-            self.action_name()?;
+            self.bump();
+            self.action_name();
             self.advance.pop(self.position, self.current.kind);
         }
-
-        Ok(())
     }
 
     /// Parses an action name (identifier or string).
-    fn action_name(&mut self) -> Result<(), duramen_cst::Error> {
-        let checkpoint = self.builder.checkpoint()?;
+    fn action_name(&mut self) {
+        let checkpoint = self.builder.checkpoint();
 
         if self.current.kind == TokenKind::String || self.current.kind.is_identifier() {
-            self.bump()?;
-            self.builder.close_at(&checkpoint, SchemaSyntax::Name)?;
+            self.bump();
+            self.builder.wrap(checkpoint, SchemaSyntax::Name);
         } else if self.current.len > 0 {
-            self.builder.open(SchemaSyntax::Error)?;
-            self.bump()?;
-            self.builder.close()?;
+            self.builder.open(SchemaSyntax::Error);
+            self.bump();
+            self.builder.close();
         }
-
-        Ok(())
     }
 }

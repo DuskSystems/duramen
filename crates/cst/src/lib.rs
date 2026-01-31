@@ -16,11 +16,14 @@ extern crate std;
 
 use core::ops::Range;
 
-pub use syntree::Error;
-use syntree::{FlavorDefault, Node};
+mod builder;
+pub use builder::Builder;
 
 pub mod policy;
 pub mod schema;
+
+mod tree;
+pub use tree::{Node, Tree};
 
 /// CST accessors, inspired by:
 /// <https://rust-lang.github.io/rust-analyzer/syntax/ast/trait.AstNode.html>.
@@ -28,8 +31,8 @@ pub trait CstNode<'a>: Sized + 'a {
     type Syntax: Copy;
 
     fn can_cast(kind: Self::Syntax) -> bool;
-    fn cast(node: Node<'a, Self::Syntax, FlavorDefault>) -> Option<Self>;
-    fn syntax(&self) -> Node<'a, Self::Syntax, FlavorDefault>;
+    fn cast(node: Node<'a, Self::Syntax>) -> Option<Self>;
+    fn syntax(&self) -> Node<'a, Self::Syntax>;
 
     fn range(&self) -> Range<usize> {
         self.syntax().range()
