@@ -542,6 +542,7 @@ impl fmt::Display for PolicySyntax {
 }
 
 impl From<TokenKind> for PolicySyntax {
+    #[inline(always)]
     fn from(value: TokenKind) -> Self {
         match value {
             TokenKind::Integer => Self::Integer,

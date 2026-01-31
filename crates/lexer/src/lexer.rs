@@ -30,7 +30,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Returns the next token.
-    #[inline]
+    #[inline(always)]
     pub fn next_token(&mut self) -> Option<Token> {
         self.cursor.current()?;
 
@@ -42,7 +42,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Scans the next token.
-    #[inline]
+    #[inline(always)]
     fn scan_token(&mut self) -> TokenKind {
         let Some(current) = self.cursor.current() else {
             return TokenKind::Unknown;
@@ -105,6 +105,7 @@ impl<'a> Lexer<'a> {
 impl Iterator for Lexer<'_> {
     type Item = Token;
 
+    #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         self.next_token()
     }
