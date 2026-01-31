@@ -461,6 +461,7 @@ impl fmt::Display for SchemaSyntax {
 }
 
 impl From<TokenKind> for SchemaSyntax {
+    #[inline(always)]
     fn from(value: TokenKind) -> Self {
         match value {
             TokenKind::String | TokenKind::StringUnterminated => Self::String,

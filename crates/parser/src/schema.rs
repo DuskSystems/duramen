@@ -67,6 +67,7 @@ impl<'a> SchemaParser<'a> {
     }
 
     /// Consumes the current token and advances to the next non trivial token.
+    #[inline(always)]
     fn bump(&mut self) {
         if self.current.len > 0 {
             self.builder
