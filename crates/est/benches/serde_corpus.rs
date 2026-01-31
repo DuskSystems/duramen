@@ -18,7 +18,7 @@ fn main() {
 }
 
 #[divan::bench]
-fn est_json_serde_policy_serialize(bencher: Bencher<'_, '_>) {
+fn est_serde_policy_serialize(bencher: Bencher<'_, '_>) {
     let templates: Vec<ast::policy::Template> = POLICIES
         .iter()
         .filter_map(|path| {
@@ -38,7 +38,7 @@ fn est_json_serde_policy_serialize(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn est_json_serde_policy_deserialize(bencher: Bencher<'_, '_>) {
+fn est_serde_policy_deserialize(bencher: Bencher<'_, '_>) {
     let templates: Vec<ast::policy::Template> = POLICIES
         .iter()
         .filter_map(|path| {
@@ -66,7 +66,7 @@ fn est_json_serde_policy_deserialize(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn est_json_serde_policy_roundtrip(bencher: Bencher<'_, '_>) {
+fn est_serde_policy_roundtrip(bencher: Bencher<'_, '_>) {
     let templates: Vec<ast::policy::Template> = POLICIES
         .iter()
         .filter_map(|path| {
@@ -89,7 +89,7 @@ fn est_json_serde_policy_roundtrip(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn est_json_serde_schema_serialize(bencher: Bencher<'_, '_>) {
+fn est_serde_schema_serialize(bencher: Bencher<'_, '_>) {
     let schemas: Vec<ast::schema::Schema> = SCHEMAS
         .iter()
         .filter_map(|path| {
@@ -109,7 +109,7 @@ fn est_json_serde_schema_serialize(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn est_json_serde_schema_deserialize(bencher: Bencher<'_, '_>) {
+fn est_serde_schema_deserialize(bencher: Bencher<'_, '_>) {
     let schemas: Vec<ast::schema::Schema> = SCHEMAS
         .iter()
         .filter_map(|path| {
@@ -137,7 +137,7 @@ fn est_json_serde_schema_deserialize(bencher: Bencher<'_, '_>) {
 }
 
 #[divan::bench]
-fn est_json_serde_schema_roundtrip(bencher: Bencher<'_, '_>) {
+fn est_serde_schema_roundtrip(bencher: Bencher<'_, '_>) {
     let schemas: Vec<ast::schema::Schema> = SCHEMAS
         .iter()
         .filter_map(|path| {

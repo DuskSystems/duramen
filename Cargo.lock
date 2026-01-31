@@ -535,13 +535,18 @@ dependencies = [
 name = "duramen"
 version = "0.1.0"
 dependencies = [
+ "cedar-policy",
+ "codspeed-divan-compat",
  "duramen-ast",
  "duramen-cst",
  "duramen-diagnostics",
  "duramen-est",
  "duramen-lexer",
+ "duramen-lower",
  "duramen-parser",
+ "duramen-test",
  "duramen-validator",
+ "serde_json",
 ]
 
 [[package]]

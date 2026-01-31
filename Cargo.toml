@@ -178,6 +178,7 @@ workspace = true
 [features]
 default = ["std"]
 std = []
+serde = ["duramen-est/serde"]
 
 [dependencies]
 duramen-ast = { workspace = true }
@@ -185,8 +186,26 @@ duramen-cst = { workspace = true }
 duramen-diagnostics = { workspace = true }
 duramen-est = { workspace = true }
 duramen-lexer = { workspace = true }
+duramen-lower = { workspace = true }
 duramen-parser = { workspace = true }
 duramen-validator = { workspace = true }
+
+[dev-dependencies]
+duramen-test = { workspace = true }
+
+# Upstream
+cedar-policy = { workspace = true }
+
+# Serialization
+serde_json = { workspace = true, features = ["std"] }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[bench]]
+name = "e2e_serde"
+harness = false
+required-features = ["serde"]
 
 [package.metadata.docs.rs]
 all-features = true
