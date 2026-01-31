@@ -18,7 +18,5 @@ mod cursor;
 mod lexer;
 pub use lexer::Lexer;
 
-mod lookup;
-
 mod token;
 pub use token::{Token, TokenKind};

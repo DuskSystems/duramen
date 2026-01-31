@@ -159,7 +159,7 @@ impl<'a> Lexer<'a> {
                     self.cursor.bump_n(2);
                     TokenKind::Amp2
                 } else {
-                    self.cursor.bump_char();
+                    self.cursor.bump();
                     TokenKind::Unknown
                 }
             }
@@ -168,7 +168,7 @@ impl<'a> Lexer<'a> {
                     self.cursor.bump_n(2);
                     TokenKind::Pipe2
                 } else {
-                    self.cursor.bump_char();
+                    self.cursor.bump();
                     TokenKind::Unknown
                 }
             }
