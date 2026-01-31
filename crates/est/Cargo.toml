@@ -41,11 +41,11 @@ serde_json = { workspace = true }
 divan = { workspace = true }
 
 [[test]]
-name = "serde_json_differential"
+name = "serde_differential"
 harness = false
 required-features = ["serde"]
 
 [[bench]]
-name = "serde_json_corpus"
+name = "serde_corpus"
 harness = false
 required-features = ["serde"]

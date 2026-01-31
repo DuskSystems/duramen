@@ -69,15 +69,15 @@ doc = false
 bench = false
 
 [[bin]]
-name = "est_serde_json_policy"
-path = "fuzz_targets/est_serde_json_policy.rs"
+name = "est_serde_policy"
+path = "fuzz_targets/est_serde_policy.rs"
 test = false
 doc = false
 bench = false
 
 [[bin]]
-name = "est_serde_json_schema"
-path = "fuzz_targets/est_serde_json_schema.rs"
+name = "est_serde_schema"
+path = "fuzz_targets/est_serde_schema.rs"
 test = false
 doc = false
 bench = false

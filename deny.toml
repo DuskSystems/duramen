@@ -19,6 +19,7 @@ unused-allowed-license = "deny"
 allow = [
   "Apache-2.0",
   "MIT",
+  "Unicode-3.0",
 ]
 
 # https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html
@@ -36,7 +37,12 @@ unused = "allow"
 
 # https://embarkstudios.github.io/cargo-deny/checks/bans/cfg.html#the-build-field-optional
 [bans.build]
-allow-build-scripts = []
+allow-build-scripts = [
+  "proc-macro2",
+  "quote",
+  "serde",
+  "serde_core",
+]
 
 # https://embarkstudios.github.io/cargo-deny/checks/sources/cfg.html
 [sources]
