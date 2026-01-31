@@ -7,8 +7,16 @@ mod syntax;
 pub use syntax::PolicySyntax;
 
 pub type PolicyTree = Tree<PolicySyntax>;
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(size_of::<PolicyTree>() == 32, "PolicyTree");
+
 pub type PolicyBuilder = Builder<PolicySyntax>;
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(size_of::<PolicyBuilder>() == 64, "PolicyBuilder");
+
 pub type PolicyNode<'a> = Node<'a, PolicySyntax>;
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(size_of::<PolicyNode<'_>>() == 24, "PolicyNode");
 
 macro_rules! cst_node {
     ($name:ident, $kind:expr) => {
@@ -73,7 +81,7 @@ impl Annotation<'_> {
         self.node
             .children()
             .find(|node| node.kind().is_identifier())
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     #[must_use]
@@ -83,8 +91,8 @@ impl Annotation<'_> {
             .children()
             .find(|child| child.kind() == PolicySyntax::String)?;
 
-        let text = &source[child.range()];
-        text.get(1..text.len().saturating_sub(1))
+        let text = child.text(source);
+        text.get(1..text.len() - 1)
     }
 }
 
@@ -163,7 +171,7 @@ impl<'a> Name<'a> {
         self.node
             .children()
             .filter(|node| node.kind().is_identifier())
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     #[must_use]
@@ -181,7 +189,7 @@ impl<'a> Name<'a> {
             .children()
             .filter(|node| node.kind().is_identifier())
             .last()
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     pub fn namespace<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
@@ -191,11 +199,11 @@ impl<'a> Name<'a> {
             .filter(|node| node.kind().is_identifier())
             .collect();
 
-        let count = segments.len().saturating_sub(1);
+        let count = segments.len() - 1;
         segments
             .into_iter()
             .take(count)
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     #[must_use]
@@ -206,11 +214,14 @@ impl<'a> Name<'a> {
     }
 
     #[must_use]
-    pub fn first_reserved_segment<'s>(&self, source: &'s str) -> Option<(&'s str, Range<usize>)> {
+    pub fn first_reserved_segment<'s>(&self, source: &'s str) -> Option<(&'s str, Range<u32>)> {
         self.node
             .children()
             .find(|node| node.kind().is_reserved_word())
-            .map(|node| (&source[node.range()], node.range()))
+            .map(|node| {
+                let range = node.range();
+                (&source[range.start as usize..range.end as usize], range)
+            })
     }
 }
 
@@ -543,12 +554,9 @@ impl<'a> HasExpression<'a> {
                     && child.kind() != PolicySyntax::Has
             })
             .map(|child| {
-                let text = &source[child.range()];
+                let text = child.text(source);
                 if child.kind() == PolicySyntax::String {
-                    (
-                        text.get(1..text.len().saturating_sub(1)).unwrap_or(text),
-                        true,
-                    )
+                    (text.get(1..text.len() - 1).unwrap_or(text), true)
                 } else {
                     (text, false)
                 }
@@ -581,8 +589,8 @@ impl<'a> LikeExpression<'a> {
             .children()
             .find(|child| child.kind() == PolicySyntax::String)
             .map(|child| {
-                let text = &source[child.range()];
-                text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
+                let text = child.text(source);
+                text.get(1..text.len() - 1).unwrap_or(text)
             })
     }
 }
@@ -694,7 +702,7 @@ impl FieldAccess<'_> {
                     && !child.kind().is_trivial()
                     && child.kind() != PolicySyntax::Dot
             })
-            .map(|child| &source[child.range()])
+            .map(|child| child.text(source))
     }
 
     #[must_use]
@@ -717,7 +725,7 @@ impl<'a> MethodCall<'a> {
         self.node
             .children()
             .find(|child| child.kind() == PolicySyntax::Identifier || child.kind().is_keyword())
-            .map(|child| &source[child.range()])
+            .map(|child| child.text(source))
     }
 
     pub fn arguments(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
@@ -764,7 +772,7 @@ impl LiteralExpression<'_> {
         self.node
             .children()
             .find(|child| child.kind() == PolicySyntax::Integer)
-            .map(|child| &source[child.range()])
+            .map(|child| child.text(source))
     }
 
     #[must_use]
@@ -773,8 +781,8 @@ impl LiteralExpression<'_> {
             .children()
             .find(|child| child.kind() == PolicySyntax::String)
             .map(|child| {
-                let text = &source[child.range()];
-                text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
+                let text = child.text(source);
+                text.get(1..text.len() - 1).unwrap_or(text)
             })
     }
 }
@@ -792,8 +800,8 @@ impl<'a> EntityRefExpression<'a> {
             .children()
             .find(|child| child.kind() == PolicySyntax::String)
             .map(|child| {
-                let text = &source[child.range()];
-                text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
+                let text = child.text(source);
+                text.get(1..text.len() - 1).unwrap_or(text)
             })
     }
 
@@ -824,7 +832,7 @@ impl SlotExpression<'_> {
                     PolicySyntax::Identifier | PolicySyntax::Principal | PolicySyntax::Resource
                 )
             })
-            .map(|child| &source[child.range()])
+            .map(|child| child.text(source))
     }
 }
 
@@ -862,12 +870,9 @@ impl<'a> RecordEntry<'a> {
             .children()
             .find(|child| child.kind().is_token() && !child.kind().is_trivial())
             .map(|child| {
-                let text = &source[child.range()];
+                let text = child.text(source);
                 if child.kind() == PolicySyntax::String {
-                    (
-                        text.get(1..text.len().saturating_sub(1)).unwrap_or(text),
-                        true,
-                    )
+                    (text.get(1..text.len() - 1).unwrap_or(text), true)
                 } else {
                     (text, false)
                 }

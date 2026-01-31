@@ -18,13 +18,13 @@ impl<'a> Lexer<'a> {
     /// Returns the current byte offset.
     #[must_use]
     #[inline(always)]
-    pub const fn offset(&self) -> usize {
+    pub const fn offset(&self) -> u32 {
         self.cursor.position()
     }
 
     /// Sets the byte offset.
     #[inline(always)]
-    pub const fn set_offset(&mut self, offset: usize) {
+    pub const fn set_offset(&mut self, offset: u32) {
         self.cursor.set_position(offset);
     }
 
@@ -159,7 +159,7 @@ impl<'a> Lexer<'a> {
                     self.cursor.bump_n(2);
                     TokenKind::Amp2
                 } else {
-                    self.cursor.bump_char();
+                    self.cursor.bump();
                     TokenKind::Unknown
                 }
             }
@@ -168,7 +168,7 @@ impl<'a> Lexer<'a> {
                     self.cursor.bump_n(2);
                     TokenKind::Pipe2
                 } else {
-                    self.cursor.bump_char();
+                    self.cursor.bump();
                     TokenKind::Unknown
                 }
             }

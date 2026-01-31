@@ -19,6 +19,9 @@ use core::ops::Range;
 mod builder;
 pub use builder::Builder;
 
+mod index;
+pub(crate) use index::NodeIndex;
+
 pub mod policy;
 pub mod schema;
 
@@ -34,11 +37,11 @@ pub trait CstNode<'a>: Sized + 'a {
     fn cast(node: Node<'a, Self::Syntax>) -> Option<Self>;
     fn syntax(&self) -> Node<'a, Self::Syntax>;
 
-    fn range(&self) -> Range<usize> {
+    fn range(&self) -> Range<u32> {
         self.syntax().range()
     }
 
     fn text<'s>(&self, source: &'s str) -> &'s str {
-        &source[self.range()]
+        self.syntax().text(source)
     }
 }

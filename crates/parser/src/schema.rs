@@ -27,10 +27,7 @@ impl SchemaParseResult {
         let mut output = String::with_capacity(source.len());
 
         for node in self.tree.children() {
-            let range = node.range();
-            if let Some(text) = source.get(range) {
-                output.push_str(text);
-            }
+            output.push_str(node.text(source));
         }
 
         output
@@ -40,7 +37,7 @@ impl SchemaParseResult {
 pub struct SchemaParser<'a> {
     lexer: Lexer<'a>,
     current: Token,
-    position: usize,
+    position: u32,
     builder: SchemaBuilder,
     advance: Advance,
 }
@@ -52,7 +49,7 @@ impl<'a> SchemaParser<'a> {
             lexer: Lexer::new(source),
             current: Token::new(TokenKind::Unknown, 0),
             position: 0,
-            builder: SchemaBuilder::new(source.len() / 4),
+            builder: SchemaBuilder::new((source.len() / 4) as u32),
             advance: Advance::new(),
         }
     }

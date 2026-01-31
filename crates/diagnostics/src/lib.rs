@@ -76,8 +76,8 @@ pub enum Severity {
 pub struct Diagnostic {
     severity: Severity,
     message: String,
-    label: Option<(Range<usize>, String)>,
-    context: Vec<(Range<usize>, String)>,
+    label: Option<(Range<u32>, String)>,
+    context: Vec<(Range<u32>, String)>,
     notes: Vec<String>,
 }
 
@@ -115,13 +115,13 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn with_label<M: Into<String>>(mut self, range: Range<usize>, message: M) -> Self {
+    pub fn with_label<M: Into<String>>(mut self, range: Range<u32>, message: M) -> Self {
         self.label = Some((range, message.into()));
         self
     }
 
     #[must_use]
-    pub fn with_context<M: Into<String>>(mut self, range: Range<usize>, message: M) -> Self {
+    pub fn with_context<M: Into<String>>(mut self, range: Range<u32>, message: M) -> Self {
         self.context.push((range, message.into()));
         self
     }
@@ -144,13 +144,13 @@ impl Diagnostic {
         let mut snippet = Snippet::source(source).path(path);
 
         if let Some((range, message)) = &self.label {
-            snippet =
-                snippet.annotation(AnnotationKind::Primary.span(range.clone()).label(message));
+            let span = range.start as usize..range.end as usize;
+            snippet = snippet.annotation(AnnotationKind::Primary.span(span).label(message));
         }
 
         for (range, message) in &self.context {
-            snippet =
-                snippet.annotation(AnnotationKind::Context.span(range.clone()).label(message));
+            let span = range.start as usize..range.end as usize;
+            snippet = snippet.annotation(AnnotationKind::Context.span(span).label(message));
         }
 
         let title = level.primary_title(&self.message);
@@ -165,30 +165,30 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn missing_effect(span: Range<usize>) -> Self {
+    pub fn missing_effect(span: Range<u32>) -> Self {
         Self::error("missing effect").with_label(span, "expected `permit` or `forbid`")
     }
 
     #[must_use]
-    pub fn missing_scope_variable(var: &str, span: Range<usize>) -> Self {
+    pub fn missing_scope_variable(var: &str, span: Range<u32>) -> Self {
         Self::error(format!("missing `{var}` clause"))
             .with_label(span, format!("expected `{var}` clause"))
     }
 
     #[must_use]
-    pub fn invalid_scope_operator(got: &str, expected: &str, span: Range<usize>) -> Self {
+    pub fn invalid_scope_operator(got: &str, expected: &str, span: Range<u32>) -> Self {
         Self::error(format!("invalid operator `{got}`"))
             .with_label(span, format!("expected {expected}"))
     }
 
     #[must_use]
-    pub fn expected_entity(span: Range<usize>) -> Self {
+    pub fn expected_entity(span: Range<u32>) -> Self {
         Self::error("expected entity reference")
             .with_label(span, "expected entity like `Type::\"id\"`")
     }
 
     #[must_use]
-    pub fn expected_entity_or_slot(span: Range<usize>) -> Self {
+    pub fn expected_entity_or_slot(span: Range<u32>) -> Self {
         Self::error("expected entity reference or slot").with_label(
             span,
             "expected entity like `Type::\"id\"` or slot like `?principal`",
@@ -196,44 +196,44 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn invalid_slot_id(id: &str, span: Range<usize>) -> Self {
+    pub fn invalid_slot_id(id: &str, span: Range<u32>) -> Self {
         Self::error(format!("invalid slot `?{id}`"))
             .with_label(span, "expected `?principal` or `?resource`")
     }
 
     #[must_use]
-    pub fn invalid_integer(value: &str, span: Range<usize>) -> Self {
+    pub fn invalid_integer(value: &str, span: Range<u32>) -> Self {
         Self::error(format!("invalid integer `{value}`")).with_label(span, "not a valid integer")
     }
 
     #[must_use]
-    pub fn integer_overflow(value: &str, span: Range<usize>) -> Self {
+    pub fn integer_overflow(value: &str, span: Range<u32>) -> Self {
         Self::error(format!("integer overflow: `{value}`"))
             .with_label(span, "value out of range for i64")
     }
 
     #[must_use]
-    pub fn invalid_string_escape(reason: &str, span: Range<usize>) -> Self {
+    pub fn invalid_string_escape(reason: &str, span: Range<u32>) -> Self {
         Self::error(format!("invalid escape sequence: {reason}")).with_label(span, "invalid escape")
     }
 
     #[must_use]
-    pub fn invalid_pattern(reason: &str, span: Range<usize>) -> Self {
+    pub fn invalid_pattern(reason: &str, span: Range<u32>) -> Self {
         Self::error(format!("invalid pattern: {reason}")).with_label(span, "invalid pattern")
     }
 
     #[must_use]
-    pub fn unknown_method(name: &str, span: Range<usize>) -> Self {
+    pub fn unknown_method(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("unknown method `{name}`")).with_label(span, "unknown method")
     }
 
     #[must_use]
-    pub fn unknown_function(name: &str, span: Range<usize>) -> Self {
+    pub fn unknown_function(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("unknown function `{name}`")).with_label(span, "unknown function")
     }
 
     #[must_use]
-    pub fn wrong_arity(name: &str, expected: usize, got: usize, span: Range<usize>) -> Self {
+    pub fn wrong_arity(name: &str, expected: usize, got: usize, span: Range<u32>) -> Self {
         Self::error(format!(
             "`{name}` expects {expected} argument(s), got {got}"
         ))
@@ -241,19 +241,19 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn reserved_identifier(name: &str, span: Range<usize>) -> Self {
+    pub fn reserved_identifier(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("`{name}` is a reserved identifier"))
             .with_label(span, "reserved identifier")
     }
 
     #[must_use]
-    pub fn invalid_identifier(name: &str, span: Range<usize>) -> Self {
+    pub fn invalid_identifier(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("`{name}` is not a valid identifier"))
             .with_label(span, "invalid identifier")
     }
 
     #[must_use]
-    pub fn duplicate_annotation(name: &str, span: Range<usize>, first: Range<usize>) -> Self {
+    pub fn duplicate_annotation(name: &str, span: Range<u32>, first: Range<u32>) -> Self {
         Self::error(format!("duplicate annotation `@{name}`"))
             .with_label(span, "duplicate annotation")
             .with_context(first, "first defined here")
@@ -263,8 +263,8 @@ impl Diagnostic {
     pub fn duplicate_declaration(
         kind: &str,
         name: &str,
-        span: Range<usize>,
-        first: Range<usize>,
+        span: Range<u32>,
+        first: Range<u32>,
     ) -> Self {
         Self::error(format!("duplicate {kind} `{name}`"))
             .with_label(span, format!("duplicate {kind}"))
@@ -272,42 +272,42 @@ impl Diagnostic {
     }
 
     #[must_use]
-    pub fn invalid_type_reference(name: &str, span: Range<usize>) -> Self {
+    pub fn invalid_type_reference(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("unknown type `{name}`")).with_label(span, "unknown type")
     }
 
     #[must_use]
-    pub fn cyclic_type_definition(name: &str, span: Range<usize>) -> Self {
+    pub fn cyclic_type_definition(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("cyclic type definition `{name}`"))
             .with_label(span, "type references itself")
     }
 
     #[must_use]
-    pub fn empty_node(expected: &str, span: Range<usize>) -> Self {
+    pub fn empty_node(expected: &str, span: Range<u32>) -> Self {
         Self::error(format!("expected {expected}")).with_label(span, format!("expected {expected}"))
     }
 
     #[must_use]
-    pub fn missing_child(parent: &str, child: &str, span: Range<usize>) -> Self {
+    pub fn missing_child(parent: &str, child: &str, span: Range<u32>) -> Self {
         Self::error(format!("{parent} missing {child}"))
             .with_label(span, format!("missing {child}"))
     }
 
     #[must_use]
-    pub fn too_many_operators(op: &str, span: Range<usize>) -> Self {
+    pub fn too_many_operators(op: &str, span: Range<u32>) -> Self {
         Self::error(format!("too many `{op}` operators"))
             .with_label(span, "too many consecutive operators")
     }
 
     #[must_use]
-    pub fn duplicate_key(key: &str, span: Range<usize>, first: Range<usize>) -> Self {
+    pub fn duplicate_key(key: &str, span: Range<u32>, first: Range<u32>) -> Self {
         Self::error(format!("duplicate key `{key}`"))
             .with_label(span, "duplicate key")
             .with_context(first, "first defined here")
     }
 
     #[must_use]
-    pub fn method_as_function(name: &str, span: Range<usize>) -> Self {
+    pub fn method_as_function(name: &str, span: Range<u32>) -> Self {
         Self::error(format!("`{name}` is a method, not a function"))
             .with_label(span, "method called as function")
             .with_note(format!("use `expr.{name}(...)` instead"))

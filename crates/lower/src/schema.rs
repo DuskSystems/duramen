@@ -157,7 +157,7 @@ impl<'a> SchemaLowerer<'a> {
         I: Iterator<Item = cst::schema::Annotation<'b>>,
     {
         let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
-        let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
+        let mut seen: BTreeMap<String, Range<u32>> = BTreeMap::new();
 
         for annotation in annotations {
             let Some(name) = annotation.name(self.source) else {

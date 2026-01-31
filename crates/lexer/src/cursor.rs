@@ -4,7 +4,7 @@ use crate::lookup::ByteLookup;
 pub struct Cursor<'a> {
     source: &'a str,
     bytes: &'a [u8],
-    position: usize,
+    position: u32,
 }
 
 impl<'a> Cursor<'a> {
@@ -22,13 +22,13 @@ impl<'a> Cursor<'a> {
     /// Returns the current byte position.
     #[must_use]
     #[inline(always)]
-    pub const fn position(&self) -> usize {
+    pub const fn position(&self) -> u32 {
         self.position
     }
 
     /// Sets the byte position.
     #[inline(always)]
-    pub const fn set_position(&mut self, position: usize) {
+    pub const fn set_position(&mut self, position: u32) {
         self.position = position;
     }
 
@@ -36,14 +36,14 @@ impl<'a> Cursor<'a> {
     #[must_use]
     #[inline(always)]
     pub fn current(&self) -> Option<u8> {
-        self.bytes.get(self.position).copied()
+        self.bytes.get(self.position as usize).copied()
     }
 
     /// Returns the next byte.
     #[must_use]
     #[inline(always)]
     pub fn peek(&self) -> Option<u8> {
-        self.bytes.get(self.position + 1).copied()
+        self.bytes.get((self.position + 1) as usize).copied()
     }
 
     /// Advance by one byte.
@@ -54,36 +54,37 @@ impl<'a> Cursor<'a> {
 
     /// Advance by `n` bytes.
     #[inline(always)]
-    pub const fn bump_n(&mut self, n: usize) {
+    pub const fn bump_n(&mut self, n: u32) {
         self.position = self.position + n;
     }
 
     /// Advance by one UTF-8 character.
     #[inline]
     pub fn bump_char(&mut self) {
-        if let Some(remaining) = self.source.get(self.position..)
+        if let Some(remaining) = self.source.get(self.position as usize..)
             && let Some(char) = remaining.chars().next()
         {
-            self.position += char.len_utf8();
+            self.position += char.len_utf8() as u32;
         }
     }
 
     /// Returns a slice from `start` to current position.
     #[must_use]
     #[inline]
-    pub fn slice(&self, start: usize) -> Option<&'a str> {
-        self.source.get(start..self.position)
+    pub fn slice(&self, start: u32) -> Option<&'a str> {
+        self.source.get(start as usize..self.position as usize)
     }
 
     /// Skips whitespace characters.
     #[inline(always)]
     pub fn skip_whitespace(&mut self) -> bool {
-        let start = self.position;
+        let start = self.position as usize;
+        let mut position = start;
 
-        while let Some(&byte) = self.bytes.get(self.position) {
+        while let Some(&byte) = self.bytes.get(position) {
             // ASCII
             if ByteLookup::is_ascii_whitespace(byte) {
-                self.position += 1;
+                position += 1;
                 continue;
             }
 
@@ -92,7 +93,7 @@ impl<'a> Cursor<'a> {
             }
 
             // Unicode
-            let Some(char) = self.source[self.position..].chars().next() else {
+            let Some(char) = self.source[position..].chars().next() else {
                 break;
             };
 
@@ -100,20 +101,21 @@ impl<'a> Cursor<'a> {
                 break;
             }
 
-            self.position += char.len_utf8();
+            position += char.len_utf8();
         }
 
-        self.position > start
+        self.position = position as u32;
+        position > start
     }
 
     /// Skips to end of line.
     #[inline(always)]
     pub fn skip_line(&mut self) {
-        let remaining = &self.bytes[self.position..];
+        let remaining = &self.bytes[self.position as usize..];
         if let Some(offset) = memchr::memchr2(b'\n', b'\r', remaining) {
-            self.position += offset;
+            self.position += offset as u32;
         } else {
-            self.position = self.bytes.len();
+            self.position = self.bytes.len() as u32;
         }
     }
 
@@ -123,15 +125,15 @@ impl<'a> Cursor<'a> {
     #[inline(always)]
     pub fn scan_string(&mut self) -> bool {
         loop {
-            let remaining = &self.bytes[self.position..];
+            let remaining = &self.bytes[self.position as usize..];
             let Some(offset) = memchr::memchr2(b'"', b'\\', remaining) else {
-                self.position = self.bytes.len();
+                self.position = self.bytes.len() as u32;
                 return false;
             };
 
-            self.position += offset;
+            self.position += offset as u32;
 
-            let byte = self.bytes[self.position];
+            let byte = self.bytes[self.position as usize];
             if byte == b'"' {
                 self.position += 1;
                 return true;
@@ -141,10 +143,10 @@ impl<'a> Cursor<'a> {
             self.position += 1;
             if let Some(char) = self
                 .source
-                .get(self.position..)
+                .get(self.position as usize..)
                 .and_then(|str| str.chars().next())
             {
-                self.position += char.len_utf8();
+                self.position += char.len_utf8() as u32;
             }
         }
     }
@@ -152,25 +154,33 @@ impl<'a> Cursor<'a> {
     /// Scans an identifier.
     #[inline(always)]
     pub fn scan_identifier(&mut self) {
-        while let Some(&byte) = self.bytes.get(self.position) {
+        let mut position = self.position as usize;
+
+        while let Some(&byte) = self.bytes.get(position) {
             if !ByteLookup::is_identifier_continue(byte) {
                 break;
             }
 
-            self.position += 1;
+            position += 1;
         }
+
+        self.position = position as u32;
     }
 
     /// Scans an integer.
     #[inline(always)]
     pub fn scan_integer(&mut self) {
-        while let Some(&byte) = self.bytes.get(self.position) {
+        let mut position = self.position as usize;
+
+        while let Some(&byte) = self.bytes.get(position) {
             if !ByteLookup::is_digit(byte) {
                 break;
             }
 
-            self.position += 1;
+            position += 1;
         }
+
+        self.position = position as u32;
     }
 }
 

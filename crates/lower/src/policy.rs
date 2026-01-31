@@ -92,7 +92,7 @@ impl<'a> PolicyLowerer<'a> {
     fn lower_scope(
         &mut self,
         policy: &cst::policy::Policy<'_>,
-        span: Range<usize>,
+        span: Range<u32>,
     ) -> (
         ast::policy::PrincipalConstraint,
         ast::policy::ActionConstraint,
@@ -179,7 +179,7 @@ impl<'a> PolicyLowerer<'a> {
         index: usize,
     ) -> (ast::common::Annotations, ast::policy::PolicyId) {
         let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
-        let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
+        let mut seen: BTreeMap<String, Range<u32>> = BTreeMap::new();
         let mut policy_id = None;
 
         for annotation in policy.annotations() {
@@ -774,7 +774,7 @@ impl<'a> PolicyLowerer<'a> {
         text: &str,
         neg_count: usize,
         not_count: usize,
-        span: Range<usize>,
+        span: Range<u32>,
     ) -> Option<ast::policy::Expr> {
         const I64_MIN_ABS: u64 = (i64::MAX as u64) + 1;
 
@@ -1113,7 +1113,7 @@ impl<'a> PolicyLowerer<'a> {
         record_expr: &cst::policy::RecordExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let mut fields = BTreeMap::new();
-        let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
+        let mut seen: BTreeMap<String, Range<u32>> = BTreeMap::new();
 
         for entry in record_expr.entries() {
             let entry_span = entry.range();
@@ -1151,14 +1151,14 @@ impl<'a> PolicyLowerer<'a> {
         Some(ast::policy::Expr::record(fields))
     }
 
-    fn check_arity(&mut self, name: &str, expected: usize, got: usize, span: Range<usize>) {
+    fn check_arity(&mut self, name: &str, expected: usize, got: usize, span: Range<u32>) {
         if expected != got {
             self.diagnostics
                 .push(Diagnostic::wrong_arity(name, expected, got, span));
         }
     }
 
-    fn parse_integer(&mut self, text: &str, span: Range<usize>) -> Option<ast::policy::Integer> {
+    fn parse_integer(&mut self, text: &str, span: Range<u32>) -> Option<ast::policy::Integer> {
         let value: i64 = text.parse().ok().or_else(|| {
             self.diagnostics
                 .push(Diagnostic::invalid_integer(text, span.clone()));
@@ -1169,12 +1169,7 @@ impl<'a> PolicyLowerer<'a> {
         Some(ast::policy::Integer::new(value))
     }
 
-    fn unescape_field(
-        &mut self,
-        field: &str,
-        is_quoted: bool,
-        span: Range<usize>,
-    ) -> Option<String> {
+    fn unescape_field(&mut self, field: &str, is_quoted: bool, span: Range<u32>) -> Option<String> {
         if is_quoted {
             StringUnescaper::new(field).unescape().or_else(|| {
                 self.diagnostics

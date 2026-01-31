@@ -1,5 +1,4 @@
 const WHITESPACE: u8 = 1 << 0;
-const DIGIT: u8 = 1 << 1;
 const IDENTIFIER_CONTINUE: u8 = 1 << 2;
 
 const FLAGS: [u8; 256] = {
@@ -9,8 +8,7 @@ const FLAGS: [u8; 256] = {
     loop {
         table[index as usize] = match index {
             b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C => WHITESPACE,
-            b'0'..=b'9' => DIGIT | IDENTIFIER_CONTINUE,
-            b'A'..=b'Z' | b'a'..=b'z' | b'_' => IDENTIFIER_CONTINUE,
+            b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'_' => IDENTIFIER_CONTINUE,
             _ => 0,
         };
 
@@ -39,7 +37,7 @@ impl ByteLookup {
     #[must_use]
     #[inline(always)]
     pub const fn is_digit(byte: u8) -> bool {
-        FLAGS[byte as usize] & DIGIT != 0
+        byte >= b'0' && byte <= b'9'
     }
 
     /// Checks if a byte can continue an identifier.

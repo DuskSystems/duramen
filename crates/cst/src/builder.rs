@@ -1,5 +1,6 @@
 use alloc::vec::Vec;
 
+use crate::NodeIndex;
 use crate::tree::{NodeData, Tree};
 
 /// Builder for the CST tree.
@@ -7,20 +8,20 @@ use crate::tree::{NodeData, Tree};
 pub struct Builder<T: Copy> {
     nodes: Vec<NodeData<T>>,
     parents: Vec<usize>,
-    sibling: Option<usize>,
-    root: Option<usize>,
-    cursor: usize,
+    sibling: NodeIndex,
+    root: NodeIndex,
+    cursor: u32,
 }
 
 impl<T: Copy> Builder<T> {
     /// Creates a new builder with a capacity hint.
     #[must_use]
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(capacity: u32) -> Self {
         Self {
-            nodes: Vec::with_capacity(capacity),
+            nodes: Vec::with_capacity(capacity as usize),
             parents: Vec::with_capacity(8),
-            sibling: None,
-            root: None,
+            sibling: NodeIndex::NONE,
+            root: NodeIndex::NONE,
             cursor: 0,
         }
     }
@@ -34,14 +35,14 @@ impl<T: Copy> Builder<T> {
             kind,
             start: self.cursor,
             end: self.cursor,
-            first: None,
-            next: None,
+            first: NodeIndex::NONE,
+            next: NodeIndex::NONE,
         };
 
         self.attach(index);
         self.nodes.push(node);
         self.parents.push(index);
-        self.sibling = None;
+        self.sibling = NodeIndex::NONE;
     }
 
     /// Closes the current branch.
@@ -53,12 +54,12 @@ impl<T: Copy> Builder<T> {
         };
 
         self.nodes[index].end = self.cursor;
-        self.sibling = Some(index);
+        self.sibling = NodeIndex::new(index);
     }
 
     /// Adds a new token node.
     #[inline(always)]
-    pub fn token(&mut self, kind: T, len: usize) {
+    pub fn token(&mut self, kind: T, len: u32) {
         let index = self.nodes.len();
         let start = self.cursor;
         let end = start + len;
@@ -68,27 +69,25 @@ impl<T: Copy> Builder<T> {
             kind,
             start,
             end,
-            first: None,
-            next: None,
+            first: NodeIndex::NONE,
+            next: NodeIndex::NONE,
         };
 
         self.attach(index);
         self.nodes.push(node);
-        self.sibling = Some(index);
+        self.sibling = NodeIndex::new(index);
     }
 
-    /// Returns a checkpoint for use with [`wrap`](Self::wrap):
-    /// - `None` wraps all nodes in scope,
-    /// - `Some` wraps nodes after that point.
+    /// Returns a checkpoint for use with [`wrap`](Self::wrap).
     #[must_use]
     #[inline(always)]
-    pub const fn checkpoint(&self) -> Option<usize> {
+    pub const fn checkpoint(&self) -> NodeIndex {
         self.sibling
     }
 
     /// Wraps nodes since the checkpoint in a new parent.
-    pub fn wrap(&mut self, checkpoint: Option<usize>, kind: T) {
-        let first = match checkpoint {
+    pub fn wrap(&mut self, checkpoint: NodeIndex, kind: T) {
+        let first = match checkpoint.get() {
             Some(previous) => self.nodes[previous].next,
             None => match self.parent() {
                 Some(parent) => self.nodes[parent].first,
@@ -96,7 +95,7 @@ impl<T: Copy> Builder<T> {
             },
         };
 
-        let Some(first) = first else {
+        let Some(first) = first.get() else {
             self.open(kind);
             self.close();
             return;
@@ -110,26 +109,28 @@ impl<T: Copy> Builder<T> {
             kind,
             start,
             end,
-            first: Some(first),
-            next: None,
+            first: NodeIndex::new(first),
+            next: NodeIndex::NONE,
         };
 
         self.nodes.push(node);
 
-        if let Some(previous) = checkpoint {
-            self.nodes[previous].next = Some(wrapper);
+        let wrapper_index = NodeIndex::new(wrapper);
+
+        if let Some(previous) = checkpoint.get() {
+            self.nodes[previous].next = wrapper_index;
         }
 
         if let Some(parent) = self.parent() {
             let parent = &mut self.nodes[parent];
-            if parent.first == Some(first) {
-                parent.first = Some(wrapper);
+            if parent.first == NodeIndex::new(first) {
+                parent.first = wrapper_index;
             }
-        } else if self.root == Some(first) {
-            self.root = Some(wrapper);
+        } else if self.root == NodeIndex::new(first) {
+            self.root = wrapper_index;
         }
 
-        self.sibling = Some(wrapper);
+        self.sibling = wrapper_index;
     }
 
     /// Constructs the tree.
@@ -148,17 +149,19 @@ impl<T: Copy> Builder<T> {
 
     #[inline(always)]
     fn attach(&mut self, index: usize) {
-        if let Some(sibling) = self.sibling {
-            self.nodes[sibling].next = Some(index);
+        let node_index = NodeIndex::new(index);
+
+        if let Some(sibling) = self.sibling.get() {
+            self.nodes[sibling].next = node_index;
         }
 
         if let Some(parent) = self.parent() {
             let parent = &mut self.nodes[parent];
             if parent.first.is_none() {
-                parent.first = Some(index);
+                parent.first = node_index;
             }
         } else if self.root.is_none() {
-            self.root = Some(index);
+            self.root = node_index;
         }
     }
 }

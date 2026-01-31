@@ -5,8 +5,16 @@ mod syntax;
 pub use syntax::SchemaSyntax;
 
 pub type SchemaTree = Tree<SchemaSyntax>;
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(size_of::<SchemaTree>() == 32, "SchemaTree");
+
 pub type SchemaBuilder = Builder<SchemaSyntax>;
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(size_of::<SchemaBuilder>() == 64, "SchemaBuilder");
+
 pub type SchemaNode<'a> = Node<'a, SchemaSyntax>;
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(size_of::<SchemaNode<'_>>() == 24, "SchemaNode");
 
 macro_rules! cst_node {
     ($name:ident, $kind:expr) => {
@@ -137,8 +145,8 @@ impl<'a> ActionDecl<'a> {
     pub fn action_names<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node.children().filter_map(|child| {
             if child.kind() == SchemaSyntax::String {
-                let text = &source[child.range()];
-                text.get(1..text.len().saturating_sub(1))
+                let text = child.text(source);
+                text.get(1..text.len() - 1)
             } else if let Some(name) = Name::cast(child) {
                 name.basename(source)
             } else {
@@ -202,7 +210,7 @@ impl Annotation<'_> {
         self.node
             .children()
             .find(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     #[must_use]
@@ -212,8 +220,8 @@ impl Annotation<'_> {
             .children()
             .find(|child| child.kind() == SchemaSyntax::String)?;
 
-        let text = &source[child.range()];
-        text.get(1..text.len().saturating_sub(1))
+        let text = child.text(source);
+        text.get(1..text.len() - 1)
     }
 }
 
@@ -298,8 +306,8 @@ impl<'a> ActionParents<'a> {
                 let child = children.next()?;
 
                 if child.kind() == SchemaSyntax::String {
-                    let text = &source[child.range()];
-                    let eid = text.get(1..text.len().saturating_sub(1));
+                    let text = child.text(source);
+                    let eid = text.get(1..text.len() - 1);
                     return Some((None, eid));
                 }
 
@@ -313,17 +321,17 @@ impl<'a> ActionParents<'a> {
                         if let Some(string) = children.peek()
                             && string.kind() == SchemaSyntax::String
                         {
-                            let text = &source[string.range()];
+                            let text = string.text(source);
                             children.next();
-                            text.get(1..text.len().saturating_sub(1))
+                            text.get(1..text.len() - 1)
                         } else {
                             None
                         }
                     }
                     Some(SchemaSyntax::String) => {
                         let string = children.next()?;
-                        let text = &source[string.range()];
-                        text.get(1..text.len().saturating_sub(1))
+                        let text = string.text(source);
+                        text.get(1..text.len() - 1)
                     }
                     _ => None,
                 };
@@ -350,10 +358,10 @@ impl<'a> AttributeDecl<'a> {
             kind == SchemaSyntax::String || kind == SchemaSyntax::Identifier || kind.is_keyword()
         })?;
 
-        let text = &source[child.range()];
+        let text = child.text(source);
 
         if child.kind() == SchemaSyntax::String {
-            text.get(1..text.len().saturating_sub(1))
+            text.get(1..text.len() - 1)
         } else {
             Some(text)
         }
@@ -382,7 +390,7 @@ impl<'a> Name<'a> {
         self.node
             .children()
             .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     #[must_use]
@@ -401,15 +409,15 @@ impl<'a> Name<'a> {
             .children()
             .find(|node| node.kind() == SchemaSyntax::String)
         {
-            let text = &source[string_node.range()];
-            return text.get(1..text.len().saturating_sub(1));
+            let text = string_node.text(source);
+            return text.get(1..text.len() - 1);
         }
 
         self.node
             .children()
             .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .last()
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 
     pub fn namespace<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
@@ -419,11 +427,11 @@ impl<'a> Name<'a> {
             .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .collect();
 
-        let count = segments.len().saturating_sub(1);
+        let count = segments.len() - 1;
         segments
             .into_iter()
             .take(count)
-            .map(|node| &source[node.range()])
+            .map(|node| node.text(source))
     }
 }
 
@@ -511,8 +519,8 @@ impl<'a> EnumType<'a> {
             .children()
             .filter(|node| node.kind() == SchemaSyntax::EnumVariant)
             .filter_map(|node| {
-                let text = &source[node.range()];
-                text.get(1..text.len().saturating_sub(1))
+                let text = node.text(source);
+                text.get(1..text.len() - 1)
             })
     }
 }

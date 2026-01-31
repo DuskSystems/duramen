@@ -8,7 +8,7 @@ use core::fmt;
 /// Tracks parser position to avoid infinite loops in debug builds.
 pub struct Advance {
     #[cfg(debug_assertions)]
-    positions: Vec<usize>,
+    positions: Vec<u32>,
 }
 
 impl Advance {
@@ -21,7 +21,7 @@ impl Advance {
     }
 
     #[inline]
-    pub fn push(&mut self, position: usize) {
+    pub fn push(&mut self, position: u32) {
         #[cfg(debug_assertions)]
         self.positions.push(position);
 
@@ -30,7 +30,7 @@ impl Advance {
     }
 
     #[inline]
-    pub fn pop<T: fmt::Debug>(&mut self, position: usize, token: T) {
+    pub fn pop<T: fmt::Debug>(&mut self, position: u32, token: T) {
         #[cfg(debug_assertions)]
         #[expect(clippy::panic, reason = "Debug assertion")]
         {

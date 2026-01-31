@@ -7,13 +7,13 @@ pub struct Token {
     pub kind: TokenKind,
 
     /// Length in bytes.
-    pub len: usize,
+    pub len: u32,
 }
 
 impl Token {
     /// Creates a new token.
     #[must_use]
-    pub const fn new(kind: TokenKind, len: usize) -> Self {
+    pub const fn new(kind: TokenKind, len: u32) -> Self {
         Self { kind, len }
     }
 }

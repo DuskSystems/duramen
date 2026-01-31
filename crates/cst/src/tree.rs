@@ -1,28 +1,30 @@
 use alloc::vec::Vec;
 use core::ops::Range;
 
+use crate::NodeIndex;
+
 /// Internal node storage.
 #[derive(Debug, Clone)]
 pub struct NodeData<T: Copy> {
     pub(crate) kind: T,
-    pub(crate) start: usize,
-    pub(crate) end: usize,
-    pub(crate) first: Option<usize>,
-    pub(crate) next: Option<usize>,
+    pub(crate) start: u32,
+    pub(crate) end: u32,
+    pub(crate) first: NodeIndex,
+    pub(crate) next: NodeIndex,
 }
 
 /// Concrete syntax tree.
 #[derive(Debug, Clone)]
 pub struct Tree<T: Copy> {
     pub(crate) nodes: Vec<NodeData<T>>,
-    pub(crate) root: Option<usize>,
+    pub(crate) root: NodeIndex,
 }
 
 impl<T: Copy> Tree<T> {
     /// Returns the number of nodes in the tree.
     #[must_use]
-    pub const fn len(&self) -> usize {
-        self.nodes.len()
+    pub const fn len(&self) -> u32 {
+        self.nodes.len() as u32
     }
 
     /// Returns `true` if the tree contains no nodes.
@@ -36,7 +38,7 @@ impl<T: Copy> Tree<T> {
     pub fn root(&self) -> Option<Node<'_, T>> {
         Some(Node {
             tree: &self.nodes,
-            index: self.root?,
+            index: self.root.get()?,
         })
     }
 
@@ -45,7 +47,7 @@ impl<T: Copy> Tree<T> {
     pub fn children(&self) -> Children<'_, T> {
         Children {
             tree: &self.nodes,
-            current: self.root,
+            current: self.root.get(),
         }
     }
 }
@@ -61,25 +63,33 @@ impl<'a, T: Copy> Node<'a, T> {
     /// Returns the syntax kind of this node.
     #[must_use]
     #[inline(always)]
-    pub const fn kind(&self) -> T {
+    pub fn kind(&self) -> T {
         self.tree[self.index].kind
     }
 
     /// Returns the byte range of this node.
     #[must_use]
     #[inline(always)]
-    pub const fn range(&self) -> Range<usize> {
+    pub fn range(&self) -> Range<u32> {
         let data = &self.tree[self.index];
         data.start..data.end
+    }
+
+    /// Returns the source text for this node.
+    #[must_use]
+    #[inline(always)]
+    pub fn text<'s>(&self, source: &'s str) -> &'s str {
+        let data = &self.tree[self.index];
+        &source[data.start as usize..data.end as usize]
     }
 
     /// Returns an iterator over this node's children.
     #[must_use]
     #[inline(always)]
-    pub const fn children(&self) -> Children<'a, T> {
+    pub fn children(&self) -> Children<'a, T> {
         Children {
             tree: self.tree,
-            current: self.tree[self.index].first,
+            current: self.tree[self.index].first.get(),
         }
     }
 }
@@ -98,7 +108,7 @@ impl<'a, T: Copy> Iterator for Children<'a, T> {
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.current?;
         let data = &self.tree[index];
-        self.current = data.next;
+        self.current = data.next.get();
 
         Some(Node {
             tree: self.tree,
