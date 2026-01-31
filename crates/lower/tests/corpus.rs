@@ -2,60 +2,17 @@ use std::path::Path;
 
 use duramen_lower::{PolicyLowerer, SchemaLowerer};
 use duramen_parser::{PolicyParser, SchemaParser};
-use duramen_test::{
-    CEDAR_CORPUS, CEDAR_INTEGRATION_TESTS, CEDAR_POLICY_PARSER_TESTS, CEDAR_SAMPLE_DATA,
-    CEDAR_SCHEMA_PARSER_TESTS,
-};
 
-datatest_stable::harness! {
-    {
-        test = policy,
-        root = CEDAR_CORPUS,
-        pattern = r".*[.]cedar$"
-    },
-    {
-        test = policy,
-        root = CEDAR_INTEGRATION_TESTS,
-        pattern = r".*[.]cedar$"
-    },
-    {
-        test = policy,
-        root = CEDAR_POLICY_PARSER_TESTS,
-        pattern = r".*[.]cedar$"
-    },
-    {
-        test = schema,
-        root = CEDAR_CORPUS,
-        pattern = r".*[.]cedarschema$"
-    },
-    {
-        test = schema,
-        root = CEDAR_SAMPLE_DATA,
-        pattern = r".*[.]cedarschema$"
-    },
-    {
-        test = schema,
-        root = CEDAR_SCHEMA_PARSER_TESTS,
-        pattern = r".*[.]cedarschema$"
-    },
+duramen_test::corpus!(policy = policy, schema = schema);
+
+fn policy(_path: &Path, source: &str) {
+    let result = PolicyParser::new(source).parse();
+    let lowerer = PolicyLowerer::new(source);
+    drop(lowerer.lower(result.tree()));
 }
 
-fn policy(path: &Path) -> datatest_stable::Result<()> {
-    let source = std::fs::read_to_string(path)?;
-    let result = PolicyParser::new(&source).parse();
-
-    let lowerer = PolicyLowerer::new(&source);
+fn schema(_path: &Path, source: &str) {
+    let result = SchemaParser::new(source).parse();
+    let lowerer = SchemaLowerer::new(source);
     drop(lowerer.lower(result.tree()));
-
-    Ok(())
-}
-
-fn schema(path: &Path) -> datatest_stable::Result<()> {
-    let source = std::fs::read_to_string(path)?;
-    let result = SchemaParser::new(&source).parse();
-
-    let lowerer = SchemaLowerer::new(&source);
-    drop(lowerer.lower(result.tree()));
-
-    Ok(())
 }

@@ -5,52 +5,15 @@ use duramen_ast as ast;
 use duramen_est::json::{PolicySet, SchemaFragment};
 use duramen_lower::{PolicyLowerer, SchemaLowerer};
 use duramen_parser::{PolicyParser, SchemaParser};
-use duramen_test::{
-    CEDAR_CORPUS, CEDAR_INTEGRATION_TESTS, CEDAR_POLICY_PARSER_TESTS, CEDAR_SAMPLE_DATA,
-    CEDAR_SCHEMA_PARSER_TESTS, assert_eq,
-};
+use duramen_test::assert_eq;
 
-datatest_stable::harness! {
-    {
-        test = policy_differential,
-        root = CEDAR_CORPUS,
-        pattern = r".*[.]cedar$"
-    },
-    {
-        test = policy_differential,
-        root = CEDAR_INTEGRATION_TESTS,
-        pattern = r".*[.]cedar$"
-    },
-    {
-        test = policy_differential,
-        root = CEDAR_POLICY_PARSER_TESTS,
-        pattern = r".*[.]cedar$"
-    },
+duramen_test::corpus!(policy = policy_differential, schema = schema_differential);
 
-    {
-        test = schema_differential,
-        root = CEDAR_CORPUS,
-        pattern = r".*[.]cedarschema$"
-    },
-    {
-        test = schema_differential,
-        root = CEDAR_SAMPLE_DATA,
-        pattern = r".*[.]cedarschema$"
-    },
-    {
-        test = schema_differential,
-        root = CEDAR_SCHEMA_PARSER_TESTS,
-        pattern = r".*[.]cedarschema$"
-    },
-}
-
-fn policy_differential(path: &Path) -> datatest_stable::Result<()> {
-    let source = std::fs::read_to_string(path)?;
-
+fn policy_differential(path: &Path, source: &str) -> duramen_test::Result<()> {
     let cedar = source.parse::<CedarPolicySet>();
 
-    let result = PolicyParser::new(&source).parse();
-    let duramen = PolicyLowerer::new(&source).lower(result.tree());
+    let result = PolicyParser::new(source).parse();
+    let duramen = PolicyLowerer::new(source).lower(result.tree());
 
     match (cedar, duramen) {
         (Ok(cedar), Ok((templates, _))) => {
@@ -83,13 +46,11 @@ fn policy_differential(path: &Path) -> datatest_stable::Result<()> {
     Ok(())
 }
 
-fn schema_differential(path: &Path) -> datatest_stable::Result<()> {
-    let source = std::fs::read_to_string(path)?;
+fn schema_differential(path: &Path, source: &str) -> duramen_test::Result<()> {
+    let cedar = CedarSchema::from_cedarschema_str(source);
 
-    let cedar = CedarSchema::from_cedarschema_str(&source);
-
-    let result = SchemaParser::new(&source).parse();
-    let duramen = SchemaLowerer::new(&source).lower(result.tree());
+    let result = SchemaParser::new(source).parse();
+    let duramen = SchemaLowerer::new(source).lower(result.tree());
 
     match (cedar, duramen) {
         (Ok((cedar, _warnings)), Ok((schema, _))) => {
