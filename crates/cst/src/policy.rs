@@ -1,15 +1,14 @@
 use core::ops::Range;
 
-use syntree::{Builder, FlavorDefault, Node, Tree};
-
-use crate::CstNode;
+use crate::tree::{Node, Tree};
+use crate::{Builder, CstNode};
 
 mod syntax;
 pub use syntax::PolicySyntax;
 
-pub type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
+pub type PolicyTree = Tree<PolicySyntax>;
 pub type PolicyBuilder = Builder<PolicySyntax>;
-pub type PolicyNode<'a> = Node<'a, PolicySyntax, FlavorDefault>;
+pub type PolicyNode<'a> = Node<'a, PolicySyntax>;
 
 macro_rules! cst_node {
     ($name:ident, $kind:expr) => {
@@ -26,7 +25,7 @@ macro_rules! cst_node {
             }
 
             fn cast(node: PolicyNode<'a>) -> Option<Self> {
-                Self::can_cast(node.value()).then_some(Self { node })
+                Self::can_cast(node.kind()).then_some(Self { node })
             }
 
             fn syntax(&self) -> PolicyNode<'a> {
@@ -39,7 +38,7 @@ macro_rules! cst_node {
 cst_node!(Policies, PolicySyntax::Policies);
 impl<'a> Policies<'a> {
     pub fn iter(&self) -> impl Iterator<Item = Policy<'a>> + use<'a> {
-        self.node.children().skip_tokens().filter_map(Policy::cast)
+        self.node.children().filter_map(Policy::cast)
     }
 }
 
@@ -47,7 +46,7 @@ cst_node!(Policy, PolicySyntax::Policy);
 impl<'a> Policy<'a> {
     #[must_use]
     pub fn effect(&self) -> Option<Effect> {
-        self.node.children().find_map(|child| match child.value() {
+        self.node.children().find_map(|child| match child.kind() {
             PolicySyntax::Permit => Some(Effect::Permit),
             PolicySyntax::Forbid => Some(Effect::Forbid),
             _ => None,
@@ -73,7 +72,7 @@ impl Annotation<'_> {
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|node| node.value().is_identifier())
+            .find(|node| node.kind().is_identifier())
             .map(|node| &source[node.range()])
     }
 
@@ -82,7 +81,7 @@ impl Annotation<'_> {
         let child = self
             .node
             .children()
-            .find(|child| child.value() == PolicySyntax::String)?;
+            .find(|child| child.kind() == PolicySyntax::String)?;
 
         let text = &source[child.range()];
         text.get(1..text.len().saturating_sub(1))
@@ -95,14 +94,14 @@ impl<'a> VariableDef<'a> {
     pub fn variable(&self) -> Option<Variable> {
         self.node
             .children()
-            .find_map(|child| Variable::from_kind(child.value()))
+            .find_map(|child| Variable::from_kind(child.kind()))
     }
 
     #[must_use]
     pub fn entity_type(&self) -> Option<Name<'a>> {
         let mut found = false;
         for child in self.node.children() {
-            if child.value() == PolicySyntax::Is {
+            if child.kind() == PolicySyntax::Is {
                 found = true;
             } else if found && let Some(name) = Name::cast(child) {
                 return Some(name);
@@ -116,7 +115,7 @@ impl<'a> VariableDef<'a> {
     pub fn constraint(&self) -> Option<Expression<'a>> {
         let mut found_operator = false;
         for child in self.node.children() {
-            match child.value() {
+            match child.kind() {
                 PolicySyntax::Eq2 | PolicySyntax::In => {
                     found_operator = true;
                 }
@@ -133,7 +132,7 @@ impl<'a> VariableDef<'a> {
 
     #[must_use]
     pub fn operator(&self) -> Option<RelOp> {
-        self.node.children().find_map(|child| match child.value() {
+        self.node.children().find_map(|child| match child.kind() {
             PolicySyntax::Eq2 => Some(RelOp::Eq),
             PolicySyntax::In => Some(RelOp::In),
             _ => None,
@@ -145,7 +144,7 @@ cst_node!(Condition, PolicySyntax::Condition);
 impl<'a> Condition<'a> {
     #[must_use]
     pub fn kind(&self) -> Option<ConditionKind> {
-        self.node.children().find_map(|child| match child.value() {
+        self.node.children().find_map(|child| match child.kind() {
             PolicySyntax::When => Some(ConditionKind::When),
             PolicySyntax::Unless => Some(ConditionKind::Unless),
             _ => None,
@@ -163,7 +162,7 @@ impl<'a> Name<'a> {
     pub fn segments<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node
             .children()
-            .filter(|node| node.value().is_identifier())
+            .filter(|node| node.kind().is_identifier())
             .map(|node| &source[node.range()])
     }
 
@@ -171,7 +170,7 @@ impl<'a> Name<'a> {
     pub fn is_qualified(&self) -> bool {
         self.node
             .children()
-            .filter(|node| node.value().is_identifier())
+            .filter(|node| node.kind().is_identifier())
             .nth(1)
             .is_some()
     }
@@ -180,7 +179,7 @@ impl<'a> Name<'a> {
     pub fn basename<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .filter(|node| node.value().is_identifier())
+            .filter(|node| node.kind().is_identifier())
             .last()
             .map(|node| &source[node.range()])
     }
@@ -189,7 +188,7 @@ impl<'a> Name<'a> {
         let segments: alloc::vec::Vec<_> = self
             .node
             .children()
-            .filter(|node| node.value().is_identifier())
+            .filter(|node| node.kind().is_identifier())
             .collect();
 
         let count = segments.len().saturating_sub(1);
@@ -203,14 +202,14 @@ impl<'a> Name<'a> {
     pub fn has_reserved_segment(&self) -> bool {
         self.node
             .children()
-            .any(|node| node.value().is_reserved_word())
+            .any(|node| node.kind().is_reserved_word())
     }
 
     #[must_use]
     pub fn first_reserved_segment<'s>(&self, source: &'s str) -> Option<(&'s str, Range<usize>)> {
         self.node
             .children()
-            .find(|node| node.value().is_reserved_word())
+            .find(|node| node.kind().is_reserved_word())
             .map(|node| (&source[node.range()], node.range()))
     }
 }
@@ -402,7 +401,7 @@ impl<'a> CstNode<'a> for Expression<'a> {
     }
 
     fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        match node.value() {
+        match node.kind() {
             PolicySyntax::IfExpression => IfExpression::cast(node).map(Self::If),
             PolicySyntax::OrExpression => OrExpression::cast(node).map(Self::Or),
             PolicySyntax::AndExpression => AndExpression::cast(node).map(Self::And),
@@ -453,48 +452,31 @@ cst_node!(IfExpression, PolicySyntax::IfExpression);
 impl<'a> IfExpression<'a> {
     #[must_use]
     pub fn condition(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 
     #[must_use]
     pub fn then_expr(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
-            .nth(1)
+        self.node.children().filter_map(Expression::cast).nth(1)
     }
 
     #[must_use]
     pub fn else_expr(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
-            .nth(2)
+        self.node.children().filter_map(Expression::cast).nth(2)
     }
 }
 
 cst_node!(OrExpression, PolicySyntax::OrExpression);
 impl<'a> OrExpression<'a> {
     pub fn operands(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
+        self.node.children().filter_map(Expression::cast)
     }
 }
 
 cst_node!(AndExpression, PolicySyntax::AndExpression);
 impl<'a> AndExpression<'a> {
     pub fn operands(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
+        self.node.children().filter_map(Expression::cast)
     }
 }
 
@@ -502,58 +484,45 @@ cst_node!(RelationExpression, PolicySyntax::Relation);
 impl<'a> RelationExpression<'a> {
     #[must_use]
     pub fn left(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 
     #[must_use]
     pub fn operator(&self) -> Option<RelOp> {
         self.node
             .children()
-            .find_map(|child| RelOp::from_kind(child.value()))
+            .find_map(|child| RelOp::from_kind(child.kind()))
     }
 
     #[must_use]
     pub fn right(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
-            .nth(1)
+        self.node.children().filter_map(Expression::cast).nth(1)
     }
 }
 
 cst_node!(SumExpression, PolicySyntax::Sum);
 impl<'a> SumExpression<'a> {
     pub fn operands(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
+        self.node.children().filter_map(Expression::cast)
     }
 
     pub fn operators(&self) -> impl Iterator<Item = AddOp> + use<'a> {
         self.node
             .children()
-            .filter_map(|child| AddOp::from_kind(child.value()))
+            .filter_map(|child| AddOp::from_kind(child.kind()))
     }
 }
 
 cst_node!(ProductExpression, PolicySyntax::Product);
 impl<'a> ProductExpression<'a> {
     pub fn operands(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
+        self.node.children().filter_map(Expression::cast)
     }
 
     pub fn operators(&self) -> impl Iterator<Item = MulOp> + use<'a> {
         self.node
             .children()
-            .filter_map(|child| MulOp::from_kind(child.value()))
+            .filter_map(|child| MulOp::from_kind(child.kind()))
     }
 }
 
@@ -561,10 +530,7 @@ cst_node!(HasExpression, PolicySyntax::HasExpression);
 impl<'a> HasExpression<'a> {
     #[must_use]
     pub fn target(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 
     #[must_use]
@@ -572,13 +538,13 @@ impl<'a> HasExpression<'a> {
         self.node
             .children()
             .find(|child| {
-                child.value().is_token()
-                    && !child.value().is_trivial()
-                    && child.value() != PolicySyntax::Has
+                child.kind().is_token()
+                    && !child.kind().is_trivial()
+                    && child.kind() != PolicySyntax::Has
             })
             .map(|child| {
                 let text = &source[child.range()];
-                if child.value() == PolicySyntax::String {
+                if child.kind() == PolicySyntax::String {
                     (
                         text.get(1..text.len().saturating_sub(1)).unwrap_or(text),
                         true,
@@ -594,11 +560,11 @@ impl<'a> HasExpression<'a> {
         self.node
             .children()
             .find(|child| {
-                child.value().is_token()
-                    && !child.value().is_trivial()
-                    && child.value() != PolicySyntax::Has
+                child.kind().is_token()
+                    && !child.kind().is_trivial()
+                    && child.kind() != PolicySyntax::Has
             })
-            .is_some_and(|child| child.value().is_reserved_word())
+            .is_some_and(|child| child.kind().is_reserved_word())
     }
 }
 
@@ -606,17 +572,14 @@ cst_node!(LikeExpression, PolicySyntax::LikeExpression);
 impl<'a> LikeExpression<'a> {
     #[must_use]
     pub fn target(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 
     #[must_use]
     pub fn pattern<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|child| child.value() == PolicySyntax::String)
+            .find(|child| child.kind() == PolicySyntax::String)
             .map(|child| {
                 let text = &source[child.range()];
                 text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
@@ -628,17 +591,14 @@ cst_node!(IsExpression, PolicySyntax::IsExpression);
 impl<'a> IsExpression<'a> {
     #[must_use]
     pub fn target(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 
     #[must_use]
     pub fn entity_type(&self) -> Option<Name<'a>> {
         let mut found_is = false;
         for child in self.node.children() {
-            if child.value() == PolicySyntax::Is {
+            if child.kind() == PolicySyntax::Is {
                 found_is = true;
             } else if found_is && let Some(name) = Name::cast(child) {
                 return Some(name);
@@ -651,7 +611,7 @@ impl<'a> IsExpression<'a> {
     pub fn in_expr(&self) -> Option<Expression<'a>> {
         let mut found_in = false;
         for child in self.node.children() {
-            if child.value() == PolicySyntax::In {
+            if child.kind() == PolicySyntax::In {
                 found_in = true;
             } else if found_in && let Some(expr) = Expression::cast(child) {
                 return Some(expr);
@@ -667,15 +627,12 @@ impl<'a> UnaryExpression<'a> {
     pub fn operators(&self) -> impl Iterator<Item = UnaryOp> + use<'a> {
         self.node
             .children()
-            .filter_map(|child| UnaryOp::from_kind(child.value()))
+            .filter_map(|child| UnaryOp::from_kind(child.kind()))
     }
 
     #[must_use]
     pub fn operand(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 }
 
@@ -683,10 +640,7 @@ cst_node!(MemberExpression, PolicySyntax::Member);
 impl<'a> MemberExpression<'a> {
     #[must_use]
     pub fn base(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 
     pub fn accesses(&self) -> impl Iterator<Item = MemberAccess<'a>> + use<'a> {
@@ -712,7 +666,7 @@ impl<'a> CstNode<'a> for MemberAccess<'a> {
     }
 
     fn cast(node: PolicyNode<'a>) -> Option<Self> {
-        match node.value() {
+        match node.kind() {
             PolicySyntax::FieldAccess => FieldAccess::cast(node).map(Self::Field),
             PolicySyntax::MethodCall => MethodCall::cast(node).map(Self::Call),
             PolicySyntax::IndexAccess => IndexAccess::cast(node).map(Self::Index),
@@ -736,9 +690,9 @@ impl FieldAccess<'_> {
         self.node
             .children()
             .find(|child| {
-                child.value().is_token()
-                    && !child.value().is_trivial()
-                    && child.value() != PolicySyntax::Dot
+                child.kind().is_token()
+                    && !child.kind().is_trivial()
+                    && child.kind() != PolicySyntax::Dot
             })
             .map(|child| &source[child.range()])
     }
@@ -748,11 +702,11 @@ impl FieldAccess<'_> {
         self.node
             .children()
             .find(|child| {
-                child.value().is_token()
-                    && !child.value().is_trivial()
-                    && child.value() != PolicySyntax::Dot
+                child.kind().is_token()
+                    && !child.kind().is_trivial()
+                    && child.kind() != PolicySyntax::Dot
             })
-            .is_some_and(|child| child.value().is_reserved_word())
+            .is_some_and(|child| child.kind().is_reserved_word())
     }
 }
 
@@ -762,7 +716,7 @@ impl<'a> MethodCall<'a> {
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|child| child.value() == PolicySyntax::Identifier || child.value().is_keyword())
+            .find(|child| child.kind() == PolicySyntax::Identifier || child.kind().is_keyword())
             .map(|child| &source[child.range()])
     }
 
@@ -779,10 +733,7 @@ cst_node!(IndexAccess, PolicySyntax::IndexAccess);
 impl<'a> IndexAccess<'a> {
     #[must_use]
     pub fn index(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 }
 
@@ -790,7 +741,7 @@ cst_node!(LiteralExpression, PolicySyntax::Literal);
 impl LiteralExpression<'_> {
     #[must_use]
     pub fn kind(&self) -> Option<LiteralKind> {
-        self.node.children().find_map(|child| match child.value() {
+        self.node.children().find_map(|child| match child.kind() {
             PolicySyntax::True => Some(LiteralKind::Bool(true)),
             PolicySyntax::False => Some(LiteralKind::Bool(false)),
             PolicySyntax::Integer => Some(LiteralKind::Int),
@@ -801,7 +752,7 @@ impl LiteralExpression<'_> {
 
     #[must_use]
     pub fn as_bool(&self) -> Option<bool> {
-        self.node.children().find_map(|child| match child.value() {
+        self.node.children().find_map(|child| match child.kind() {
             PolicySyntax::True => Some(true),
             PolicySyntax::False => Some(false),
             _ => None,
@@ -812,7 +763,7 @@ impl LiteralExpression<'_> {
     pub fn as_int<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|child| child.value() == PolicySyntax::Integer)
+            .find(|child| child.kind() == PolicySyntax::Integer)
             .map(|child| &source[child.range()])
     }
 
@@ -820,7 +771,7 @@ impl LiteralExpression<'_> {
     pub fn as_string<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|child| child.value() == PolicySyntax::String)
+            .find(|child| child.kind() == PolicySyntax::String)
             .map(|child| {
                 let text = &source[child.range()];
                 text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
@@ -839,7 +790,7 @@ impl<'a> EntityRefExpression<'a> {
     pub fn id<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|child| child.value() == PolicySyntax::String)
+            .find(|child| child.kind() == PolicySyntax::String)
             .map(|child| {
                 let text = &source[child.range()];
                 text.get(1..text.len().saturating_sub(1)).unwrap_or(text)
@@ -855,7 +806,7 @@ cst_node!(SlotExpression, PolicySyntax::Slot);
 impl SlotExpression<'_> {
     #[must_use]
     pub fn kind(&self) -> Option<SlotKind> {
-        self.node.children().find_map(|child| match child.value() {
+        self.node.children().find_map(|child| match child.kind() {
             PolicySyntax::Principal => Some(SlotKind::Principal),
             PolicySyntax::Resource => Some(SlotKind::Resource),
             PolicySyntax::Identifier => Some(SlotKind::Other),
@@ -869,7 +820,7 @@ impl SlotExpression<'_> {
             .children()
             .find(|child| {
                 matches!(
-                    child.value(),
+                    child.kind(),
                     PolicySyntax::Identifier | PolicySyntax::Principal | PolicySyntax::Resource
                 )
             })
@@ -881,10 +832,7 @@ cst_node!(ParenExpression, PolicySyntax::Parenthesized);
 impl<'a> ParenExpression<'a> {
     #[must_use]
     pub fn inner(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 }
 
@@ -912,10 +860,10 @@ impl<'a> RecordEntry<'a> {
     pub fn key<'s>(&self, source: &'s str) -> Option<(&'s str, bool)> {
         self.node
             .children()
-            .find(|child| child.value().is_token() && !child.value().is_trivial())
+            .find(|child| child.kind().is_token() && !child.kind().is_trivial())
             .map(|child| {
                 let text = &source[child.range()];
-                if child.value() == PolicySyntax::String {
+                if child.kind() == PolicySyntax::String {
                     (
                         text.get(1..text.len().saturating_sub(1)).unwrap_or(text),
                         true,
@@ -930,25 +878,19 @@ impl<'a> RecordEntry<'a> {
     pub fn is_key_reserved(&self) -> bool {
         self.node
             .children()
-            .find(|child| child.value().is_token() && !child.value().is_trivial())
-            .is_some_and(|child| child.value().is_reserved_word())
+            .find(|child| child.kind().is_token() && !child.kind().is_trivial())
+            .is_some_and(|child| child.kind().is_reserved_word())
     }
 
     #[must_use]
     pub fn value(&self) -> Option<Expression<'a>> {
-        self.node
-            .children()
-            .skip_tokens()
-            .find_map(Expression::cast)
+        self.node.children().find_map(Expression::cast)
     }
 }
 
 cst_node!(ArgumentList, PolicySyntax::ArgumentList);
 impl<'a> ArgumentList<'a> {
     pub fn iter(&self) -> impl Iterator<Item = Expression<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(Expression::cast)
+        self.node.children().filter_map(Expression::cast)
     }
 }

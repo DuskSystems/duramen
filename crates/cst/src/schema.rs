@@ -1,13 +1,12 @@
-use syntree::{Builder, FlavorDefault, Node, Tree};
-
-use crate::CstNode;
+use crate::tree::{Node, Tree};
+use crate::{Builder, CstNode};
 
 mod syntax;
 pub use syntax::SchemaSyntax;
 
-pub type SchemaTree = Tree<SchemaSyntax, FlavorDefault>;
+pub type SchemaTree = Tree<SchemaSyntax>;
 pub type SchemaBuilder = Builder<SchemaSyntax>;
-pub type SchemaNode<'a> = Node<'a, SchemaSyntax, FlavorDefault>;
+pub type SchemaNode<'a> = Node<'a, SchemaSyntax>;
 
 macro_rules! cst_node {
     ($name:ident, $kind:expr) => {
@@ -24,7 +23,7 @@ macro_rules! cst_node {
             }
 
             fn cast(node: SchemaNode<'a>) -> Option<Self> {
-                Self::can_cast(node.value()).then_some(Self { node })
+                Self::can_cast(node.kind()).then_some(Self { node })
             }
 
             fn syntax(&self) -> SchemaNode<'a> {
@@ -37,31 +36,19 @@ macro_rules! cst_node {
 cst_node!(Schema, SchemaSyntax::Schema);
 impl<'a> Schema<'a> {
     pub fn namespaces(&self) -> impl Iterator<Item = NamespaceDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(NamespaceDecl::cast)
+        self.node.children().filter_map(NamespaceDecl::cast)
     }
 
     pub fn entities(&self) -> impl Iterator<Item = EntityDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(EntityDecl::cast)
+        self.node.children().filter_map(EntityDecl::cast)
     }
 
     pub fn actions(&self) -> impl Iterator<Item = ActionDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(ActionDecl::cast)
+        self.node.children().filter_map(ActionDecl::cast)
     }
 
     pub fn types(&self) -> impl Iterator<Item = TypeDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(TypeDecl::cast)
+        self.node.children().filter_map(TypeDecl::cast)
     }
 }
 
@@ -77,31 +64,19 @@ impl<'a> NamespaceDecl<'a> {
     }
 
     pub fn entities(&self) -> impl Iterator<Item = EntityDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(EntityDecl::cast)
+        self.node.children().filter_map(EntityDecl::cast)
     }
 
     pub fn actions(&self) -> impl Iterator<Item = ActionDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(ActionDecl::cast)
+        self.node.children().filter_map(ActionDecl::cast)
     }
 
     pub fn types(&self) -> impl Iterator<Item = TypeDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(TypeDecl::cast)
+        self.node.children().filter_map(TypeDecl::cast)
     }
 
     pub fn namespaces(&self) -> impl Iterator<Item = NamespaceDecl<'a>> + use<'a> {
-        self.node
-            .children()
-            .skip_tokens()
-            .filter_map(NamespaceDecl::cast)
+        self.node.children().filter_map(NamespaceDecl::cast)
     }
 }
 
@@ -124,7 +99,7 @@ impl<'a> EntityDecl<'a> {
     pub fn is_enum(&self) -> bool {
         self.node
             .children()
-            .any(|child| child.value() == SchemaSyntax::Enum)
+            .any(|child| child.kind() == SchemaSyntax::Enum)
     }
 
     #[must_use]
@@ -161,7 +136,7 @@ impl<'a> ActionDecl<'a> {
 
     pub fn action_names<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node.children().filter_map(|child| {
-            if child.value() == SchemaSyntax::String {
+            if child.kind() == SchemaSyntax::String {
                 let text = &source[child.range()];
                 text.get(1..text.len().saturating_sub(1))
             } else if let Some(name) = Name::cast(child) {
@@ -209,7 +184,7 @@ impl<'a> TypeDecl<'a> {
         self.node
             .children()
             .filter(move |node| {
-                if node.value() == SchemaSyntax::Name && !skipped_name {
+                if node.kind() == SchemaSyntax::Name && !skipped_name {
                     skipped_name = true;
                     false
                 } else {
@@ -226,7 +201,7 @@ impl Annotation<'_> {
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         self.node
             .children()
-            .find(|node| node.value() == SchemaSyntax::Identifier || node.value().is_name_keyword())
+            .find(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .map(|node| &source[node.range()])
     }
 
@@ -235,7 +210,7 @@ impl Annotation<'_> {
         let child = self
             .node
             .children()
-            .find(|child| child.value() == SchemaSyntax::String)?;
+            .find(|child| child.kind() == SchemaSyntax::String)?;
 
         let text = &source[child.range()];
         text.get(1..text.len().saturating_sub(1))
@@ -322,7 +297,7 @@ impl<'a> ActionParents<'a> {
             loop {
                 let child = children.next()?;
 
-                if child.value() == SchemaSyntax::String {
+                if child.kind() == SchemaSyntax::String {
                     let text = &source[child.range()];
                     let eid = text.get(1..text.len().saturating_sub(1));
                     return Some((None, eid));
@@ -332,11 +307,11 @@ impl<'a> ActionParents<'a> {
                     continue;
                 };
 
-                let eid = match children.peek().map(Node::value) {
+                let eid = match children.peek().map(Node::kind) {
                     Some(SchemaSyntax::Colon2) => {
                         children.next();
                         if let Some(string) = children.peek()
-                            && string.value() == SchemaSyntax::String
+                            && string.kind() == SchemaSyntax::String
                         {
                             let text = &source[string.range()];
                             children.next();
@@ -371,13 +346,13 @@ impl<'a> AttributeDecl<'a> {
     #[must_use]
     pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
         let child = self.node.children().find(|child| {
-            let kind = child.value();
+            let kind = child.kind();
             kind == SchemaSyntax::String || kind == SchemaSyntax::Identifier || kind.is_keyword()
         })?;
 
         let text = &source[child.range()];
 
-        if child.value() == SchemaSyntax::String {
+        if child.kind() == SchemaSyntax::String {
             text.get(1..text.len().saturating_sub(1))
         } else {
             Some(text)
@@ -388,7 +363,7 @@ impl<'a> AttributeDecl<'a> {
     pub fn is_optional(&self) -> bool {
         self.node
             .children()
-            .any(|child| child.value() == SchemaSyntax::Question)
+            .any(|child| child.kind() == SchemaSyntax::Question)
     }
 
     #[must_use]
@@ -406,9 +381,7 @@ impl<'a> Name<'a> {
     pub fn segments<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node
             .children()
-            .filter(|node| {
-                node.value() == SchemaSyntax::Identifier || node.value().is_name_keyword()
-            })
+            .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .map(|node| &source[node.range()])
     }
 
@@ -416,9 +389,7 @@ impl<'a> Name<'a> {
     pub fn is_qualified(&self) -> bool {
         self.node
             .children()
-            .filter(|node| {
-                node.value() == SchemaSyntax::Identifier || node.value().is_name_keyword()
-            })
+            .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .nth(1)
             .is_some()
     }
@@ -428,7 +399,7 @@ impl<'a> Name<'a> {
         if let Some(string_node) = self
             .node
             .children()
-            .find(|node| node.value() == SchemaSyntax::String)
+            .find(|node| node.kind() == SchemaSyntax::String)
         {
             let text = &source[string_node.range()];
             return text.get(1..text.len().saturating_sub(1));
@@ -436,9 +407,7 @@ impl<'a> Name<'a> {
 
         self.node
             .children()
-            .filter(|node| {
-                node.value() == SchemaSyntax::Identifier || node.value().is_name_keyword()
-            })
+            .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .last()
             .map(|node| &source[node.range()])
     }
@@ -447,9 +416,7 @@ impl<'a> Name<'a> {
         let segments: alloc::vec::Vec<_> = self
             .node
             .children()
-            .filter(|node| {
-                node.value() == SchemaSyntax::Identifier || node.value().is_name_keyword()
-            })
+            .filter(|node| node.kind() == SchemaSyntax::Identifier || node.kind().is_name_keyword())
             .collect();
 
         let count = segments.len().saturating_sub(1);
@@ -492,8 +459,8 @@ impl<'a> CstNode<'a> for TypeExpr<'a> {
     }
 
     fn cast(node: SchemaNode<'a>) -> Option<Self> {
-        match node.value() {
-            SchemaSyntax::TypeExpr => node.children().skip_tokens().find_map(Self::cast),
+        match node.kind() {
+            SchemaSyntax::TypeExpr => node.children().find_map(Self::cast),
             SchemaSyntax::SetType => SetType::cast(node).map(Self::Set),
             SchemaSyntax::RecordType => RecordType::cast(node).map(Self::Record),
             SchemaSyntax::EntityType => EntityType::cast(node).map(Self::Entity),
@@ -542,7 +509,7 @@ impl<'a> EnumType<'a> {
     pub fn variants<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
         self.node
             .children()
-            .filter(|node| node.value() == SchemaSyntax::EnumVariant)
+            .filter(|node| node.kind() == SchemaSyntax::EnumVariant)
             .filter_map(|node| {
                 let text = &source[node.range()];
                 text.get(1..text.len().saturating_sub(1))
