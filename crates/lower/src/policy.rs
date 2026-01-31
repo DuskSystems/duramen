@@ -4,7 +4,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::ops::Range;
 
-use duramen_cst::accessors::CstNode as _;
+use duramen_cst::CstNode as _;
 use duramen_diagnostics::{Diagnostic, Diagnostics};
 use {duramen_ast as ast, duramen_cst as cst};
 
@@ -28,7 +28,7 @@ impl<'a> PolicyLowerer<'a> {
     /// # Errors
     pub fn lower(
         mut self,
-        tree: &cst::PolicyTree,
+        tree: &cst::policy::PolicyTree,
     ) -> Result<(Vec<ast::policy::Template>, Diagnostics), Diagnostics> {
         let value = self.lower_policies(tree);
 
@@ -39,13 +39,10 @@ impl<'a> PolicyLowerer<'a> {
         }
     }
 
-    fn lower_policies(&mut self, tree: &cst::PolicyTree) -> Vec<ast::policy::Template> {
+    fn lower_policies(&mut self, tree: &cst::policy::PolicyTree) -> Vec<ast::policy::Template> {
         let mut templates = Vec::new();
 
-        let Some(policies) = tree
-            .children()
-            .find_map(cst::accessors::policy::Policies::cast)
-        else {
+        let Some(policies) = tree.children().find_map(cst::policy::Policies::cast) else {
             return templates;
         };
 
@@ -60,7 +57,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_policy(
         &mut self,
-        policy: &cst::accessors::policy::Policy<'_>,
+        policy: &cst::policy::Policy<'_>,
         index: usize,
     ) -> Option<ast::policy::Template> {
         let span = policy.range();
@@ -68,8 +65,8 @@ impl<'a> PolicyLowerer<'a> {
         let effect = policy
             .effect()
             .map(|eff| match eff {
-                cst::accessors::policy::Effect::Permit => ast::policy::Effect::Permit,
-                cst::accessors::policy::Effect::Forbid => ast::policy::Effect::Forbid,
+                cst::policy::Effect::Permit => ast::policy::Effect::Permit,
+                cst::policy::Effect::Forbid => ast::policy::Effect::Forbid,
             })
             .or_else(|| {
                 self.diagnostics
@@ -94,7 +91,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_scope(
         &mut self,
-        policy: &cst::accessors::policy::Policy<'_>,
+        policy: &cst::policy::Policy<'_>,
         span: Range<usize>,
     ) -> (
         ast::policy::PrincipalConstraint,
@@ -111,16 +108,16 @@ impl<'a> PolicyLowerer<'a> {
             };
 
             match variable {
-                cst::accessors::policy::Variable::Principal => {
+                cst::policy::Variable::Principal => {
                     principal = Some(self.lower_principal(&var_def));
                 }
-                cst::accessors::policy::Variable::Action => {
+                cst::policy::Variable::Action => {
                     action = Some(self.lower_action_constraint(&var_def));
                 }
-                cst::accessors::policy::Variable::Resource => {
+                cst::policy::Variable::Resource => {
                     resource = Some(self.lower_resource(&var_def));
                 }
-                cst::accessors::policy::Variable::Context => {}
+                cst::policy::Variable::Context => {}
             }
         }
 
@@ -147,10 +144,7 @@ impl<'a> PolicyLowerer<'a> {
         (principal, action, resource)
     }
 
-    fn lower_conditions(
-        &mut self,
-        policy: &cst::accessors::policy::Policy<'_>,
-    ) -> Vec<ast::policy::Clause> {
+    fn lower_conditions(&mut self, policy: &cst::policy::Policy<'_>) -> Vec<ast::policy::Clause> {
         let mut clauses: Vec<ast::policy::Clause> = Vec::new();
 
         for condition in policy.conditions() {
@@ -169,8 +163,8 @@ impl<'a> PolicyLowerer<'a> {
             };
 
             let clause_kind = match kind {
-                cst::accessors::policy::ConditionKind::When => ast::policy::ClauseKind::When,
-                cst::accessors::policy::ConditionKind::Unless => ast::policy::ClauseKind::Unless,
+                cst::policy::ConditionKind::When => ast::policy::ClauseKind::When,
+                cst::policy::ConditionKind::Unless => ast::policy::ClauseKind::Unless,
             };
 
             clauses.push(ast::policy::Clause::new(clause_kind, expr));
@@ -181,7 +175,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_annotations(
         &mut self,
-        policy: &cst::accessors::policy::Policy<'_>,
+        policy: &cst::policy::Policy<'_>,
         index: usize,
     ) -> (ast::common::Annotations, ast::policy::PolicyId) {
         let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
@@ -235,7 +229,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_principal(
         &mut self,
-        var_def: &cst::accessors::policy::VariableDef<'_>,
+        var_def: &cst::policy::VariableDef<'_>,
     ) -> ast::policy::PrincipalConstraint {
         let constraint = self.lower_principal_or_resource(var_def, ast::policy::SlotId::Principal);
         ast::policy::PrincipalConstraint::new(constraint)
@@ -243,7 +237,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_resource(
         &mut self,
-        var_def: &cst::accessors::policy::VariableDef<'_>,
+        var_def: &cst::policy::VariableDef<'_>,
     ) -> ast::policy::ResourceConstraint {
         let constraint = self.lower_principal_or_resource(var_def, ast::policy::SlotId::Resource);
         ast::policy::ResourceConstraint::new(constraint)
@@ -251,7 +245,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_principal_or_resource(
         &mut self,
-        var_def: &cst::accessors::policy::VariableDef<'_>,
+        var_def: &cst::policy::VariableDef<'_>,
         slot_id: ast::policy::SlotId,
     ) -> ast::policy::PrincipalOrResourceConstraint {
         let span = var_def.range();
@@ -273,14 +267,14 @@ impl<'a> PolicyLowerer<'a> {
                 ast::policy::PrincipalOrResourceConstraint::Is(entity_type)
             }
 
-            (Some(cst::accessors::policy::RelOp::Eq), Some(expr), None) => {
+            (Some(cst::policy::RelOp::Eq), Some(expr), None) => {
                 self.lower_entity_or_slot(&expr, slot_id).map_or(
                     ast::policy::PrincipalOrResourceConstraint::Any,
                     ast::policy::PrincipalOrResourceConstraint::Eq,
                 )
             }
 
-            (Some(cst::accessors::policy::RelOp::In), Some(expr), None) => {
+            (Some(cst::policy::RelOp::In), Some(expr), None) => {
                 self.lower_entity_or_slot(&expr, slot_id).map_or(
                     ast::policy::PrincipalOrResourceConstraint::Any,
                     ast::policy::PrincipalOrResourceConstraint::In,
@@ -288,7 +282,7 @@ impl<'a> PolicyLowerer<'a> {
             }
 
             (
-                Some(cst::accessors::policy::RelOp::Eq | cst::accessors::policy::RelOp::In),
+                Some(cst::policy::RelOp::Eq | cst::policy::RelOp::In),
                 Some(expr),
                 Some(entity_type),
             ) => match self.lower_entity_or_slot(&expr, slot_id) {
@@ -320,7 +314,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_action_constraint(
         &mut self,
-        var_def: &cst::accessors::policy::VariableDef<'_>,
+        var_def: &cst::policy::VariableDef<'_>,
     ) -> ast::policy::ActionConstraint {
         let span = var_def.range();
         let operator = var_def.operator();
@@ -329,14 +323,14 @@ impl<'a> PolicyLowerer<'a> {
         match (operator, constraint_expr) {
             (None, None) => ast::policy::ActionConstraint::any(),
 
-            (Some(cst::accessors::policy::RelOp::Eq), Some(expr)) => {
+            (Some(cst::policy::RelOp::Eq), Some(expr)) => {
                 self.lower_constraint_entity_ref(&expr).map_or_else(
                     ast::policy::ActionConstraint::any,
                     ast::policy::ActionConstraint::equal,
                 )
             }
 
-            (Some(cst::accessors::policy::RelOp::In), Some(expr)) => {
+            (Some(cst::policy::RelOp::In), Some(expr)) => {
                 let actions = self.lower_action_list(&expr);
                 ast::policy::ActionConstraint::is_in(actions)
             }
@@ -363,30 +357,28 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_entity_or_slot(
         &mut self,
-        expr: &cst::accessors::policy::Expression<'_>,
+        expr: &cst::policy::Expression<'_>,
         slot_id: ast::policy::SlotId,
     ) -> Option<ast::policy::EntityReference> {
         match expr {
-            cst::accessors::policy::Expression::EntityRef(entity_ref) => {
+            cst::policy::Expression::EntityRef(entity_ref) => {
                 let uid = self.lower_entity_ref_node(entity_ref)?;
                 Some(ast::policy::EntityReference::euid(uid))
             }
-            cst::accessors::policy::Expression::Slot(slot) => {
+            cst::policy::Expression::Slot(slot) => {
                 let kind = slot.kind()?;
                 match kind {
-                    cst::accessors::policy::SlotKind::Principal
+                    cst::policy::SlotKind::Principal
                         if slot_id == ast::policy::SlotId::Principal =>
                     {
                         Some(ast::policy::EntityReference::Slot)
                     }
-                    cst::accessors::policy::SlotKind::Resource
-                        if slot_id == ast::policy::SlotId::Resource =>
-                    {
+                    cst::policy::SlotKind::Resource if slot_id == ast::policy::SlotId::Resource => {
                         Some(ast::policy::EntityReference::Slot)
                     }
-                    cst::accessors::policy::SlotKind::Principal
-                    | cst::accessors::policy::SlotKind::Resource
-                    | cst::accessors::policy::SlotKind::Other => {
+                    cst::policy::SlotKind::Principal
+                    | cst::policy::SlotKind::Resource
+                    | cst::policy::SlotKind::Other => {
                         if let Some(name) = slot.name(self.source) {
                             self.diagnostics
                                 .push(Diagnostic::invalid_slot_id(name, slot.range()));
@@ -405,9 +397,9 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_constraint_entity_ref(
         &mut self,
-        expr: &cst::accessors::policy::Expression<'_>,
+        expr: &cst::policy::Expression<'_>,
     ) -> Option<ast::common::EntityUid> {
-        if let cst::accessors::policy::Expression::EntityRef(entity_ref) = expr {
+        if let cst::policy::Expression::EntityRef(entity_ref) = expr {
             self.lower_entity_ref_node(entity_ref)
         } else {
             self.diagnostics
@@ -418,19 +410,19 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_action_list(
         &mut self,
-        expr: &cst::accessors::policy::Expression<'_>,
+        expr: &cst::policy::Expression<'_>,
     ) -> Vec<ast::common::EntityUid> {
         let mut actions = Vec::new();
 
         match expr {
-            cst::accessors::policy::Expression::List(list) => {
+            cst::policy::Expression::List(list) => {
                 for elem in list.elements() {
                     if let Some(uid) = self.lower_constraint_entity_ref(&elem) {
                         actions.push(uid);
                     }
                 }
             }
-            cst::accessors::policy::Expression::EntityRef(entity_ref) => {
+            cst::policy::Expression::EntityRef(entity_ref) => {
                 if let Some(uid) = self.lower_entity_ref_node(entity_ref) {
                     actions.push(uid);
                 }
@@ -446,7 +438,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_entity_ref_node(
         &mut self,
-        entity_ref: &cst::accessors::policy::EntityRefExpression<'_>,
+        entity_ref: &cst::policy::EntityRefExpression<'_>,
     ) -> Option<ast::common::EntityUid> {
         let type_name = entity_ref.type_name()?;
         let entity_type = lower_entity_type(&type_name, self.source)?;
@@ -466,45 +458,35 @@ impl<'a> PolicyLowerer<'a> {
         ))
     }
 
-    fn lower_expr(
-        &mut self,
-        expr: &cst::accessors::policy::Expression<'_>,
-    ) -> Option<ast::policy::Expr> {
+    fn lower_expr(&mut self, expr: &cst::policy::Expression<'_>) -> Option<ast::policy::Expr> {
         match expr {
-            cst::accessors::policy::Expression::If(if_expr) => self.lower_if(if_expr),
-            cst::accessors::policy::Expression::Or(or_expr) => self.lower_or(or_expr),
-            cst::accessors::policy::Expression::And(and_expr) => self.lower_and(and_expr),
-            cst::accessors::policy::Expression::Relation(rel_expr) => self.lower_relation(rel_expr),
-            cst::accessors::policy::Expression::Sum(sum_expr) => self.lower_sum(sum_expr),
-            cst::accessors::policy::Expression::Product(prod_expr) => self.lower_product(prod_expr),
-            cst::accessors::policy::Expression::Has(has_expr) => self.lower_has(has_expr),
-            cst::accessors::policy::Expression::Like(like_expr) => self.lower_like(like_expr),
-            cst::accessors::policy::Expression::Is(is_expr) => self.lower_is(is_expr),
-            cst::accessors::policy::Expression::Unary(unary_expr) => self.lower_unary(unary_expr),
-            cst::accessors::policy::Expression::Member(member_expr) => {
-                self.lower_member(member_expr)
-            }
-            cst::accessors::policy::Expression::Literal(lit_expr) => self.lower_literal(lit_expr),
-            cst::accessors::policy::Expression::EntityRef(entity_ref) => {
+            cst::policy::Expression::If(if_expr) => self.lower_if(if_expr),
+            cst::policy::Expression::Or(or_expr) => self.lower_or(or_expr),
+            cst::policy::Expression::And(and_expr) => self.lower_and(and_expr),
+            cst::policy::Expression::Relation(rel_expr) => self.lower_relation(rel_expr),
+            cst::policy::Expression::Sum(sum_expr) => self.lower_sum(sum_expr),
+            cst::policy::Expression::Product(prod_expr) => self.lower_product(prod_expr),
+            cst::policy::Expression::Has(has_expr) => self.lower_has(has_expr),
+            cst::policy::Expression::Like(like_expr) => self.lower_like(like_expr),
+            cst::policy::Expression::Is(is_expr) => self.lower_is(is_expr),
+            cst::policy::Expression::Unary(unary_expr) => self.lower_unary(unary_expr),
+            cst::policy::Expression::Member(member_expr) => self.lower_member(member_expr),
+            cst::policy::Expression::Literal(lit_expr) => self.lower_literal(lit_expr),
+            cst::policy::Expression::EntityRef(entity_ref) => {
                 self.lower_entity_ref_expr(entity_ref)
             }
-            cst::accessors::policy::Expression::Slot(slot_expr) => self.lower_slot(slot_expr),
-            cst::accessors::policy::Expression::Paren(paren_expr) => {
+            cst::policy::Expression::Slot(slot_expr) => self.lower_slot(slot_expr),
+            cst::policy::Expression::Paren(paren_expr) => {
                 let inner = paren_expr.inner()?;
                 self.lower_expr(&inner)
             }
-            cst::accessors::policy::Expression::List(list_expr) => Some(self.lower_list(list_expr)),
-            cst::accessors::policy::Expression::Record(record_expr) => {
-                self.lower_record(record_expr)
-            }
-            cst::accessors::policy::Expression::Name(name) => self.lower_name_expr(name),
+            cst::policy::Expression::List(list_expr) => Some(self.lower_list(list_expr)),
+            cst::policy::Expression::Record(record_expr) => self.lower_record(record_expr),
+            cst::policy::Expression::Name(name) => self.lower_name_expr(name),
         }
     }
 
-    fn lower_name_expr(
-        &mut self,
-        name: &cst::accessors::policy::Name<'_>,
-    ) -> Option<ast::policy::Expr> {
+    fn lower_name_expr(&mut self, name: &cst::policy::Name<'_>) -> Option<ast::policy::Expr> {
         let basename = name.basename(self.source)?;
         let var = match basename {
             "principal" => ast::policy::Var::Principal,
@@ -529,10 +511,7 @@ impl<'a> PolicyLowerer<'a> {
         Some(ast::policy::Expr::var(var))
     }
 
-    fn lower_if(
-        &mut self,
-        if_expr: &cst::accessors::policy::IfExpression<'_>,
-    ) -> Option<ast::policy::Expr> {
+    fn lower_if(&mut self, if_expr: &cst::policy::IfExpression<'_>) -> Option<ast::policy::Expr> {
         let cond = if_expr.condition()?;
         let then_expr = if_expr.then_expr()?;
         let else_expr = if_expr.else_expr()?;
@@ -544,10 +523,7 @@ impl<'a> PolicyLowerer<'a> {
         Some(ast::policy::Expr::if_then_else(cond, then_expr, else_expr))
     }
 
-    fn lower_or(
-        &mut self,
-        or_expr: &cst::accessors::policy::OrExpression<'_>,
-    ) -> Option<ast::policy::Expr> {
+    fn lower_or(&mut self, or_expr: &cst::policy::OrExpression<'_>) -> Option<ast::policy::Expr> {
         let mut operands = or_expr.operands();
 
         let first = operands.next()?;
@@ -563,7 +539,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_and(
         &mut self,
-        and_expr: &cst::accessors::policy::AndExpression<'_>,
+        and_expr: &cst::policy::AndExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let mut operands = and_expr.operands();
 
@@ -580,7 +556,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_relation(
         &mut self,
-        rel_expr: &cst::accessors::policy::RelationExpression<'_>,
+        rel_expr: &cst::policy::RelationExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let left = rel_expr.left()?;
         let right = rel_expr.right()?;
@@ -590,26 +566,26 @@ impl<'a> PolicyLowerer<'a> {
         let right = self.lower_expr(&right)?;
 
         let expr = match operator {
-            cst::accessors::policy::RelOp::Eq => {
+            cst::policy::RelOp::Eq => {
                 ast::policy::Expr::binary(ast::policy::BinaryOp::Eq, left, right)
             }
-            cst::accessors::policy::RelOp::NotEq => ast::policy::Expr::unary(
+            cst::policy::RelOp::NotEq => ast::policy::Expr::unary(
                 ast::policy::UnaryOp::Not,
                 ast::policy::Expr::binary(ast::policy::BinaryOp::Eq, left, right),
             ),
-            cst::accessors::policy::RelOp::Less => {
+            cst::policy::RelOp::Less => {
                 ast::policy::Expr::binary(ast::policy::BinaryOp::Less, left, right)
             }
-            cst::accessors::policy::RelOp::LessEq => {
+            cst::policy::RelOp::LessEq => {
                 ast::policy::Expr::binary(ast::policy::BinaryOp::LessEq, left, right)
             }
-            cst::accessors::policy::RelOp::Greater => {
+            cst::policy::RelOp::Greater => {
                 ast::policy::Expr::binary(ast::policy::BinaryOp::Greater, left, right)
             }
-            cst::accessors::policy::RelOp::GreaterEq => {
+            cst::policy::RelOp::GreaterEq => {
                 ast::policy::Expr::binary(ast::policy::BinaryOp::GreaterEq, left, right)
             }
-            cst::accessors::policy::RelOp::In => {
+            cst::policy::RelOp::In => {
                 ast::policy::Expr::binary(ast::policy::BinaryOp::In, left, right)
             }
         };
@@ -619,7 +595,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_sum(
         &mut self,
-        sum_expr: &cst::accessors::policy::SumExpression<'_>,
+        sum_expr: &cst::policy::SumExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let mut operands = sum_expr.operands();
         let mut operators = sum_expr.operators();
@@ -632,10 +608,10 @@ impl<'a> PolicyLowerer<'a> {
             let right = self.lower_expr(&operand)?;
 
             result = match operator {
-                cst::accessors::policy::AddOp::Plus => {
+                cst::policy::AddOp::Plus => {
                     ast::policy::Expr::binary(ast::policy::BinaryOp::Add, result, right)
                 }
-                cst::accessors::policy::AddOp::Minus => {
+                cst::policy::AddOp::Minus => {
                     ast::policy::Expr::binary(ast::policy::BinaryOp::Sub, result, right)
                 }
             };
@@ -646,7 +622,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_product(
         &mut self,
-        prod_expr: &cst::accessors::policy::ProductExpression<'_>,
+        prod_expr: &cst::policy::ProductExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let mut operands = prod_expr.operands();
         let mut operators = prod_expr.operators();
@@ -659,15 +635,15 @@ impl<'a> PolicyLowerer<'a> {
             let right = self.lower_expr(&operand)?;
 
             result = match operator {
-                cst::accessors::policy::MulOp::Times => {
+                cst::policy::MulOp::Times => {
                     ast::policy::Expr::binary(ast::policy::BinaryOp::Mul, result, right)
                 }
-                cst::accessors::policy::MulOp::Divide => {
+                cst::policy::MulOp::Divide => {
                     self.diagnostics
                         .push(Diagnostic::unknown_method("/", prod_expr.range()));
                     return None;
                 }
-                cst::accessors::policy::MulOp::Mod => {
+                cst::policy::MulOp::Mod => {
                     self.diagnostics
                         .push(Diagnostic::unknown_method("%", prod_expr.range()));
                     return None;
@@ -680,7 +656,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_has(
         &mut self,
-        has_expr: &cst::accessors::policy::HasExpression<'_>,
+        has_expr: &cst::policy::HasExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let target = has_expr.target()?;
         let span = has_expr.range();
@@ -703,7 +679,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_like(
         &mut self,
-        like_expr: &cst::accessors::policy::LikeExpression<'_>,
+        like_expr: &cst::policy::LikeExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let target = like_expr.target()?;
         let pattern_str = like_expr.pattern(self.source)?;
@@ -721,10 +697,7 @@ impl<'a> PolicyLowerer<'a> {
         Some(ast::policy::Expr::like(target, pattern))
     }
 
-    fn lower_is(
-        &mut self,
-        is_expr: &cst::accessors::policy::IsExpression<'_>,
-    ) -> Option<ast::policy::Expr> {
+    fn lower_is(&mut self, is_expr: &cst::policy::IsExpression<'_>) -> Option<ast::policy::Expr> {
         let target_cst = is_expr.target()?;
         let entity_type_name = is_expr.entity_type()?;
 
@@ -741,7 +714,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_unary(
         &mut self,
-        unary_expr: &cst::accessors::policy::UnaryExpression<'_>,
+        unary_expr: &cst::policy::UnaryExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         const MAX_OPERATORS: usize = 4;
 
@@ -751,8 +724,8 @@ impl<'a> PolicyLowerer<'a> {
         let mut neg_count: usize = 0;
         for op in &operators {
             match op {
-                cst::accessors::policy::UnaryOp::Not => not_count = not_count.saturating_add(1),
-                cst::accessors::policy::UnaryOp::Neg => neg_count = neg_count.saturating_add(1),
+                cst::policy::UnaryOp::Not => not_count = not_count.saturating_add(1),
+                cst::policy::UnaryOp::Neg => neg_count = neg_count.saturating_add(1),
             }
         }
 
@@ -774,8 +747,8 @@ impl<'a> PolicyLowerer<'a> {
         let operand = unary_expr.operand()?;
 
         if neg_count > 0
-            && let cst::accessors::policy::Expression::Literal(lit_expr) = &operand
-            && lit_expr.kind() == Some(cst::accessors::policy::LiteralKind::Int)
+            && let cst::policy::Expression::Literal(lit_expr) = &operand
+            && lit_expr.kind() == Some(cst::policy::LiteralKind::Int)
             && let Some(text) = lit_expr.as_int(self.source)
         {
             return self.lower_negated_integer(text, neg_count, not_count, lit_expr.range());
@@ -784,10 +757,10 @@ impl<'a> PolicyLowerer<'a> {
         let mut result = self.lower_expr(&operand)?;
         for operator in operators.into_iter().rev() {
             result = match operator {
-                cst::accessors::policy::UnaryOp::Not => {
+                cst::policy::UnaryOp::Not => {
                     ast::policy::Expr::unary(ast::policy::UnaryOp::Not, result)
                 }
-                cst::accessors::policy::UnaryOp::Neg => {
+                cst::policy::UnaryOp::Neg => {
                     ast::policy::Expr::unary(ast::policy::UnaryOp::Neg, result)
                 }
             };
@@ -839,16 +812,16 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_member(
         &mut self,
-        member_expr: &cst::accessors::policy::MemberExpression<'_>,
+        member_expr: &cst::policy::MemberExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let base = member_expr.base()?;
         let mut accesses = member_expr.accesses().peekable();
 
-        if let cst::accessors::policy::Expression::Name(name) = &base
+        if let cst::policy::Expression::Name(name) = &base
             && !name.is_qualified()
             && let Some(fn_name) = name.basename(self.source)
             && is_extension_function(fn_name)
-            && let Some(cst::accessors::policy::MemberAccess::Call(method_call)) = accesses.peek()
+            && let Some(cst::policy::MemberAccess::Call(method_call)) = accesses.peek()
         {
             let fn_name_ast =
                 ast::common::Name::unqualified(ast::common::Id::new(String::from(fn_name)));
@@ -865,7 +838,7 @@ impl<'a> PolicyLowerer<'a> {
 
             for access in accesses {
                 result = match access {
-                    cst::accessors::policy::MemberAccess::Field(field_access) => {
+                    cst::policy::MemberAccess::Field(field_access) => {
                         let span = field_access.range();
 
                         if field_access.is_field_reserved() {
@@ -880,10 +853,10 @@ impl<'a> PolicyLowerer<'a> {
                         let field = self.unescape_field(field, false, span)?;
                         ast::policy::Expr::get_attr(result, field)
                     }
-                    cst::accessors::policy::MemberAccess::Call(method_call) => {
+                    cst::policy::MemberAccess::Call(method_call) => {
                         self.lower_method_call(result, &method_call)?
                     }
-                    cst::accessors::policy::MemberAccess::Index(index_access) => {
+                    cst::policy::MemberAccess::Index(index_access) => {
                         let index = index_access.index()?;
                         let index = self.lower_expr(&index)?;
                         if let Some(key) = extract_string_literal(&index) {
@@ -907,7 +880,7 @@ impl<'a> PolicyLowerer<'a> {
 
         for access in accesses {
             result = match access {
-                cst::accessors::policy::MemberAccess::Field(field_access) => {
+                cst::policy::MemberAccess::Field(field_access) => {
                     let span = field_access.range();
 
                     if field_access.is_field_reserved() {
@@ -922,10 +895,10 @@ impl<'a> PolicyLowerer<'a> {
                     let field = self.unescape_field(field, false, span)?;
                     ast::policy::Expr::get_attr(result, field)
                 }
-                cst::accessors::policy::MemberAccess::Call(method_call) => {
+                cst::policy::MemberAccess::Call(method_call) => {
                     self.lower_method_call(result, &method_call)?
                 }
-                cst::accessors::policy::MemberAccess::Index(index_access) => {
+                cst::policy::MemberAccess::Index(index_access) => {
                     let index = index_access.index()?;
                     let index = self.lower_expr(&index)?;
                     if let Some(key) = extract_string_literal(&index) {
@@ -948,7 +921,7 @@ impl<'a> PolicyLowerer<'a> {
     fn lower_method_call(
         &mut self,
         receiver: ast::policy::Expr,
-        method_call: &cst::accessors::policy::MethodCall<'_>,
+        method_call: &cst::policy::MethodCall<'_>,
     ) -> Option<ast::policy::Expr> {
         let span = method_call.range();
         let method_name = method_call.name(self.source)?;
@@ -1034,20 +1007,18 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_literal(
         &mut self,
-        lit_expr: &cst::accessors::policy::LiteralExpression<'_>,
+        lit_expr: &cst::policy::LiteralExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let kind = lit_expr.kind()?;
 
         match kind {
-            cst::accessors::policy::LiteralKind::Bool(value) => {
-                Some(ast::policy::Expr::bool(value))
-            }
-            cst::accessors::policy::LiteralKind::Int => {
+            cst::policy::LiteralKind::Bool(value) => Some(ast::policy::Expr::bool(value)),
+            cst::policy::LiteralKind::Int => {
                 let text = lit_expr.as_int(self.source)?;
                 let value = self.parse_integer(text, lit_expr.range())?;
                 Some(ast::policy::Expr::long(value))
             }
-            cst::accessors::policy::LiteralKind::String => {
+            cst::policy::LiteralKind::String => {
                 let text = lit_expr.as_string(self.source)?;
                 let value = StringUnescaper::new(text).unescape().or_else(|| {
                     self.diagnostics.push(Diagnostic::invalid_string_escape(
@@ -1064,7 +1035,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_entity_ref_expr(
         &mut self,
-        entity_ref: &cst::accessors::policy::EntityRefExpression<'_>,
+        entity_ref: &cst::policy::EntityRefExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let type_name = entity_ref.type_name()?;
 
@@ -1104,18 +1075,18 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_slot(
         &mut self,
-        slot_expr: &cst::accessors::policy::SlotExpression<'_>,
+        slot_expr: &cst::policy::SlotExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let kind = slot_expr.kind()?;
 
         match kind {
-            cst::accessors::policy::SlotKind::Principal => {
+            cst::policy::SlotKind::Principal => {
                 Some(ast::policy::Expr::slot(ast::policy::SlotId::Principal))
             }
-            cst::accessors::policy::SlotKind::Resource => {
+            cst::policy::SlotKind::Resource => {
                 Some(ast::policy::Expr::slot(ast::policy::SlotId::Resource))
             }
-            cst::accessors::policy::SlotKind::Other => {
+            cst::policy::SlotKind::Other => {
                 if let Some(name) = slot_expr.name(self.source) {
                     self.diagnostics
                         .push(Diagnostic::invalid_slot_id(name, slot_expr.range()));
@@ -1125,10 +1096,7 @@ impl<'a> PolicyLowerer<'a> {
         }
     }
 
-    fn lower_list(
-        &mut self,
-        list_expr: &cst::accessors::policy::ListExpression<'_>,
-    ) -> ast::policy::Expr {
+    fn lower_list(&mut self, list_expr: &cst::policy::ListExpression<'_>) -> ast::policy::Expr {
         let mut elements = Vec::new();
 
         for elem in list_expr.elements() {
@@ -1142,7 +1110,7 @@ impl<'a> PolicyLowerer<'a> {
 
     fn lower_record(
         &mut self,
-        record_expr: &cst::accessors::policy::RecordExpression<'_>,
+        record_expr: &cst::policy::RecordExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let mut fields = BTreeMap::new();
         let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
@@ -1219,7 +1187,7 @@ impl<'a> PolicyLowerer<'a> {
     }
 }
 
-fn lower_name(name: &cst::accessors::policy::Name<'_>, source: &str) -> Option<ast::common::Name> {
+fn lower_name(name: &cst::policy::Name<'_>, source: &str) -> Option<ast::common::Name> {
     let segments: Vec<&str> = name.segments(source).collect();
     if segments.is_empty() {
         return None;
@@ -1237,7 +1205,7 @@ fn lower_name(name: &cst::accessors::policy::Name<'_>, source: &str) -> Option<a
 }
 
 fn lower_entity_type(
-    name: &cst::accessors::policy::Name<'_>,
+    name: &cst::policy::Name<'_>,
     source: &str,
 ) -> Option<ast::common::EntityType> {
     lower_name(name, source).map(ast::common::EntityType::new)

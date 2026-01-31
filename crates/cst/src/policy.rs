@@ -1,5 +1,15 @@
-use super::CstNode;
-use crate::{PolicyNode, PolicySyntax};
+use core::ops::Range;
+
+use syntree::{Builder, FlavorDefault, Node, Tree};
+
+use crate::CstNode;
+
+mod syntax;
+pub use syntax::PolicySyntax;
+
+pub type PolicyTree = Tree<PolicySyntax, FlavorDefault>;
+pub type PolicyBuilder = Builder<PolicySyntax>;
+pub type PolicyNode<'a> = Node<'a, PolicySyntax, FlavorDefault>;
 
 macro_rules! cst_node {
     ($name:ident, $kind:expr) => {
@@ -148,22 +158,6 @@ impl<'a> Condition<'a> {
     }
 }
 
-cst_node!(Extension, PolicySyntax::Extension);
-impl<'a> Extension<'a> {
-    #[must_use]
-    pub fn name<'s>(&self, source: &'s str) -> Option<&'s str> {
-        self.node
-            .children()
-            .find(|child| child.value() == PolicySyntax::Identifier)
-            .map(|child| &source[child.range()])
-    }
-
-    #[must_use]
-    pub fn expr(&self) -> Option<Expression<'a>> {
-        self.node.children().find_map(Expression::cast)
-    }
-}
-
 cst_node!(Name, PolicySyntax::Name);
 impl<'a> Name<'a> {
     pub fn segments<'s>(&self, source: &'s str) -> impl Iterator<Item = &'s str> + use<'a, 's> {
@@ -213,10 +207,7 @@ impl<'a> Name<'a> {
     }
 
     #[must_use]
-    pub fn first_reserved_segment<'s>(
-        &self,
-        source: &'s str,
-    ) -> Option<(&'s str, core::ops::Range<usize>)> {
+    pub fn first_reserved_segment<'s>(&self, source: &'s str) -> Option<(&'s str, Range<usize>)> {
         self.node
             .children()
             .find(|node| node.value().is_reserved_word())

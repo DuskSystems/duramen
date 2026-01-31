@@ -1,9 +1,7 @@
 use alloc::string::String;
 
-use duramen_cst::accessors::CstNode as _;
-use duramen_cst::accessors::policy::Policies;
-use duramen_cst::syntax::policy::PolicySyntax;
-use duramen_cst::{PolicyBuilder, PolicyTree};
+use duramen_cst::CstNode as _;
+use duramen_cst::policy::{Policies, PolicyBuilder, PolicySyntax, PolicyTree};
 use duramen_lexer::{Lexer, Token, TokenKind};
 
 use crate::advance::Advance;
@@ -182,38 +180,8 @@ impl<'a> PolicyParser<'a> {
             self.advance.pop(self.position, self.current.kind);
         }
 
-        if self.current.kind == TokenKind::Identifier {
-            self.extension()?;
-        }
-
         if self.current.kind == TokenKind::Semicolon {
             self.bump()?;
-        }
-
-        self.builder.close()?;
-        Ok(())
-    }
-
-    /// Parses an extension clause.
-    ///
-    /// ```cedar
-    /// advice { "message" }
-    /// ```
-    fn extension(&mut self) -> Result<(), duramen_cst::Error> {
-        self.builder.open(PolicySyntax::Extension)?;
-
-        self.bump()?;
-
-        if self.current.kind == TokenKind::OpenBrace {
-            self.bump()?;
-
-            if self.current.kind != TokenKind::CloseBrace {
-                self.expr()?;
-            }
-
-            if self.current.kind == TokenKind::CloseBrace {
-                self.bump()?;
-            }
         }
 
         self.builder.close()?;
@@ -779,18 +747,16 @@ impl<'a> PolicyParser<'a> {
     /// User::"alice"
     /// ```
     fn name(&mut self) -> Result<(), duramen_cst::Error> {
-        let outer_checkpoint = self.builder.checkpoint()?;
-        let name_checkpoint = self.builder.checkpoint()?;
+        let checkpoint = self.builder.checkpoint()?;
+
+        self.builder.open(PolicySyntax::Name)?;
 
         if self.current.kind.is_identifier() {
             self.bump()?;
 
             while self.current.kind == TokenKind::Colon2 {
-                let is_entity_ref = self.peek_entity_ref();
-
-                if is_entity_ref {
-                    self.builder
-                        .close_at(&name_checkpoint, PolicySyntax::Name)?;
+                if self.peek_entity_ref() {
+                    self.builder.close()?;
 
                     self.advance.push(self.position);
                     self.bump()?;
@@ -800,7 +766,7 @@ impl<'a> PolicyParser<'a> {
 
                         self.advance.pop(self.position, self.current.kind);
                         self.builder
-                            .close_at(&outer_checkpoint, PolicySyntax::EntityReference)?;
+                            .close_at(&checkpoint, PolicySyntax::EntityReference)?;
 
                         return Ok(());
                     } else if self.current.kind == TokenKind::OpenBrace {
@@ -826,7 +792,7 @@ impl<'a> PolicyParser<'a> {
 
                         self.advance.pop(self.position, self.current.kind);
                         self.builder
-                            .close_at(&outer_checkpoint, PolicySyntax::EntityReference)?;
+                            .close_at(&checkpoint, PolicySyntax::EntityReference)?;
 
                         return Ok(());
                     }
@@ -848,9 +814,7 @@ impl<'a> PolicyParser<'a> {
             }
         }
 
-        self.builder
-            .close_at(&outer_checkpoint, PolicySyntax::Name)?;
-
+        self.builder.close()?;
         Ok(())
     }
 
