@@ -101,6 +101,7 @@ print_stderr = "deny"
 print_stdout = "deny"
 
 # Relaxed
+cast_possible_truncation = "allow"
 cognitive_complexity = "allow"
 module_name_repetitions = "allow"
 multiple_crate_versions = "allow"

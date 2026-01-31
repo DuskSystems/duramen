@@ -6,18 +6,18 @@ use crate::tree::{NodeData, Tree};
 #[derive(Debug)]
 pub struct Builder<T: Copy> {
     nodes: Vec<NodeData<T>>,
-    parents: Vec<usize>,
-    sibling: Option<usize>,
-    root: Option<usize>,
-    cursor: usize,
+    parents: Vec<u32>,
+    sibling: Option<u32>,
+    root: Option<u32>,
+    cursor: u32,
 }
 
 impl<T: Copy> Builder<T> {
     /// Creates a new builder with a capacity hint.
     #[must_use]
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(capacity: u32) -> Self {
         Self {
-            nodes: Vec::with_capacity(capacity),
+            nodes: Vec::with_capacity(capacity as usize),
             parents: Vec::with_capacity(8),
             sibling: None,
             root: None,
@@ -29,7 +29,7 @@ impl<T: Copy> Builder<T> {
     /// Call [`close`](Self::close) to commit the node.
     #[inline(always)]
     pub fn open(&mut self, kind: T) {
-        let index = self.nodes.len();
+        let index = self.nodes.len() as u32;
         let node = NodeData {
             kind,
             start: self.cursor,
@@ -52,14 +52,14 @@ impl<T: Copy> Builder<T> {
             return;
         };
 
-        self.nodes[index].end = self.cursor;
+        self.nodes[index as usize].end = self.cursor;
         self.sibling = Some(index);
     }
 
     /// Adds a new token node.
     #[inline(always)]
-    pub fn token(&mut self, kind: T, len: usize) {
-        let index = self.nodes.len();
+    pub fn token(&mut self, kind: T, len: u32) {
+        let index = self.nodes.len() as u32;
         let start = self.cursor;
         let end = start + len;
         self.cursor = end;
@@ -82,16 +82,16 @@ impl<T: Copy> Builder<T> {
     /// - `Some` wraps nodes after that point.
     #[must_use]
     #[inline(always)]
-    pub const fn checkpoint(&self) -> Option<usize> {
+    pub const fn checkpoint(&self) -> Option<u32> {
         self.sibling
     }
 
     /// Wraps nodes since the checkpoint in a new parent.
-    pub fn wrap(&mut self, checkpoint: Option<usize>, kind: T) {
+    pub fn wrap(&mut self, checkpoint: Option<u32>, kind: T) {
         let first = match checkpoint {
-            Some(previous) => self.nodes[previous].next,
+            Some(previous) => self.nodes[previous as usize].next,
             None => match self.parent() {
-                Some(parent) => self.nodes[parent].first,
+                Some(parent) => self.nodes[parent as usize].first,
                 None => self.root,
             },
         };
@@ -102,10 +102,10 @@ impl<T: Copy> Builder<T> {
             return;
         };
 
-        let start = self.nodes[first].start;
+        let start = self.nodes[first as usize].start;
         let end = self.cursor;
 
-        let wrapper = self.nodes.len();
+        let wrapper = self.nodes.len() as u32;
         let node = NodeData {
             kind,
             start,
@@ -117,11 +117,11 @@ impl<T: Copy> Builder<T> {
         self.nodes.push(node);
 
         if let Some(previous) = checkpoint {
-            self.nodes[previous].next = Some(wrapper);
+            self.nodes[previous as usize].next = Some(wrapper);
         }
 
         if let Some(parent) = self.parent() {
-            let parent = &mut self.nodes[parent];
+            let parent = &mut self.nodes[parent as usize];
             if parent.first == Some(first) {
                 parent.first = Some(wrapper);
             }
@@ -142,18 +142,18 @@ impl<T: Copy> Builder<T> {
     }
 
     #[inline(always)]
-    fn parent(&self) -> Option<usize> {
+    fn parent(&self) -> Option<u32> {
         self.parents.last().copied()
     }
 
     #[inline(always)]
-    fn attach(&mut self, index: usize) {
+    fn attach(&mut self, index: u32) {
         if let Some(sibling) = self.sibling {
-            self.nodes[sibling].next = Some(index);
+            self.nodes[sibling as usize].next = Some(index);
         }
 
         if let Some(parent) = self.parent() {
-            let parent = &mut self.nodes[parent];
+            let parent = &mut self.nodes[parent as usize];
             if parent.first.is_none() {
                 parent.first = Some(index);
             }

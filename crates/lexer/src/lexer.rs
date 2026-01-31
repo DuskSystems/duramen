@@ -36,7 +36,7 @@ impl<'a> Lexer<'a> {
 
         let start = self.cursor.position();
         let kind = self.scan_token();
-        let len = self.cursor.position() - start;
+        let len = (self.cursor.position() - start) as u32;
 
         Some(Token::new(kind, len))
     }
