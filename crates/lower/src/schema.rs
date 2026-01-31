@@ -3,7 +3,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::ops::Range;
 
-use duramen_cst::accessors::CstNode as _;
+use duramen_cst::CstNode as _;
 use duramen_diagnostics::{Diagnostic, Diagnostics};
 use {duramen_ast as ast, duramen_cst as cst};
 
@@ -26,7 +26,7 @@ impl<'a> SchemaLowerer<'a> {
     /// # Errors
     pub fn lower(
         mut self,
-        tree: &cst::SchemaTree,
+        tree: &cst::schema::SchemaTree,
     ) -> Result<(ast::schema::Schema, Diagnostics), Diagnostics> {
         self.collect_parse_errors(tree);
         let value = self.lower_schema(tree);
@@ -43,14 +43,14 @@ impl<'a> SchemaLowerer<'a> {
         }
     }
 
-    fn collect_parse_errors(&mut self, tree: &cst::SchemaTree) {
+    fn collect_parse_errors(&mut self, tree: &cst::schema::SchemaTree) {
         for node in tree.children() {
             self.collect_errors_in_subtree(&node);
         }
     }
 
-    fn collect_errors_in_subtree(&mut self, node: &cst::SchemaNode<'_>) {
-        if node.value() == cst::syntax::schema::SchemaSyntax::Error {
+    fn collect_errors_in_subtree(&mut self, node: &cst::schema::SchemaNode<'_>) {
+        if node.value() == cst::schema::SchemaSyntax::Error {
             self.diagnostics.push(
                 Diagnostic::error("syntax error").with_label(node.range(), "unexpected token"),
             );
@@ -61,11 +61,8 @@ impl<'a> SchemaLowerer<'a> {
         }
     }
 
-    fn lower_schema(&mut self, tree: &cst::SchemaTree) -> ast::schema::Schema {
-        let Some(schema) = tree
-            .children()
-            .find_map(cst::accessors::schema::Schema::cast)
-        else {
+    fn lower_schema(&mut self, tree: &cst::schema::SchemaTree) -> ast::schema::Schema {
+        let Some(schema) = tree.children().find_map(cst::schema::Schema::cast) else {
             return ast::schema::Schema::empty();
         };
 
@@ -86,7 +83,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_default_namespace(
         &mut self,
-        schema: &cst::accessors::schema::Schema<'_>,
+        schema: &cst::schema::Schema<'_>,
     ) -> ast::schema::Namespace {
         let mut entities = Vec::new();
         let mut actions = Vec::new();
@@ -115,7 +112,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_namespace(
         &mut self,
-        ns_decl: &cst::accessors::schema::NamespaceDecl<'_>,
+        ns_decl: &cst::schema::NamespaceDecl<'_>,
     ) -> ast::schema::Namespace {
         let name = ns_decl
             .name()
@@ -157,7 +154,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_annotations<'b, I>(&mut self, annotations: I) -> ast::common::Annotations
     where
-        I: Iterator<Item = cst::accessors::schema::Annotation<'b>>,
+        I: Iterator<Item = cst::schema::Annotation<'b>>,
     {
         let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
         let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
@@ -202,7 +199,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_entity(
         &mut self,
-        entity_decl: &cst::accessors::schema::EntityDecl<'_>,
+        entity_decl: &cst::schema::EntityDecl<'_>,
     ) -> Option<ast::schema::EntityDecl> {
         let names: Vec<ast::common::Id> = entity_decl
             .names()
@@ -266,7 +263,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_enum_choices(
         &mut self,
-        entity_decl: &cst::accessors::schema::EntityDecl<'_>,
+        entity_decl: &cst::schema::EntityDecl<'_>,
     ) -> Vec<ast::common::Id> {
         let Some(enum_type) = entity_decl.enum_type() else {
             return Vec::new();
@@ -292,7 +289,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_action(
         &mut self,
-        action_decl: &cst::accessors::schema::ActionDecl<'_>,
+        action_decl: &cst::schema::ActionDecl<'_>,
     ) -> Option<ast::schema::ActionDecl> {
         let names: Vec<ast::common::Id> = action_decl
             .action_names(self.source)
@@ -332,7 +329,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_type_decl(
         &mut self,
-        type_decl: &cst::accessors::schema::TypeDecl<'_>,
+        type_decl: &cst::schema::TypeDecl<'_>,
     ) -> Option<ast::schema::TypeDecl> {
         let name = type_decl
             .name()
@@ -349,7 +346,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_action_parents(
         &mut self,
-        parents: &cst::accessors::schema::ActionParents<'_>,
+        parents: &cst::schema::ActionParents<'_>,
     ) -> Vec<ast::schema::ActionRef> {
         let mut result = Vec::new();
 
@@ -412,7 +409,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_applies_to(
         &mut self,
-        applies_to: &cst::accessors::schema::AppliesToClause<'_>,
+        applies_to: &cst::schema::AppliesToClause<'_>,
     ) -> ast::schema::AppliesTo {
         let principals = applies_to
             .principal_types()
@@ -457,7 +454,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_attributes<'b>(
         &mut self,
-        attributes: impl Iterator<Item = cst::accessors::schema::AttributeDecl<'b>>,
+        attributes: impl Iterator<Item = cst::schema::AttributeDecl<'b>>,
     ) -> ast::schema::RecordType {
         let attrs: Vec<ast::schema::AttributeDecl> = attributes
             .filter_map(|attr| self.lower_attribute(&attr))
@@ -468,7 +465,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_attribute(
         &mut self,
-        attr: &cst::accessors::schema::AttributeDecl<'_>,
+        attr: &cst::schema::AttributeDecl<'_>,
     ) -> Option<ast::schema::AttributeDecl> {
         let name_str = attr.name(self.source)?;
         let name = StringUnescaper::new(name_str)
@@ -500,27 +497,18 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_type_expr(
         &mut self,
-        type_expr: &cst::accessors::schema::TypeExpr<'_>,
+        type_expr: &cst::schema::TypeExpr<'_>,
     ) -> Option<ast::schema::Type> {
         match type_expr {
-            cst::accessors::schema::TypeExpr::Set(set_type) => self.lower_set_type(set_type),
-            cst::accessors::schema::TypeExpr::Record(record_type) => {
-                Some(self.lower_record_type(record_type))
-            }
-            cst::accessors::schema::TypeExpr::Entity(entity_type) => {
-                self.lower_entity_type_expr(entity_type)
-            }
-            cst::accessors::schema::TypeExpr::Enum(enum_type) => self.lower_enum_type(enum_type),
-            cst::accessors::schema::TypeExpr::Reference(name) => {
-                lower_type_reference(name, self.source)
-            }
+            cst::schema::TypeExpr::Set(set_type) => self.lower_set_type(set_type),
+            cst::schema::TypeExpr::Record(record_type) => Some(self.lower_record_type(record_type)),
+            cst::schema::TypeExpr::Entity(entity_type) => self.lower_entity_type_expr(entity_type),
+            cst::schema::TypeExpr::Enum(enum_type) => self.lower_enum_type(enum_type),
+            cst::schema::TypeExpr::Reference(name) => lower_type_reference(name, self.source),
         }
     }
 
-    fn lower_set_type(
-        &mut self,
-        set_type: &cst::accessors::schema::SetType<'_>,
-    ) -> Option<ast::schema::Type> {
+    fn lower_set_type(&mut self, set_type: &cst::schema::SetType<'_>) -> Option<ast::schema::Type> {
         let element_type = set_type.element_type()?;
         let element = self.lower_type_expr(&element_type)?;
         Some(ast::schema::Type::set(element))
@@ -528,7 +516,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_record_type(
         &mut self,
-        record_type: &cst::accessors::schema::RecordType<'_>,
+        record_type: &cst::schema::RecordType<'_>,
     ) -> ast::schema::Type {
         let attrs: Vec<ast::schema::AttributeDecl> = record_type
             .attributes()
@@ -540,7 +528,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_entity_type_expr(
         &self,
-        entity_type: &cst::accessors::schema::EntityType<'_>,
+        entity_type: &cst::schema::EntityType<'_>,
     ) -> Option<ast::schema::Type> {
         let name = entity_type.name()?;
         let entity_type = lower_name(&name, self.source).map(ast::common::EntityType::new)?;
@@ -549,7 +537,7 @@ impl<'a> SchemaLowerer<'a> {
 
     fn lower_enum_type(
         &mut self,
-        enum_type: &cst::accessors::schema::EnumType<'_>,
+        enum_type: &cst::schema::EnumType<'_>,
     ) -> Option<ast::schema::Type> {
         let span = enum_type.range();
         let variants: Vec<ast::common::Id> = enum_type
@@ -586,7 +574,7 @@ fn is_namespace_empty(namespace: &ast::schema::Namespace) -> bool {
         && namespace.types().is_empty()
 }
 
-fn lower_name(name: &cst::accessors::schema::Name<'_>, source: &str) -> Option<ast::common::Name> {
+fn lower_name(name: &cst::schema::Name<'_>, source: &str) -> Option<ast::common::Name> {
     let segments: Vec<&str> = name.segments(source).collect();
 
     if segments.is_empty() {
@@ -605,16 +593,13 @@ fn lower_name(name: &cst::accessors::schema::Name<'_>, source: &str) -> Option<a
 }
 
 fn lower_entity_type(
-    name: &cst::accessors::schema::Name<'_>,
+    name: &cst::schema::Name<'_>,
     source: &str,
 ) -> Option<ast::common::EntityType> {
     lower_name(name, source).map(ast::common::EntityType::new)
 }
 
-fn lower_type_reference(
-    name: &cst::accessors::schema::Name<'_>,
-    source: &str,
-) -> Option<ast::schema::Type> {
+fn lower_type_reference(name: &cst::schema::Name<'_>, source: &str) -> Option<ast::schema::Type> {
     let name = lower_name(name, source)?;
     Some(ast::schema::Type::named(name))
 }

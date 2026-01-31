@@ -1,9 +1,7 @@
 use alloc::string::String;
 
-use duramen_cst::accessors::CstNode as _;
-use duramen_cst::accessors::schema::Schema;
-use duramen_cst::syntax::schema::SchemaSyntax;
-use duramen_cst::{SchemaBuilder, SchemaTree};
+use duramen_cst::CstNode as _;
+use duramen_cst::schema::{Schema, SchemaBuilder, SchemaSyntax, SchemaTree};
 use duramen_lexer::{Lexer, Token, TokenKind};
 
 use crate::advance::Advance;

@@ -1,7 +1,13 @@
-use syntree::Node;
+use syntree::{Builder, FlavorDefault, Node, Tree};
 
-use super::CstNode;
-use crate::{SchemaNode, SchemaSyntax};
+use crate::CstNode;
+
+mod syntax;
+pub use syntax::SchemaSyntax;
+
+pub type SchemaTree = Tree<SchemaSyntax, FlavorDefault>;
+pub type SchemaBuilder = Builder<SchemaSyntax>;
+pub type SchemaNode<'a> = Node<'a, SchemaSyntax, FlavorDefault>;
 
 macro_rules! cst_node {
     ($name:ident, $kind:expr) => {
