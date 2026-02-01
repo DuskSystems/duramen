@@ -21,3 +21,5 @@ mod schema;
 pub use schema::SchemaLowerer;
 
 pub mod unescape;
+
+pub(crate) type FxHashMap<K, V> = hashbrown::HashMap<K, V, rustc_hash::FxBuildHasher>;

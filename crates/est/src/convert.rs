@@ -58,7 +58,7 @@ pub(crate) fn string_to_name(name: &str) -> ast::common::Name {
                 .iter()
                 .map(|s| ast::common::Id::new((*s).into()))
                 .collect();
-            ast::common::Name::new(path_ids, ast::common::Id::new((*basename).into()))
+            ast::common::Name::qualified(path_ids, ast::common::Id::new((*basename).into()))
         }
     }
 }

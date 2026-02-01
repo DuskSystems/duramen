@@ -7,6 +7,7 @@ use duramen_cst::CstNode as _;
 use duramen_diagnostics::{Diagnostic, Diagnostics};
 use {duramen_ast as ast, duramen_cst as cst};
 
+use crate::FxHashMap;
 use crate::unescape::StringUnescaper;
 
 pub struct SchemaLowerer<'a> {
@@ -148,7 +149,6 @@ impl<'a> SchemaLowerer<'a> {
         }
 
         let annotations = self.lower_annotations(ns_decl.annotations());
-
         ast::schema::Namespace::new(name, entities, actions, types, annotations)
     }
 
@@ -157,7 +157,7 @@ impl<'a> SchemaLowerer<'a> {
         I: Iterator<Item = cst::schema::Annotation<'b>>,
     {
         let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
-        let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
+        let mut seen: FxHashMap<&str, Range<usize>> = FxHashMap::default();
 
         for annotation in annotations {
             let Some(name) = annotation.name(self.source) else {
@@ -167,15 +167,13 @@ impl<'a> SchemaLowerer<'a> {
             let span = annotation.range();
 
             if let Some(first) = seen.get(name) {
-                self.diagnostics.push(Diagnostic::duplicate_annotation(
-                    name,
-                    span.clone(),
-                    first.clone(),
-                ));
+                self.diagnostics
+                    .push(Diagnostic::duplicate_annotation(name, span, first.clone()));
+
                 continue;
             }
 
-            seen.insert(name.into(), span.clone());
+            seen.insert(name, span.clone());
 
             let value: Option<String> = annotation.value(self.source).and_then(|val| {
                 StringUnescaper::new(val).unescape().or_else(|| {
@@ -191,7 +189,10 @@ impl<'a> SchemaLowerer<'a> {
                 ast::common::Annotation::without_value,
                 ast::common::Annotation::with_value,
             );
-            map.insert(ast::common::AnyId::new(name.into()), annotation_value);
+            map.insert(
+                ast::common::AnyId::new(String::from(name)),
+                annotation_value,
+            );
         }
 
         ast::common::Annotations::from_map(map)
@@ -589,7 +590,7 @@ fn lower_name(name: &cst::schema::Name<'_>, source: &str) -> Option<ast::common:
 
     let basename = ast::common::Id::new(String::from(*segments.last()?));
 
-    Some(ast::common::Name::new(path, basename))
+    Some(ast::common::Name::qualified(path, basename))
 }
 
 fn lower_entity_type(

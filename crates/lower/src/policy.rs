@@ -8,6 +8,7 @@ use duramen_cst::CstNode as _;
 use duramen_diagnostics::{Diagnostic, Diagnostics};
 use {duramen_ast as ast, duramen_cst as cst};
 
+use crate::FxHashMap;
 use crate::unescape::{PatternUnescaper, StringUnescaper};
 
 /// Lowers a policy CST into an AST.
@@ -179,7 +180,7 @@ impl<'a> PolicyLowerer<'a> {
         index: usize,
     ) -> (ast::common::Annotations, ast::policy::PolicyId) {
         let mut map: BTreeMap<ast::common::AnyId, ast::common::Annotation> = BTreeMap::new();
-        let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
+        let mut seen: FxHashMap<&str, Range<usize>> = FxHashMap::default();
         let mut policy_id = None;
 
         for annotation in policy.annotations() {
@@ -190,15 +191,13 @@ impl<'a> PolicyLowerer<'a> {
             let span = annotation.range();
 
             if let Some(first) = seen.get(name) {
-                self.diagnostics.push(Diagnostic::duplicate_annotation(
-                    name,
-                    span.clone(),
-                    first.clone(),
-                ));
+                self.diagnostics
+                    .push(Diagnostic::duplicate_annotation(name, span, first.clone()));
+
                 continue;
             }
 
-            seen.insert(name.into(), span.clone());
+            seen.insert(name, span.clone());
 
             let value: Option<String> = annotation.value(self.source).and_then(|val| {
                 StringUnescaper::new(val).unescape().or_else(|| {
@@ -220,7 +219,10 @@ impl<'a> PolicyLowerer<'a> {
                 ast::common::Annotation::without_value,
                 ast::common::Annotation::with_value,
             );
-            map.insert(ast::common::AnyId::new(name.into()), annotation_value);
+            map.insert(
+                ast::common::AnyId::new(String::from(name)),
+                annotation_value,
+            );
         }
 
         let id = policy_id.unwrap_or_else(|| ast::policy::PolicyId::new(format!("policy{index}")));
@@ -294,8 +296,8 @@ impl<'a> PolicyLowerer<'a> {
 
             (Some(op), _, _) => {
                 self.diagnostics.push(Diagnostic::invalid_scope_operator(
-                    &format!("{op:?}"),
-                    "`==` or `in`",
+                    &format!("'{op}'"),
+                    "'==' or 'in'",
                     span,
                 ));
                 ast::policy::PrincipalOrResourceConstraint::Any
@@ -337,8 +339,8 @@ impl<'a> PolicyLowerer<'a> {
 
             (Some(op), _) => {
                 self.diagnostics.push(Diagnostic::invalid_scope_operator(
-                    &format!("{op:?}"),
-                    "`==` or `in`",
+                    &format!("'{op}'"),
+                    "'==' or 'in'",
                     span,
                 ));
                 ast::policy::ActionConstraint::any()
@@ -1113,17 +1115,15 @@ impl<'a> PolicyLowerer<'a> {
         record_expr: &cst::policy::RecordExpression<'_>,
     ) -> Option<ast::policy::Expr> {
         let mut fields = BTreeMap::new();
-        let mut seen: BTreeMap<String, Range<usize>> = BTreeMap::new();
+        let mut seen: FxHashMap<String, Range<usize>> = FxHashMap::default();
 
         for entry in record_expr.entries() {
             let entry_span = entry.range();
 
             if entry.is_key_reserved() {
                 let (key_text, _) = entry.key(self.source)?;
-                self.diagnostics.push(Diagnostic::reserved_identifier(
-                    key_text,
-                    entry_span.clone(),
-                ));
+                self.diagnostics
+                    .push(Diagnostic::reserved_identifier(key_text, entry_span));
 
                 continue;
             }
@@ -1201,7 +1201,7 @@ fn lower_name(name: &cst::policy::Name<'_>, source: &str) -> Option<ast::common:
 
     let basename = ast::common::Id::new(String::from(*segments.last()?));
 
-    Some(ast::common::Name::new(path, basename))
+    Some(ast::common::Name::qualified(path, basename))
 }
 
 fn lower_entity_type(

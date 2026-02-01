@@ -1,3 +1,4 @@
+use core::fmt;
 use core::ops::Range;
 
 use crate::tree::{Node, Tree};
@@ -280,6 +281,20 @@ impl RelOp {
             PolicySyntax::BangEq => Some(Self::NotEq),
             PolicySyntax::In => Some(Self::In),
             _ => None,
+        }
+    }
+}
+
+impl fmt::Display for RelOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Less => f.write_str("<"),
+            Self::LessEq => f.write_str("<="),
+            Self::Greater => f.write_str(">"),
+            Self::GreaterEq => f.write_str(">="),
+            Self::Eq => f.write_str("=="),
+            Self::NotEq => f.write_str("!="),
+            Self::In => f.write_str("in"),
         }
     }
 }

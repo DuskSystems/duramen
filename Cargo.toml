@@ -126,6 +126,10 @@ cedar-policy = { version = "=4.8.2", default-features = false }
 # SIMD
 memchr = { version = "2.7", default-features = false }
 
+# Hashing
+hashbrown = { version = "0.15", default-features = false }
+rustc-hash = { version = "2.1", default-features = false }
+
 # Diagnostics
 # FIXME: https://github.com/rust-lang/annotate-snippets-rs/issues/359
 annotate-snippets = { git = "https://github.com/CathalMullan/annotate-snippets-rs", branch = "main", default-features = false }

@@ -1,6 +1,6 @@
+use alloc::boxed::Box;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use super::integer::Integer;
@@ -26,47 +26,47 @@ pub enum ExprKind<T = ()> {
     Unknown(Unknown),
     Unary {
         op: UnaryOp,
-        arg: Arc<Expr<T>>,
+        arg: Box<Expr<T>>,
     },
     Binary {
         op: BinaryOp,
-        left: Arc<Expr<T>>,
-        right: Arc<Expr<T>>,
+        left: Box<Expr<T>>,
+        right: Box<Expr<T>>,
     },
     And {
-        left: Arc<Expr<T>>,
-        right: Arc<Expr<T>>,
+        left: Box<Expr<T>>,
+        right: Box<Expr<T>>,
     },
     Or {
-        left: Arc<Expr<T>>,
-        right: Arc<Expr<T>>,
+        left: Box<Expr<T>>,
+        right: Box<Expr<T>>,
     },
     If {
-        cond: Arc<Expr<T>>,
-        then_expr: Arc<Expr<T>>,
-        else_expr: Arc<Expr<T>>,
+        cond: Box<Expr<T>>,
+        then_expr: Box<Expr<T>>,
+        else_expr: Box<Expr<T>>,
     },
     GetAttr {
-        expr: Arc<Expr<T>>,
+        expr: Box<Expr<T>>,
         attr: String,
     },
     HasAttr {
-        expr: Arc<Expr<T>>,
+        expr: Box<Expr<T>>,
         attr: String,
     },
     Is {
-        expr: Arc<Expr<T>>,
+        expr: Box<Expr<T>>,
         entity_type: EntityType,
     },
     Like {
-        expr: Arc<Expr<T>>,
+        expr: Box<Expr<T>>,
         pattern: Pattern,
     },
-    Set(Arc<Vec<Expr<T>>>),
-    Record(Arc<BTreeMap<String, Expr<T>>>),
+    Set(Vec<Expr<T>>),
+    Record(BTreeMap<String, Expr<T>>),
     ExtensionCall {
         fn_name: Name,
-        args: Arc<Vec<Expr<T>>>,
+        args: Vec<Expr<T>>,
     },
 }
 
@@ -133,7 +133,7 @@ impl<T: Default> Expr<T> {
         Self::new(
             ExprKind::Unary {
                 op,
-                arg: Arc::new(arg),
+                arg: Box::new(arg),
             },
             T::default(),
         )
@@ -144,8 +144,8 @@ impl<T: Default> Expr<T> {
         Self::new(
             ExprKind::Binary {
                 op,
-                left: Arc::new(left),
-                right: Arc::new(right),
+                left: Box::new(left),
+                right: Box::new(right),
             },
             T::default(),
         )
@@ -155,8 +155,8 @@ impl<T: Default> Expr<T> {
     pub fn and(left: Self, right: Self) -> Self {
         Self::new(
             ExprKind::And {
-                left: Arc::new(left),
-                right: Arc::new(right),
+                left: Box::new(left),
+                right: Box::new(right),
             },
             T::default(),
         )
@@ -166,8 +166,8 @@ impl<T: Default> Expr<T> {
     pub fn or(left: Self, right: Self) -> Self {
         Self::new(
             ExprKind::Or {
-                left: Arc::new(left),
-                right: Arc::new(right),
+                left: Box::new(left),
+                right: Box::new(right),
             },
             T::default(),
         )
@@ -177,9 +177,9 @@ impl<T: Default> Expr<T> {
     pub fn if_then_else(cond: Self, then_expr: Self, else_expr: Self) -> Self {
         Self::new(
             ExprKind::If {
-                cond: Arc::new(cond),
-                then_expr: Arc::new(then_expr),
-                else_expr: Arc::new(else_expr),
+                cond: Box::new(cond),
+                then_expr: Box::new(then_expr),
+                else_expr: Box::new(else_expr),
             },
             T::default(),
         )
@@ -189,7 +189,7 @@ impl<T: Default> Expr<T> {
     pub fn get_attr(expr: Self, attr: String) -> Self {
         Self::new(
             ExprKind::GetAttr {
-                expr: Arc::new(expr),
+                expr: Box::new(expr),
                 attr,
             },
             T::default(),
@@ -200,7 +200,7 @@ impl<T: Default> Expr<T> {
     pub fn has_attr(expr: Self, attr: String) -> Self {
         Self::new(
             ExprKind::HasAttr {
-                expr: Arc::new(expr),
+                expr: Box::new(expr),
                 attr,
             },
             T::default(),
@@ -211,7 +211,7 @@ impl<T: Default> Expr<T> {
     pub fn is(expr: Self, entity_type: EntityType) -> Self {
         Self::new(
             ExprKind::Is {
-                expr: Arc::new(expr),
+                expr: Box::new(expr),
                 entity_type,
             },
             T::default(),
@@ -233,7 +233,7 @@ impl<T: Default> Expr<T> {
     pub fn like(expr: Self, pattern: Pattern) -> Self {
         Self::new(
             ExprKind::Like {
-                expr: Arc::new(expr),
+                expr: Box::new(expr),
                 pattern,
             },
             T::default(),
@@ -242,33 +242,27 @@ impl<T: Default> Expr<T> {
 
     #[must_use]
     pub fn empty_set() -> Self {
-        Self::new(ExprKind::Set(Arc::new(Vec::new())), T::default())
+        Self::new(ExprKind::Set(Vec::new()), T::default())
     }
 
     #[must_use]
     pub fn set(elements: Vec<Self>) -> Self {
-        Self::new(ExprKind::Set(Arc::new(elements)), T::default())
+        Self::new(ExprKind::Set(elements), T::default())
     }
 
     #[must_use]
     pub fn empty_record() -> Self {
-        Self::new(ExprKind::Record(Arc::new(BTreeMap::new())), T::default())
+        Self::new(ExprKind::Record(BTreeMap::new()), T::default())
     }
 
     #[must_use]
     pub fn record(fields: BTreeMap<String, Self>) -> Self {
-        Self::new(ExprKind::Record(Arc::new(fields)), T::default())
+        Self::new(ExprKind::Record(fields), T::default())
     }
 
     #[must_use]
     pub fn extension_call(fn_name: Name, args: Vec<Self>) -> Self {
-        Self::new(
-            ExprKind::ExtensionCall {
-                fn_name,
-                args: Arc::new(args),
-            },
-            T::default(),
-        )
+        Self::new(ExprKind::ExtensionCall { fn_name, args }, T::default())
     }
 }
 
