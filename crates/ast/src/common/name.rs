@@ -1,27 +1,23 @@
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use super::id::Id;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Name {
-    path: Arc<Vec<Id>>,
+    path: Vec<Id>,
     basename: Id,
 }
 
 impl Name {
     #[must_use]
-    pub fn new(path: Vec<Id>, basename: Id) -> Self {
-        Self {
-            path: Arc::new(path),
-            basename,
-        }
+    pub const fn qualified(path: Vec<Id>, basename: Id) -> Self {
+        Self { path, basename }
     }
 
     #[must_use]
-    pub fn unqualified(basename: Id) -> Self {
+    pub const fn unqualified(basename: Id) -> Self {
         Self {
-            path: Arc::new(Vec::new()),
+            path: Vec::new(),
             basename,
         }
     }
@@ -37,12 +33,12 @@ impl Name {
     }
 
     #[must_use]
-    pub fn is_unqualified(&self) -> bool {
+    pub const fn is_unqualified(&self) -> bool {
         self.path.is_empty()
     }
 
     #[must_use]
-    pub fn into_parts(self) -> (Arc<Vec<Id>>, Id) {
+    pub fn into_parts(self) -> (Vec<Id>, Id) {
         (self.path, self.basename)
     }
 }

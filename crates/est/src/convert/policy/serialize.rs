@@ -92,8 +92,15 @@ impl From<&ast::policy::Expr> for Expr {
             ),
 
             ast::policy::ExprKind::Like { expr, pattern } => {
-                let pattern_elems: Vec<PatternElem> =
-                    pattern.iter().map(PatternElem::from).collect();
+                let pattern_elems: Vec<PatternElem> = pattern
+                    .iter()
+                    .map(|elem| match elem {
+                        ast::policy::PatternElem::Char(char) => {
+                            PatternElem::Literal(PatternLiteral::new_unchecked(char.to_string()))
+                        }
+                        ast::policy::PatternElem::Wildcard => PatternElem::Wildcard,
+                    })
+                    .collect();
                 Self::like(Self::from(expr.as_ref()), pattern_elems)
             }
 
@@ -114,17 +121,6 @@ impl From<&ast::policy::Expr> for Expr {
                 let est_args: Vec<Self> = args.iter().map(Self::from).collect();
                 Self::extension_call(name_to_string(fn_name), est_args)
             }
-        }
-    }
-}
-
-impl From<&ast::policy::PatternElem> for PatternElem {
-    fn from(value: &ast::policy::PatternElem) -> Self {
-        match value {
-            ast::policy::PatternElem::Char(c) => {
-                Self::Literal(PatternLiteral::new_unchecked(c.to_string()))
-            }
-            ast::policy::PatternElem::Wildcard => Self::Wildcard,
         }
     }
 }
@@ -253,7 +249,7 @@ impl From<&ast::policy::ActionConstraint> for ActionConstraint {
                 entity: entity_uid_to_ref(uid),
             },
             ast::policy::ActionConstraint::In(uids) => {
-                let mut entities = uids.iter().map(|uid| entity_uid_to_ref(uid));
+                let mut entities = uids.iter().map(entity_uid_to_ref);
                 let first = entities.next();
                 let second = entities.next();
                 match (first, second) {
@@ -262,7 +258,7 @@ impl From<&ast::policy::ActionConstraint> for ActionConstraint {
                     },
                     _ => Self::In {
                         target: ActionInTarget::Multiple {
-                            entities: uids.iter().map(|uid| entity_uid_to_ref(uid)).collect(),
+                            entities: uids.iter().map(entity_uid_to_ref).collect(),
                         },
                     },
                 }

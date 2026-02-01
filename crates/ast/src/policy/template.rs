@@ -1,6 +1,5 @@
 use alloc::collections::BTreeMap;
 use alloc::string::String;
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use super::clause::{Clause, ClauseKind};
@@ -141,7 +140,7 @@ fn clause_to_expr(clause: &Clause) -> Expr {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct SlotValues(BTreeMap<SlotId, Arc<EntityUid>>);
+pub struct SlotValues(BTreeMap<SlotId, EntityUid>);
 
 impl SlotValues {
     #[must_use]
@@ -150,30 +149,26 @@ impl SlotValues {
     }
 
     #[must_use]
-    pub const fn from_map(map: BTreeMap<SlotId, Arc<EntityUid>>) -> Self {
+    pub const fn from_map(map: BTreeMap<SlotId, EntityUid>) -> Self {
         Self(map)
     }
 
     pub fn set_principal(&mut self, uid: EntityUid) {
-        self.0.insert(SlotId::Principal, Arc::new(uid));
+        self.0.insert(SlotId::Principal, uid);
     }
 
     pub fn set_resource(&mut self, uid: EntityUid) {
-        self.0.insert(SlotId::Resource, Arc::new(uid));
+        self.0.insert(SlotId::Resource, uid);
     }
 
     #[must_use]
     pub fn principal(&self) -> Option<&EntityUid> {
-        self.0
-            .get(&SlotId::Principal)
-            .map(core::convert::AsRef::as_ref)
+        self.0.get(&SlotId::Principal)
     }
 
     #[must_use]
     pub fn resource(&self) -> Option<&EntityUid> {
-        self.0
-            .get(&SlotId::Resource)
-            .map(core::convert::AsRef::as_ref)
+        self.0.get(&SlotId::Resource)
     }
 
     #[must_use]
@@ -184,18 +179,18 @@ impl SlotValues {
     pub fn iter(&self) -> impl Iterator<Item = (SlotId, &EntityUid)> {
         self.0
             .iter()
-            .map(|(slot_id, entity_uid)| (*slot_id, entity_uid.as_ref()))
+            .map(|(slot_id, entity_uid)| (*slot_id, entity_uid))
     }
 
     #[must_use]
-    pub fn into_map(self) -> BTreeMap<SlotId, Arc<EntityUid>> {
+    pub fn into_map(self) -> BTreeMap<SlotId, EntityUid> {
         self.0
     }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Policy {
-    template: Arc<Template>,
+    template: Template,
     link_id: Option<PolicyId>,
     slot_values: SlotValues,
 }
@@ -203,7 +198,7 @@ pub struct Policy {
 impl Policy {
     #[must_use]
     pub const fn new(
-        template: Arc<Template>,
+        template: Template,
         link_id: Option<PolicyId>,
         slot_values: SlotValues,
     ) -> Self {
@@ -219,14 +214,14 @@ impl Policy {
     pub fn from_static(template: Template) -> Self {
         assert!(template.is_static(), "template has slots");
         Self {
-            template: Arc::new(template),
+            template,
             link_id: None,
             slot_values: SlotValues::new(),
         }
     }
 
     #[must_use]
-    pub fn template(&self) -> &Template {
+    pub const fn template(&self) -> &Template {
         &self.template
     }
 
@@ -246,17 +241,17 @@ impl Policy {
     }
 
     #[must_use]
-    pub fn template_id(&self) -> &PolicyId {
+    pub const fn template_id(&self) -> &PolicyId {
         self.template.id()
     }
 
     #[must_use]
-    pub fn annotations(&self) -> &Annotations {
+    pub const fn annotations(&self) -> &Annotations {
         self.template.annotations()
     }
 
     #[must_use]
-    pub fn effect(&self) -> Effect {
+    pub const fn effect(&self) -> Effect {
         self.template.effect()
     }
 

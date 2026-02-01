@@ -1,18 +1,17 @@
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::common::{EntityType, EntityUid};
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum EntityReference {
-    Euid(Arc<EntityUid>),
+    Euid(EntityUid),
     Slot,
 }
 
 impl EntityReference {
     #[must_use]
-    pub fn euid(uid: EntityUid) -> Self {
-        Self::Euid(Arc::new(uid))
+    pub const fn euid(uid: EntityUid) -> Self {
+        Self::Euid(uid)
     }
 
     #[must_use]
@@ -21,7 +20,7 @@ impl EntityReference {
     }
 
     #[must_use]
-    pub fn as_euid(&self) -> Option<&EntityUid> {
+    pub const fn as_euid(&self) -> Option<&EntityUid> {
         match self {
             Self::Euid(uid) => Some(uid),
             Self::Slot => None,
@@ -196,8 +195,8 @@ impl ResourceConstraint {
 pub enum ActionConstraint {
     #[default]
     Any,
-    Eq(Arc<EntityUid>),
-    In(Vec<Arc<EntityUid>>),
+    Eq(EntityUid),
+    In(Vec<EntityUid>),
 }
 
 impl ActionConstraint {
@@ -207,13 +206,13 @@ impl ActionConstraint {
     }
 
     #[must_use]
-    pub fn equal(action: EntityUid) -> Self {
-        Self::Eq(Arc::new(action))
+    pub const fn equal(action: EntityUid) -> Self {
+        Self::Eq(action)
     }
 
     #[must_use]
-    pub fn is_in(actions: Vec<EntityUid>) -> Self {
-        Self::In(actions.into_iter().map(Arc::new).collect())
+    pub const fn is_in(actions: Vec<EntityUid>) -> Self {
+        Self::In(actions)
     }
 
     #[must_use]

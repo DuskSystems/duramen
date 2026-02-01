@@ -1,4 +1,4 @@
-use alloc::sync::Arc;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use super::attribute::AttributeDecl;
@@ -83,7 +83,7 @@ impl EnumType {
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum Type {
     Primitive(PrimitiveType),
-    Set(Arc<Self>),
+    Set(Box<Self>),
     Record(RecordType),
     Entity(EntityType),
     Named(Name),
@@ -114,7 +114,7 @@ impl Type {
 
     #[must_use]
     pub fn set(element: Self) -> Self {
-        Self::Set(Arc::new(element))
+        Self::Set(Box::new(element))
     }
 
     #[must_use]

@@ -1,9 +1,8 @@
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::iter::Peekable;
-use core::str::Chars;
 
 use duramen_ast as ast;
+use memchr::{memchr, memchr2};
 
 pub struct StringUnescaper<'a> {
     input: &'a str,
@@ -17,32 +16,38 @@ impl<'a> StringUnescaper<'a> {
 
     #[must_use]
     pub fn unescape(self) -> Option<String> {
+        if memchr(b'\\', self.input.as_bytes()).is_none() {
+            return Some(String::from(self.input));
+        }
+
         let mut result = String::with_capacity(self.input.len());
-        let mut chars = self.input.chars().peekable();
 
+        let mut chars = self.input.chars();
         while let Some(char) = chars.next() {
-            if char != '\\' {
+            if char == '\\' {
+                result.push(Self::parse_escape(&mut chars)?);
+            } else {
                 result.push(char);
-                continue;
-            }
-
-            let escape = chars.next()?;
-
-            match escape {
-                '\\' => result.push('\\'),
-                '"' => result.push('"'),
-                '\'' => result.push('\''),
-                'n' => result.push('\n'),
-                'r' => result.push('\r'),
-                't' => result.push('\t'),
-                '0' => result.push('\0'),
-                'x' => result.push(parse_hex_escape(&mut chars)?),
-                'u' => result.push(parse_unicode_escape(&mut chars)?),
-                _ => return None,
             }
         }
 
         Some(result)
+    }
+
+    #[inline(always)]
+    fn parse_escape(chars: &mut impl Iterator<Item = char>) -> Option<char> {
+        match chars.next()? {
+            '\\' => Some('\\'),
+            '"' => Some('"'),
+            '\'' => Some('\''),
+            'n' => Some('\n'),
+            'r' => Some('\r'),
+            't' => Some('\t'),
+            '0' => Some('\0'),
+            'x' => parse_hex(chars),
+            'u' => parse_unicode(chars),
+            _ => None,
+        }
     }
 }
 
@@ -58,75 +63,74 @@ impl<'a> PatternUnescaper<'a> {
 
     #[must_use]
     pub fn unescape(self) -> Option<ast::policy::Pattern> {
+        if memchr2(b'*', b'\\', self.input.as_bytes()).is_none() {
+            return Some(
+                self.input
+                    .chars()
+                    .map(ast::policy::PatternElem::Char)
+                    .collect(),
+            );
+        }
+
         let mut elements = Vec::new();
-        let mut chars = self.input.chars().peekable();
+        let mut chars = self.input.chars();
 
         while let Some(char) = chars.next() {
-            if char == '*' {
-                elements.push(ast::policy::PatternElem::Wildcard);
-                continue;
-            }
-
-            if char != '\\' {
-                elements.push(ast::policy::PatternElem::Char(char));
-                continue;
-            }
-
-            match chars.next()? {
-                '\\' => elements.push(ast::policy::PatternElem::Char('\\')),
-                '"' => elements.push(ast::policy::PatternElem::Char('"')),
-                '\'' => elements.push(ast::policy::PatternElem::Char('\'')),
-                'n' => elements.push(ast::policy::PatternElem::Char('\n')),
-                'r' => elements.push(ast::policy::PatternElem::Char('\r')),
-                't' => elements.push(ast::policy::PatternElem::Char('\t')),
-                '0' => elements.push(ast::policy::PatternElem::Char('\0')),
-                '*' => elements.push(ast::policy::PatternElem::Char('*')),
-                'x' => elements.push(ast::policy::PatternElem::Char(parse_hex_escape(
-                    &mut chars,
-                )?)),
-                'u' => elements.push(ast::policy::PatternElem::Char(parse_unicode_escape(
-                    &mut chars,
-                )?)),
-                _ => return None,
+            match char {
+                '*' => elements.push(ast::policy::PatternElem::Wildcard),
+                '\\' => {
+                    let escaped = Self::parse_escape(&mut chars)?;
+                    elements.push(ast::policy::PatternElem::Char(escaped));
+                }
+                _ => elements.push(ast::policy::PatternElem::Char(char)),
             }
         }
 
         Some(ast::policy::Pattern::new(elements))
     }
-}
 
-fn parse_hex_escape(chars: &mut Peekable<Chars<'_>>) -> Option<char> {
-    let mut value = 0_u32;
-    for _ in 0..2 {
-        let digit = chars.next()?.to_digit(16)?;
-        value = value.checked_mul(16)?.checked_add(digit)?;
+    #[inline(always)]
+    fn parse_escape(chars: &mut impl Iterator<Item = char>) -> Option<char> {
+        match chars.next()? {
+            '*' => Some('*'),
+            '\\' => Some('\\'),
+            '"' => Some('"'),
+            '\'' => Some('\''),
+            'n' => Some('\n'),
+            'r' => Some('\r'),
+            't' => Some('\t'),
+            '0' => Some('\0'),
+            'x' => parse_hex(chars),
+            'u' => parse_unicode(chars),
+            _ => None,
+        }
     }
-
-    char::from_u32(value).filter(char::is_ascii)
 }
 
-fn parse_unicode_escape(chars: &mut Peekable<Chars<'_>>) -> Option<char> {
+#[inline(always)]
+fn parse_hex(chars: &mut impl Iterator<Item = char>) -> Option<char> {
+    let high = chars.next()?.to_digit(16)?;
+    let low = chars.next()?.to_digit(16)?;
+    let value = high * 16 + low;
+    (value < 128).then(|| char::from_u32(value))?
+}
+
+#[inline(always)]
+fn parse_unicode(chars: &mut impl Iterator<Item = char>) -> Option<char> {
     if chars.next()? != '{' {
         return None;
     }
 
-    let mut value = 0_u32;
-    let mut has_digits = false;
-
-    loop {
-        match chars.next()? {
-            '}' => break,
-            char => {
-                let digit = char.to_digit(16)?;
-                value = value.checked_mul(16)?.checked_add(digit)?;
-                has_digits = true;
-            }
-        }
-    }
-
-    if !has_digits {
+    let first = chars.next()?;
+    if first == '}' {
         return None;
     }
 
-    char::from_u32(value)
+    let mut value = first.to_digit(16)?;
+    loop {
+        match chars.next()? {
+            '}' => return char::from_u32(value),
+            char => value = value.checked_mul(16)?.checked_add(char.to_digit(16)?)?,
+        }
+    }
 }

@@ -1,13 +1,12 @@
-use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct Pattern(Arc<Vec<PatternElem>>);
+pub struct Pattern(Vec<PatternElem>);
 
 impl Pattern {
     #[must_use]
-    pub fn new(elements: Vec<PatternElem>) -> Self {
-        Self(Arc::new(elements))
+    pub const fn new(elements: Vec<PatternElem>) -> Self {
+        Self(elements)
     }
 
     #[must_use]
@@ -16,12 +15,12 @@ impl Pattern {
     }
 
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.0.len()
     }
 

@@ -1,5 +1,4 @@
 use alloc::string::String;
-use alloc::sync::Arc;
 
 use super::integer::Integer;
 use crate::common::EntityUid;
@@ -9,7 +8,7 @@ pub enum Literal {
     Bool(bool),
     Long(Integer),
     String(String),
-    EntityUid(Arc<EntityUid>),
+    EntityUid(EntityUid),
 }
 
 impl Literal {
@@ -29,8 +28,8 @@ impl Literal {
     }
 
     #[must_use]
-    pub fn entity_uid(value: EntityUid) -> Self {
-        Self::EntityUid(Arc::new(value))
+    pub const fn entity_uid(value: EntityUid) -> Self {
+        Self::EntityUid(value)
     }
 
     #[must_use]
@@ -58,7 +57,7 @@ impl Literal {
     }
 
     #[must_use]
-    pub fn as_entity_uid(&self) -> Option<&EntityUid> {
+    pub const fn as_entity_uid(&self) -> Option<&EntityUid> {
         match self {
             Self::EntityUid(uid) => Some(uid),
             _ => None,
