@@ -192,44 +192,6 @@ impl TokenKind {
         }
     }
 
-    /// Returns the punctuation kind.
-    #[must_use]
-    pub const fn from_punctuation(current: u8, next: Option<u8>) -> Option<(Self, u8)> {
-        let (kind, len) = match current {
-            b'(' => (Self::OpenParen, 1),
-            b')' => (Self::CloseParen, 1),
-            b'{' => (Self::OpenBrace, 1),
-            b'}' => (Self::CloseBrace, 1),
-            b'[' => (Self::OpenBracket, 1),
-            b']' => (Self::CloseBracket, 1),
-            b'@' => (Self::At, 1),
-            b':' if matches!(next, Some(b':')) => (Self::Colon2, 2),
-            b':' => (Self::Colon, 1),
-            b',' => (Self::Comma, 1),
-            b'.' => (Self::Dot, 1),
-            b'?' => (Self::Question, 1),
-            b';' => (Self::Semicolon, 1),
-            b'&' if matches!(next, Some(b'&')) => (Self::Amp2, 2),
-            b'|' if matches!(next, Some(b'|')) => (Self::Pipe2, 2),
-            b'!' if matches!(next, Some(b'=')) => (Self::BangEq, 2),
-            b'!' => (Self::Bang, 1),
-            b'=' if matches!(next, Some(b'=')) => (Self::Eq2, 2),
-            b'=' => (Self::Eq, 1),
-            b'<' if matches!(next, Some(b'=')) => (Self::LtEq, 2),
-            b'<' => (Self::Lt, 1),
-            b'>' if matches!(next, Some(b'=')) => (Self::GtEq, 2),
-            b'>' => (Self::Gt, 1),
-            b'+' => (Self::Plus, 1),
-            b'-' => (Self::Minus, 1),
-            b'*' => (Self::Star, 1),
-            b'/' => (Self::Slash, 1),
-            b'%' => (Self::Percent, 1),
-            _ => return None,
-        };
-
-        Some((kind, len))
-    }
-
     /// Checks if this is a trivial token.
     #[must_use]
     pub const fn is_trivial(self) -> bool {

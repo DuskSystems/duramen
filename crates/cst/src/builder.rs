@@ -87,6 +87,7 @@ impl<T: Copy> Builder<T> {
     }
 
     /// Wraps nodes since the checkpoint in a new parent.
+    #[inline(always)]
     pub fn wrap(&mut self, checkpoint: Option<usize>, kind: T) {
         let first = match checkpoint {
             Some(previous) => self.nodes[previous].next,

@@ -89,6 +89,10 @@ impl<'a> SchemaParser<'a> {
     }
 
     /// Parses a schema file.
+    ///
+    /// ```cedarschema
+    /// namespace Acme { entity User; }
+    /// ```
     fn schema(&mut self) {
         self.builder.open(SchemaSyntax::Schema);
 
@@ -119,23 +123,7 @@ impl<'a> SchemaParser<'a> {
         if self.current.kind == TokenKind::Namespace {
             self.bump();
             self.name();
-
-            if self.current.kind == TokenKind::OpenBrace {
-                self.bump();
-
-                while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-                    self.advance.push(self.position);
-                    self.declaration();
-                    self.advance.pop(self.position, self.current.kind);
-                }
-
-                if self.current.kind == TokenKind::CloseBrace {
-                    self.bump();
-                }
-            } else {
-                self.builder.open(SchemaSyntax::Error);
-                self.builder.close();
-            }
+            self.namespace_body();
 
             self.builder
                 .wrap(checkpoint, SchemaSyntax::NamespaceDeclaration);
@@ -144,16 +132,30 @@ impl<'a> SchemaParser<'a> {
         }
     }
 
+    /// Parses a nested namespace declaration.
+    ///
+    /// ```cedarschema
+    /// namespace Inner { entity Foo; }
+    /// ```
     fn nested_namespace(&mut self) {
         self.builder.open(SchemaSyntax::NamespaceDeclaration);
         self.nested_namespace_body();
         self.builder.close();
     }
 
+    /// Parses the body of a nested namespace after the `namespace` keyword.
     fn nested_namespace_body(&mut self) {
         self.bump();
         self.name();
+        self.namespace_body();
+    }
 
+    /// Parses the body of a namespace.
+    ///
+    /// ```cedarschema
+    /// { entity User; action view; }
+    /// ```
+    fn namespace_body(&mut self) {
         if self.current.kind == TokenKind::OpenBrace {
             self.bump();
 
@@ -172,6 +174,11 @@ impl<'a> SchemaParser<'a> {
         }
     }
 
+    /// Parses a declaration (entity, action, type, or nested namespace).
+    ///
+    /// ```cedarschema
+    /// entity User;
+    /// ```
     fn declaration(&mut self) {
         if self.current.kind == TokenKind::Entity {
             self.entity_declaration();
@@ -269,6 +276,7 @@ impl<'a> SchemaParser<'a> {
         self.builder.close();
     }
 
+    /// Parses the body of an entity declaration after the `entity` keyword.
     fn entity_declaration_body(&mut self) {
         self.bump();
 
@@ -284,29 +292,7 @@ impl<'a> SchemaParser<'a> {
             if self.current.kind == TokenKind::OpenBracket {
                 self.builder.open(SchemaSyntax::EnumType);
                 self.bump();
-
-                loop {
-                    if self.current.kind == TokenKind::CloseBracket || self.current.len == 0 {
-                        break;
-                    }
-
-                    if self.current.kind != TokenKind::String {
-                        break;
-                    }
-
-                    self.advance.push(self.position);
-                    self.builder.open(SchemaSyntax::EnumVariant);
-                    self.bump();
-                    self.builder.close();
-
-                    if self.current.kind == TokenKind::Comma {
-                        self.bump();
-                        self.advance.pop(self.position, self.current.kind);
-                    } else {
-                        self.advance.pop(self.position, self.current.kind);
-                        break;
-                    }
-                }
+                self.enum_variants();
 
                 if self.current.kind == TokenKind::CloseBracket {
                     self.bump();
@@ -359,25 +345,33 @@ impl<'a> SchemaParser<'a> {
         self.builder.open(SchemaSyntax::EntityAttributes);
 
         self.bump();
-
-        while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-            self.advance.push(self.position);
-            self.attribute_declaration();
-
-            if self.current.kind == TokenKind::Comma {
-                self.bump();
-            } else {
-                self.advance.pop(self.position, self.current.kind);
-                break;
-            }
-            self.advance.pop(self.position, self.current.kind);
-        }
+        self.attribute_entries();
 
         if self.current.kind == TokenKind::CloseBrace {
             self.bump();
         }
 
         self.builder.close();
+    }
+
+    /// Parses comma-separated attribute declarations inside braces.
+    ///
+    /// ```cedarschema
+    /// name: String, age: Long
+    /// ```
+    fn attribute_entries(&mut self) {
+        while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
+            self.advance.push(self.position);
+            self.attribute_declaration();
+
+            if self.current.kind == TokenKind::Comma {
+                self.bump();
+                self.advance.pop(self.position, self.current.kind);
+            } else {
+                self.advance.pop(self.position, self.current.kind);
+                break;
+            }
+        }
     }
 
     /// Parses entity tags.
@@ -405,6 +399,7 @@ impl<'a> SchemaParser<'a> {
         self.builder.close();
     }
 
+    /// Parses the body of an action declaration after the `action` keyword.
     fn action_declaration_body(&mut self) {
         self.bump();
 
@@ -435,6 +430,7 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// in [Action::"read", Action::"write"]
     /// ```
+    #[inline(always)]
     fn action_parents(&mut self) {
         self.builder.open(SchemaSyntax::ActionParents);
 
@@ -506,6 +502,10 @@ impl<'a> SchemaParser<'a> {
     }
 
     /// Parses principal/resource/context entry in appliesTo.
+    ///
+    /// ```cedarschema
+    /// principal: [User]
+    /// ```
     fn applies_to_entry(&mut self) {
         if self.current.kind == TokenKind::Principal {
             self.builder.open(SchemaSyntax::PrincipalTypes);
@@ -577,6 +577,7 @@ impl<'a> SchemaParser<'a> {
         self.builder.close();
     }
 
+    /// Parses the body of a type declaration after the `type` keyword.
     fn type_declaration_body(&mut self) {
         self.bump();
 
@@ -627,25 +628,7 @@ impl<'a> SchemaParser<'a> {
 
             if self.current.kind == TokenKind::OpenBracket {
                 self.bump();
-
-                while self.current.len > 0 && self.current.kind != TokenKind::CloseBracket {
-                    if self.current.kind != TokenKind::String {
-                        break;
-                    }
-
-                    self.advance.push(self.position);
-                    self.builder.open(SchemaSyntax::EnumVariant);
-                    self.bump();
-                    self.builder.close();
-
-                    if self.current.kind == TokenKind::Comma {
-                        self.bump();
-                        self.advance.pop(self.position, self.current.kind);
-                    } else {
-                        self.advance.pop(self.position, self.current.kind);
-                        break;
-                    }
-                }
+                self.enum_variants();
 
                 if self.current.kind == TokenKind::CloseBracket {
                     self.bump();
@@ -655,20 +638,7 @@ impl<'a> SchemaParser<'a> {
             self.builder.wrap(checkpoint, SchemaSyntax::EnumType);
         } else if self.current.kind == TokenKind::OpenBrace {
             self.bump();
-
-            while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-                self.advance.push(self.position);
-                self.attribute_declaration();
-
-                if self.current.kind == TokenKind::Comma {
-                    self.bump();
-                } else {
-                    self.advance.pop(self.position, self.current.kind);
-                    break;
-                }
-
-                self.advance.pop(self.position, self.current.kind);
-            }
+            self.attribute_entries();
 
             if self.current.kind == TokenKind::CloseBrace {
                 self.bump();
@@ -752,6 +722,32 @@ impl<'a> SchemaParser<'a> {
         }
     }
 
+    /// Parses enum variants inside brackets.
+    ///
+    /// ```cedarschema
+    /// "active", "inactive"
+    /// ```
+    fn enum_variants(&mut self) {
+        while self.current.len > 0 && self.current.kind != TokenKind::CloseBracket {
+            if self.current.kind != TokenKind::String {
+                break;
+            }
+
+            self.advance.push(self.position);
+            self.builder.open(SchemaSyntax::EnumVariant);
+            self.bump();
+            self.builder.close();
+
+            if self.current.kind == TokenKind::Comma {
+                self.bump();
+                self.advance.pop(self.position, self.current.kind);
+            } else {
+                self.advance.pop(self.position, self.current.kind);
+                break;
+            }
+        }
+    }
+
     /// Parses a qualified name.
     ///
     /// ```cedarschema
@@ -774,6 +770,7 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// Foo::Bar::Baz
     /// ```
+    #[inline(always)]
     fn name(&mut self) {
         let checkpoint = self.builder.checkpoint();
 
@@ -802,6 +799,10 @@ impl<'a> SchemaParser<'a> {
     }
 
     /// Parses comma-separated names.
+    ///
+    /// ```cedarschema
+    /// User, Admin, Guest
+    /// ```
     fn name_list(&mut self) {
         self.name();
 
@@ -814,6 +815,10 @@ impl<'a> SchemaParser<'a> {
     }
 
     /// Parses comma-separated action names (identifiers or strings).
+    ///
+    /// ```cedarschema
+    /// view, "edit", delete
+    /// ```
     fn action_name_list(&mut self) {
         self.action_name();
 
@@ -826,6 +831,10 @@ impl<'a> SchemaParser<'a> {
     }
 
     /// Parses an action name (identifier or string).
+    ///
+    /// ```cedarschema
+    /// view
+    /// ```
     fn action_name(&mut self) {
         let checkpoint = self.builder.checkpoint();
 
