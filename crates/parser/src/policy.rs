@@ -296,6 +296,10 @@ impl<'a> PolicyParser<'a> {
     }
 
     /// Parses an expression.
+    ///
+    /// ```cedar
+    /// principal.department == "Engineering"
+    /// ```
     fn expr(&mut self) {
         let checkpoint = self.builder.checkpoint();
 
@@ -610,20 +614,7 @@ impl<'a> PolicyParser<'a> {
             self.builder.wrap(checkpoint, PolicySyntax::List);
         } else if self.current.kind == TokenKind::OpenBrace {
             self.bump();
-
-            while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-                self.advance.push(self.position);
-                self.record_entry();
-
-                if self.current.kind == TokenKind::Comma {
-                    self.bump();
-                } else {
-                    self.advance.pop(self.position, self.current.kind);
-                    break;
-                }
-
-                self.advance.pop(self.position, self.current.kind);
-            }
+            self.record_entries();
 
             if self.current.kind == TokenKind::CloseBrace {
                 self.bump();
@@ -661,6 +652,26 @@ impl<'a> PolicyParser<'a> {
         }
 
         self.builder.close();
+    }
+
+    /// Parses comma-separated record entries inside braces.
+    ///
+    /// ```cedar
+    /// "name": "alice", "age": 30
+    /// ```
+    fn record_entries(&mut self) {
+        while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
+            self.advance.push(self.position);
+            self.record_entry();
+
+            if self.current.kind == TokenKind::Comma {
+                self.bump();
+                self.advance.pop(self.position, self.current.kind);
+            } else {
+                self.advance.pop(self.position, self.current.kind);
+                break;
+            }
+        }
     }
 
     /// Parses a comma-separated argument list.
@@ -720,20 +731,7 @@ impl<'a> PolicyParser<'a> {
                         return;
                     } else if self.current.kind == TokenKind::OpenBrace {
                         self.bump();
-
-                        while self.current.len > 0 && self.current.kind != TokenKind::CloseBrace {
-                            self.advance.push(self.position);
-                            self.record_entry();
-
-                            if self.current.kind == TokenKind::Comma {
-                                self.bump();
-                            } else {
-                                self.advance.pop(self.position, self.current.kind);
-                                break;
-                            }
-
-                            self.advance.pop(self.position, self.current.kind);
-                        }
+                        self.record_entries();
 
                         if self.current.kind == TokenKind::CloseBrace {
                             self.bump();
@@ -765,6 +763,7 @@ impl<'a> PolicyParser<'a> {
         self.builder.close();
     }
 
+    /// Peeks ahead to check if the next non-trivial token starts an entity reference.
     fn peek_entity_ref(&mut self) -> bool {
         let saved = self.lexer.offset();
 

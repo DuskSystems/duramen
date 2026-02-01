@@ -193,9 +193,6 @@ pub enum SchemaSyntax {
     /// Action attributes.
     ActionAttributes,
 
-    /// Attribute entry.
-    AttributeEntry,
-
     /// Type expression.
     TypeExpr,
 
@@ -444,7 +441,6 @@ impl fmt::Display for SchemaSyntax {
             Self::ContextType => "context type",
             Self::ActionParents => "action parents",
             Self::ActionAttributes => "action attributes",
-            Self::AttributeEntry => "attribute entry",
             Self::TypeExpr => "type expression",
             Self::SetType => "set type",
             Self::RecordType => "record type",

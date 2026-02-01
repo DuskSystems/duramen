@@ -153,13 +153,6 @@ pub enum PolicySyntax {
     /// ```
     Condition,
 
-    /// Extension clause.
-    ///
-    /// ```cedar
-    /// advice { "Anonymize" }
-    /// ```
-    Extension,
-
     /// If expression.
     ///
     /// ```cedar
@@ -511,7 +504,6 @@ impl fmt::Display for PolicySyntax {
             Self::Annotation => "annotation",
             Self::VariableDef => "variable definition",
             Self::Condition => "condition",
-            Self::Extension => "extension",
             Self::IfExpression => "if expression",
             Self::OrExpression => "or expression",
             Self::AndExpression => "and expression",
