@@ -100,6 +100,9 @@
             cargo-show-asm
             vscode-extensions.vadimcn.vscode-lldb.adapter
 
+            # Upstream
+            cedar
+
             # Git
             committed
 

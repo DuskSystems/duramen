@@ -22,3 +22,10 @@ duramen-test = { workspace = true }
 
 # Fuzzing
 libfuzzer-sys = { workspace = true, features = ["link_libfuzzer"] }
+
+[[bin]]
+name = "lexer"
+path = "fuzz_targets/lexer.rs"
+test = false
+doc = false
+bench = false
