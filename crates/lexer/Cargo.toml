@@ -17,4 +17,19 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["memchr/std"]
+
+[dependencies]
+# SIMD
+memchr = { workspace = true }
+
+[dev-dependencies]
+# RNG
+rand = { workspace = true, features = ["small_rng"] }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[bench]]
+name = "throughput"
+harness = false
