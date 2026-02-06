@@ -1,0 +1,10 @@
+# https://tombi-toml.github.io/tombi/docs/configuration
+
+[files]
+exclude = ["cedar/**/*", "cedar-integration-tests/**/*"]
+
+[lsp]
+formatting.enabled = false
+
+[lint.rules]
+tables-out-of-order = "off"

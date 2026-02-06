@@ -1,0 +1,111 @@
+# Policy Keywords
+"permit"
+"forbid"
+"when"
+"unless"
+
+# Policy Scope Variables
+"principal"
+"action"
+"resource"
+"context"
+
+# Policy Slots
+"?principal"
+"?resource"
+
+# Schema Keywords
+"namespace"
+"entity"
+"type"
+"enum"
+"appliesTo"
+"attributes"
+"tags"
+
+# Schema Type Keywords
+"Bool"
+"Long"
+"String"
+"Set"
+
+# Conditionals
+"if"
+"then"
+"else"
+
+# Relational Keywords
+"in"
+"has"
+"like"
+"is"
+
+# Literals
+"true"
+"false"
+
+# Delimiters
+"("
+")"
+"{"
+"}"
+"["
+"]"
+
+# Punctuation
+","
+";"
+":"
+"::"
+"."
+"@"
+"?"
+
+# Comparison Operators
+"=="
+"!="
+"<"
+"<="
+">"
+">="
+"="
+
+# Logical Operators
+"&&"
+"||"
+"!"
+
+# Arithmetic Operators
+"+"
+"-"
+"*"
+"/"
+"%"
+
+# Extension Types
+"__cedar"
+"ip"
+"decimal"
+"ipaddr"
+
+# Extension Functions
+"contains"
+"containsAll"
+"containsAny"
+"isEmpty"
+"getTag"
+"hasTag"
+"lessThan"
+"lessThanOrEqual"
+"greaterThan"
+"greaterThanOrEqual"
+"isIpv4"
+"isIpv6"
+"isLoopback"
+"isMulticast"
+"isInRange"
+"toDate"
+"toTime"
+"toDuration"
+"offset"
+"durationSince"

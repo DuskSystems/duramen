@@ -1,0 +1,20 @@
+[package]
+name = "duramen-ast"
+description = "Duramen AST (Abstract Syntax Tree)"
+include = ["/src", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
+publish = false
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = []

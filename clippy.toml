@@ -1,0 +1,27 @@
+# https://doc.rust-lang.org/clippy/lint_configuration.html
+
+allow-renamed-params-for = []
+avoid-breaking-exported-api = false
+
+# Tests
+allow-dbg-in-tests = true
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+allow-print-in-tests = true
+allow-unwrap-in-tests = true
+
+disallowed-types = [
+  # Prefer `hashbrown` or `rustc-hash`.
+  "std::collections::HashMap",
+  "std::collections::HashSet",
+
+  # Prefer `indexmap`.
+  "alloc::collections::BTreeMap",
+  "alloc::collections::BTreeSet",
+
+  # Prefer `jiff`.
+  "core::time::Duration",
+  "std::time::Instant",
+  "std::time::SystemTime",
+]

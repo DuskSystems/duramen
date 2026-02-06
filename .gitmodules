@@ -1,0 +1,7 @@
+[submodule "cedar"]
+	path = cedar
+	url = https://github.com/cedar-policy/cedar.git
+
+[submodule "cedar-integration-tests"]
+	path = cedar-integration-tests
+	url = https://github.com/cedar-policy/cedar-integration-tests.git

@@ -1,0 +1,206 @@
+# https://doc.rust-lang.org/cargo/reference/workspaces.html
+[workspace]
+resolver = "3"
+members = [".", "crates/*", "fuzz"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+repository = "https://github.com/DuskSystems/duramen"
+license = "MIT OR Apache-2.0"
+keywords = ["cedar", "policy", "authorization"]
+categories = ["parser-implementations", "no-std"]
+
+# https://doc.rust-lang.org/rustc/lints/groups.html
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+unused = { level = "deny", priority = -2 }
+future-incompatible = { level = "deny", priority = -1 }
+keyword-idents = { level = "deny", priority = -1 }
+let-underscore = { level = "deny", priority = -1 }
+nonstandard-style = { level = "deny", priority = -1 }
+refining-impl-trait = { level = "deny", priority = -1 }
+rust-2018-compatibility = { level = "deny", priority = -1 }
+rust-2018-idioms = { level = "deny", priority = -1 }
+rust-2021-compatibility = { level = "deny", priority = -1 }
+rust-2024-compatibility = { level = "deny", priority = -1 }
+
+# https://rust-lang.github.io/rust-clippy/master/index.html
+[workspace.lints.clippy]
+cargo = { level = "deny", priority = -1 }
+complexity = { level = "deny", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+perf = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+
+# Correctness
+arithmetic_side_effects = "deny"
+expect_used = "deny"
+fallible_impl_from = "deny"
+future_not_send = "deny"
+indexing_slicing = "deny"
+non_zero_suggestions = "deny"
+panic = "deny"
+rest_pat_in_fully_bound_structs = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+unwrap_used = "deny"
+wildcard_enum_match_arm = "deny"
+
+# Errors
+map_err_ignore = "deny"
+try_err = "deny"
+unused_result_ok = "deny"
+
+# Performance
+inline_always = "allow"
+string_lit_chars_any = "deny"
+
+# Clarity
+allow_attributes = "deny"
+allow_attributes_without_reason = "deny"
+clone_on_ref_ptr = "deny"
+impl_trait_in_params = "deny"
+missing_assert_message = "deny"
+same_name_method = "deny"
+str_to_string = "deny"
+unseparated_literal_suffix = "deny"
+unused_trait_names = "deny"
+
+# Style
+deref_by_slicing = "deny"
+mod_module_files = "deny"
+redundant_type_annotations = "deny"
+ref_patterns = "deny"
+renamed_function_params = "deny"
+return_and_then = "deny"
+semicolon_outside_block = "deny"
+
+# Imports
+alloc_instead_of_core = "deny"
+std_instead_of_alloc = "deny"
+std_instead_of_core = "deny"
+unnecessary_self_imports = "deny"
+
+# Tests
+cfg_not_test = "deny"
+redundant_test_prefix = "deny"
+
+# Documentation
+doc_include_without_cfg = "deny"
+doc_paragraphs_missing_punctuation = "deny"
+missing_errors_doc = "deny"
+missing_panics_doc = "deny"
+
+# Debugging
+dbg_macro = "deny"
+print_stderr = "deny"
+print_stdout = "deny"
+
+# Relaxed
+cognitive_complexity = "allow"
+module_name_repetitions = "allow"
+new_without_default = "allow"
+too_many_lines = "allow"
+
+[workspace.dependencies]
+duramen = { path = ".", default-features = false }
+duramen-ast = { path = "crates/ast", default-features = false }
+duramen-cst = { path = "crates/cst", default-features = false }
+duramen-diagnostic = { path = "crates/diagnostic", default-features = false }
+duramen-escape = { path = "crates/escape", default-features = false }
+duramen-evaluate = { path = "crates/evaluate", default-features = false }
+duramen-lexer = { path = "crates/lexer", default-features = false }
+duramen-lower = { path = "crates/lower", default-features = false }
+duramen-parser = { path = "crates/parser", default-features = false }
+duramen-runtime = { path = "crates/runtime", default-features = false }
+duramen-test = { path = "crates/test", default-features = false }
+duramen-validate = { path = "crates/validate", default-features = false }
+
+# SIMD
+memchr = { version = "2.7", default-features = false }
+
+# Collections
+indexmap = { version = "2.13", default-features = false }
+mitsein = { version = "0.9", default-features = false }
+
+# Hashing
+hashbrown = { version = "0.15", default-features = false }
+rustc-hash = { version = "2.1", default-features = false }
+
+# Time
+jiff = { version = "0.2", default-features = false }
+
+# Diagnostics
+# FIXME: https://github.com/rust-lang/annotate-snippets-rs/pull/365
+annotate-snippets = { git = "https://github.com/CathalMullan/annotate-snippets-rs", branch = "no-std", default-features = false }
+anstream = { version = "0.6", default-features = false }
+
+# Testing
+datatest-stable = { version = "0.3", default-features = false }
+indoc = { version = "2.0", default-features = false }
+insta = { version = "1.46", default-features = false }
+rand = { version = "0.9", default-features = false }
+similar-asserts = { version = "1.7", default-features = false }
+walkdir = { version = "2.5", default-features = false }
+
+# Benchmarking
+divan = { package = "codspeed-divan-compat", version = "4.3", default-features = false }
+
+# Fuzzing
+libfuzzer-sys = { version = "0.4", default-features = false }
+
+# https://doc.rust-lang.org/cargo/reference/manifest.html
+[package]
+name = "duramen"
+description = "A Cedar implementation"
+include = ["/src", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
+publish = false
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = [
+    "duramen-ast/std",
+    "duramen-cst/std",
+    "duramen-diagnostic/std",
+    "duramen-escape/std",
+    "duramen-evaluate/std",
+    "duramen-lexer/std",
+    "duramen-lower/std",
+    "duramen-parser/std",
+    "duramen-runtime/std",
+    "duramen-validate/std",
+]
+
+[dependencies]
+duramen-ast = { workspace = true }
+duramen-cst = { workspace = true }
+duramen-diagnostic = { workspace = true }
+duramen-escape = { workspace = true }
+duramen-evaluate = { workspace = true }
+duramen-lexer = { workspace = true }
+duramen-lower = { workspace = true }
+duramen-parser = { workspace = true }
+duramen-runtime = { workspace = true }
+duramen-validate = { workspace = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--html-in-header", "docs/arborium.html"]

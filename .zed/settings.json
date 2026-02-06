@@ -1,0 +1,104 @@
+{
+  "remove_trailing_whitespace_on_save": true,
+  "ensure_final_newline_on_save": true,
+
+  "file_scan_exclusions": [
+    "**/.direnv",
+    "**/.git",
+    "**/cedar",
+    "**/cedar-integration-tests",
+  ],
+
+  "languages": {
+    "Rust": {
+      "language_servers": ["rust-analyzer"],
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+
+    "Nix": {
+      "language_servers": ["nixd", "nil"],
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+
+    "TOML": {
+      "language_servers": ["tombi"],
+      "format_on_save": "on",
+      "formatter": "language_server"
+    }
+  },
+
+  "lsp": {
+    "rust-analyzer": {
+      "binary": {
+        "path": "rust-analyzer"
+      },
+
+      "initialization_options": {
+        "cargo": {
+          "targetDir": true,
+          "features": "all"
+        },
+        "check": {
+          "command": "clippy"
+        },
+        "checkOnSave": true,
+        "hover": {
+          "memoryLayout": {
+            "enable": true,
+            "size": "decimal",
+            "alignment": "decimal",
+            "offset": "decimal",
+            "niches": true
+          }
+        },
+        "imports": {
+          "prefix": "crate",
+          "preferNoStd": true,
+          "granularity": {
+            "enforce": true,
+            "group": "module"
+          }
+        }
+      }
+    },
+
+    "nixd": {
+      "binary": {
+        "path": "nixd"
+      },
+
+      "settings": {
+        "formatting": {
+          "command": ["nixfmt", "--width=120"]
+        }
+      }
+    },
+
+    "nil": {
+      "binary": {
+        "path": "nil"
+      }
+    },
+
+    "tombi": {
+      "binary": {
+        "path": "tombi",
+        "arguments": ["lsp"]
+      }
+    },
+
+    "typos": {
+      "binary": {
+        "path": "typos-lsp"
+      }
+    }
+  },
+
+  "dap": {
+    "CodeLLDB": {
+      "binary": "codelldb"
+    }
+  }
+}

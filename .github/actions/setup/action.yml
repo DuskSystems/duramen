@@ -1,0 +1,42 @@
+name: Setup
+description: Common setup steps
+
+inputs:
+  save-cache:
+    description: Whether to save the cache
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Nix
+      uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+
+    - name: Cache Nix
+      uses: nix-community/cache-nix-action@106bba72ed8e29c8357661199511ef07790175e9 # v7.0.1
+      with:
+        primary-key: nix-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-${{ runner.arch }}-
+        save: ${{ inputs.save-cache }}
+        purge: ${{ inputs.save-cache }}
+        purge-prefixes: nix-${{ runner.os }}-${{ runner.arch }}-
+        purge-created: 86400
+
+    - name: Configure SCCache
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+      with:
+        script: |
+          core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL);
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN);
+
+    - name: Setup submodules
+      shell: bash
+      run: ./scripts/submodules.sh
+
+    - name: Build shells
+      if: inputs.save-cache == 'true'
+      shell: bash
+      run: |
+        for shell in $(nix flake show --json | jq -r '.devShells | to_entries[0].value | keys[] | select(startswith("ci"))'); do
+          nix develop ".#${shell}" --command true
+        done
