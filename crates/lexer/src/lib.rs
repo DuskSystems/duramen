@@ -10,5 +10,7 @@ pub(crate) mod cursor;
 mod lexer;
 pub use lexer::Lexer;
 
+pub(crate) mod lookup;
+
 mod token;
 pub use token::{Token, TokenKind};

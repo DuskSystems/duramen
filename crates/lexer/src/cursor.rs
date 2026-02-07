@@ -1,3 +1,5 @@
+use crate::lookup::{IDENTIFIER_TABLE, INTEGER_TABLE, WHITESPACE_TABLE};
+
 /// Cursor for traversing the source.
 pub struct Cursor<'a> {
     source: &'a str,
@@ -15,7 +17,6 @@ impl<'a> Cursor<'a> {
     }
 
     /// Returns the source as bytes.
-    #[inline]
     const fn bytes(&self) -> &[u8] {
         self.source.as_bytes()
     }
@@ -72,9 +73,26 @@ impl<'a> Cursor<'a> {
     pub fn skip_whitespace(&mut self) -> bool {
         let start = self.position;
 
-        while let Some(remaining) = self.source.get(self.position..)
-            && let Some(char) = remaining.chars().next()
-        {
+        while let Some(&byte) = self.bytes().get(self.position) {
+            // ASCII
+            if byte < 128 {
+                if *WHITESPACE_TABLE.get(byte as usize).unwrap_or(&false) {
+                    self.position += 1;
+                    continue;
+                }
+
+                break;
+            }
+
+            // Unicode
+            let Some(remaining) = self.source.get(self.position..) else {
+                break;
+            };
+
+            let Some(char) = remaining.chars().next() else {
+                break;
+            };
+
             if !char.is_whitespace() {
                 break;
             }
@@ -130,7 +148,7 @@ impl<'a> Cursor<'a> {
     /// Scans an identifier.
     pub fn scan_identifier(&mut self) {
         while let Some(&byte) = self.bytes().get(self.position) {
-            if !byte.is_ascii_alphanumeric() && byte != b'_' {
+            if !IDENTIFIER_TABLE.get(byte as usize).unwrap_or(&false) {
                 break;
             }
 
@@ -141,7 +159,7 @@ impl<'a> Cursor<'a> {
     /// Scans an integer.
     pub fn scan_integer(&mut self) {
         while let Some(&byte) = self.bytes().get(self.position) {
-            if !byte.is_ascii_digit() {
+            if !INTEGER_TABLE.get(byte as usize).unwrap_or(&false) {
                 break;
             }
 
