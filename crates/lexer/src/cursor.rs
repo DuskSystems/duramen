@@ -101,23 +101,27 @@ impl<'a> Cursor<'a> {
     /// Returns `true` if properly terminated, `false` if unterminated.
     #[must_use]
     pub fn scan_string(&mut self) -> bool {
-        while let Some(remaining) = self.source.get(self.position..)
-            && let Some(char) = remaining.chars().next()
-        {
-            self.position += char.len_utf8();
+        while let Some(remaining) = self.bytes().get(self.position..) {
+            let Some(offset) = memchr::memchr2(b'"', b'\\', remaining) else {
+                // Unterminated string
+                self.position = self.bytes().len();
+                return false;
+            };
 
-            match char {
-                '"' => return true,
-                '\\' => {
-                    // Skip the escaped character
-                    if let Some(remaining) = self.source.get(self.position..)
-                        && let Some(escaped) = remaining.chars().next()
-                    {
-                        self.position += escaped.len_utf8();
-                    }
-                }
-                _ => {}
+            self.position += offset;
+
+            let Some(&byte) = self.bytes().get(self.position) else {
+                return false;
+            };
+
+            if byte == b'"' {
+                self.position += 1;
+                return true;
             }
+
+            // Escaped character
+            self.bump();
+            self.bump_char();
         }
 
         false
