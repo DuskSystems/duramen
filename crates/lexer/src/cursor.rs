@@ -72,7 +72,9 @@ impl<'a> Cursor<'a> {
     pub fn skip_whitespace(&mut self) -> bool {
         let start = self.position;
 
-        while let Some(char) = self.source[self.position..].chars().next() {
+        while let Some(remaining) = self.source.get(self.position..)
+            && let Some(char) = remaining.chars().next()
+        {
             if !char.is_whitespace() {
                 break;
             }
@@ -85,11 +87,12 @@ impl<'a> Cursor<'a> {
 
     /// Skips to end of line.
     pub fn skip_line(&mut self) {
-        let remaining = &self.bytes()[self.position..];
-        if let Some(offset) = memchr::memchr2(b'\n', b'\r', remaining) {
-            self.position += offset;
-        } else {
-            self.position = self.bytes().len();
+        if let Some(remaining) = self.bytes().get(self.position..) {
+            if let Some(offset) = memchr::memchr2(b'\n', b'\r', remaining) {
+                self.position += offset;
+            } else {
+                self.position = self.bytes().len();
+            }
         }
     }
 
@@ -98,14 +101,18 @@ impl<'a> Cursor<'a> {
     /// Returns `true` if properly terminated, `false` if unterminated.
     #[must_use]
     pub fn scan_string(&mut self) -> bool {
-        while let Some(char) = self.source[self.position..].chars().next() {
+        while let Some(remaining) = self.source.get(self.position..)
+            && let Some(char) = remaining.chars().next()
+        {
             self.position += char.len_utf8();
 
             match char {
                 '"' => return true,
                 '\\' => {
                     // Skip the escaped character
-                    if let Some(escaped) = self.source[self.position..].chars().next() {
+                    if let Some(remaining) = self.source.get(self.position..)
+                        && let Some(escaped) = remaining.chars().next()
+                    {
                         self.position += escaped.len_utf8();
                     }
                 }
