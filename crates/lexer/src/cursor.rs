@@ -1,5 +1,10 @@
 use crate::lookup::{IDENTIFIER_TABLE, INTEGER_TABLE, WHITESPACE_TABLE};
 
+/// A saved position that can be restored later.
+#[derive(Clone, Copy, Debug)]
+#[repr(transparent)]
+pub struct Checkpoint(usize);
+
 /// Cursor for traversing the source.
 pub struct Cursor<'a> {
     source: &'a str,
@@ -17,25 +22,38 @@ impl<'a> Cursor<'a> {
     }
 
     /// Returns the source as bytes.
+    #[must_use]
     const fn bytes(&self) -> &[u8] {
         self.source.as_bytes()
     }
 
-    /// Returns the current byte position.
+    /// Returns the current position in the source.
     #[must_use]
     pub const fn position(&self) -> usize {
         self.position
     }
 
-    /// Sets the byte position.
-    pub const fn set_position(&mut self, position: usize) {
-        self.position = position;
+    /// Saves the current position for later restoration.
+    #[must_use]
+    pub const fn checkpoint(&self) -> Checkpoint {
+        Checkpoint(self.position)
+    }
+
+    /// Restores a previously saved position.
+    pub const fn restore(&mut self, checkpoint: Checkpoint) {
+        self.position = checkpoint.0;
     }
 
     /// Returns the current byte.
     #[must_use]
     pub fn current(&self) -> Option<u8> {
         self.bytes().get(self.position).copied()
+    }
+
+    /// Returns a slice from `start` to current position.
+    #[must_use]
+    pub fn slice(&self, start: usize) -> &'a str {
+        &self.source[start..self.position]
     }
 
     /// Returns the next byte.
@@ -63,21 +81,16 @@ impl<'a> Cursor<'a> {
         }
     }
 
-    /// Returns a slice from `start` to current position.
-    #[must_use]
-    pub fn slice(&self, start: usize) -> Option<&'a str> {
-        self.source.get(start..self.position)
-    }
-
     /// Skips whitespace characters.
     pub fn skip_whitespace(&mut self) -> bool {
         let start = self.position;
 
-        while let Some(&byte) = self.bytes().get(self.position) {
+        let mut position = start;
+        while let Some(&byte) = self.bytes().get(position) {
             // ASCII
             if byte < 128 {
-                if *WHITESPACE_TABLE.get(byte as usize).unwrap_or(&false) {
-                    self.position += 1;
+                if WHITESPACE_TABLE[byte as usize] {
+                    position += 1;
                     continue;
                 }
 
@@ -85,7 +98,7 @@ impl<'a> Cursor<'a> {
             }
 
             // Unicode
-            let Some(remaining) = self.source.get(self.position..) else {
+            let Some(remaining) = self.source.get(position..) else {
                 break;
             };
 
@@ -97,10 +110,11 @@ impl<'a> Cursor<'a> {
                 break;
             }
 
-            self.position += char.len_utf8();
+            position += char.len_utf8();
         }
 
-        self.position > start
+        self.position = position;
+        position > start
     }
 
     /// Skips to end of line.
@@ -147,24 +161,30 @@ impl<'a> Cursor<'a> {
 
     /// Scans an identifier.
     pub fn scan_identifier(&mut self) {
-        while let Some(&byte) = self.bytes().get(self.position) {
-            if !IDENTIFIER_TABLE.get(byte as usize).unwrap_or(&false) {
+        let mut position = self.position;
+        while let Some(&byte) = self.bytes().get(position) {
+            if !IDENTIFIER_TABLE[byte as usize] {
                 break;
             }
 
-            self.position += 1;
+            position += 1;
         }
+
+        self.position = position;
     }
 
     /// Scans an integer.
     pub fn scan_integer(&mut self) {
-        while let Some(&byte) = self.bytes().get(self.position) {
-            if !INTEGER_TABLE.get(byte as usize).unwrap_or(&false) {
+        let mut position = self.position;
+        while let Some(&byte) = self.bytes().get(position) {
+            if !INTEGER_TABLE[byte as usize] {
                 break;
             }
 
-            self.position += 1;
+            position += 1;
         }
+
+        self.position = position;
     }
 }
 

@@ -1,10 +1,3 @@
-#![expect(
-    clippy::indexing_slicing,
-    clippy::cast_possible_truncation,
-    clippy::manual_is_ascii_check,
-    reason = "Cannot fail"
-)]
-
 pub const IDENTIFIER_TABLE: [bool; 256] = {
     let mut table = [false; 256];
 
