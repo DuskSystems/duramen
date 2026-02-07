@@ -17,7 +17,7 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["annotate-snippets/std"]
 
 [dependencies]
 # Diagnostics

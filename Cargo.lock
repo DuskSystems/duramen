@@ -17,6 +17,7 @@ version = "0.12.11"
 source = "git+https://github.com/CathalMullan/annotate-snippets-rs?branch=no-std#5e4d94c579276b6adb8d1bb3aff9eb1840bafaf9"
 dependencies = [
  "anstyle",
+ "memchr",
  "unicode-width",
 ]
 
