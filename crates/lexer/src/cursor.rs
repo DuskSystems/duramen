@@ -15,7 +15,6 @@ impl<'a> Cursor<'a> {
     }
 
     /// Returns the source as bytes.
-    #[inline]
     const fn bytes(&self) -> &[u8] {
         self.source.as_bytes()
     }
