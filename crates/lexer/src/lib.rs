@@ -1,10 +1,6 @@
 #![cfg_attr(doc, doc = include_str!("../README.md"))]
 #![no_std]
-#![expect(
-    clippy::arithmetic_side_effects,
-    clippy::indexing_slicing,
-    reason = "TODO"
-)]
+#![expect(clippy::arithmetic_side_effects, reason = "TODO")]
 
 #[cfg(feature = "std")]
 extern crate std;
