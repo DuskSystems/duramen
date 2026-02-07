@@ -15,26 +15,15 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Returns the current byte offset.
-    #[must_use]
-    pub const fn offset(&self) -> usize {
-        self.cursor.position()
-    }
-
-    /// Sets the byte offset.
-    pub(crate) const fn set_offset(&mut self, offset: usize) {
-        self.cursor.set_position(offset);
-    }
-
     /// Peeks at the kind of the next non-trivial token without consuming it.
     #[must_use]
     pub fn peek_kind(&mut self) -> Option<TokenKind> {
-        let saved = self.offset();
+        let checkpoint = self.cursor.checkpoint();
 
         loop {
             let token = self.next_token()?;
             if !token.kind.is_trivial() {
-                self.set_offset(saved);
+                self.cursor.restore(checkpoint);
                 return Some(token.kind);
             }
         }
@@ -67,9 +56,7 @@ impl<'a> Lexer<'a> {
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                 let start = self.cursor.position();
                 self.cursor.scan_identifier();
-                self.cursor
-                    .slice(start)
-                    .map_or(TokenKind::Unknown, TokenKind::from_identifier)
+                TokenKind::from_identifier(self.cursor.slice(start))
             }
             // Digits
             b'0'..=b'9' => {
