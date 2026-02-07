@@ -106,6 +106,7 @@ print_stdout = "deny"
 # Relaxed
 cognitive_complexity = "allow"
 module_name_repetitions = "allow"
+multiple_crate_versions = "allow"
 new_without_default = "allow"
 too_many_lines = "allow"
 
@@ -140,9 +141,9 @@ jiff = { version = "0.2", default-features = false }
 # Diagnostics
 # FIXME: https://github.com/rust-lang/annotate-snippets-rs/pull/365
 annotate-snippets = { git = "https://github.com/CathalMullan/annotate-snippets-rs", branch = "no-std", default-features = false }
-anstream = { version = "0.6", default-features = false }
 
 # Testing
+anstream = { version = "0.6", default-features = false }
 datatest-stable = { version = "0.3", default-features = false }
 indoc = { version = "2.0", default-features = false }
 insta = { version = "1.46", default-features = false }
@@ -200,6 +201,9 @@ duramen-lower = { workspace = true }
 duramen-parser = { workspace = true }
 duramen-runtime = { workspace = true }
 duramen-validate = { workspace = true }
+
+[dev-dependencies]
+duramen-test = { workspace = true }
 
 [package.metadata.docs.rs]
 all-features = true

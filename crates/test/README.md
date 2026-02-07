@@ -1,3 +1,1 @@
 # `duramen-test`
-
-Duramen Test.
