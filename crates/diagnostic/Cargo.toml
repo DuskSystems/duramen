@@ -22,3 +22,6 @@ std = ["annotate-snippets/std"]
 [dependencies]
 # Diagnostics
 annotate-snippets = { workspace = true }
+
+[dev-dependencies]
+duramen-test = { workspace = true }

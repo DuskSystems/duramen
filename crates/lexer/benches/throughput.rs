@@ -5,8 +5,8 @@ use core::hint::black_box;
 use divan::counter::BytesCount;
 use divan::{AllocProfiler, Bencher};
 use duramen_lexer::Lexer;
-use rand::rngs::SmallRng;
-use rand::{Rng as _, SeedableRng as _};
+use duramen_test::rand::rngs::SmallRng;
+use duramen_test::rand::{Rng as _, SeedableRng as _};
 
 #[global_allocator]
 static ALLOC: AllocProfiler = AllocProfiler::system();

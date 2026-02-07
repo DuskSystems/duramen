@@ -24,8 +24,7 @@ std = ["memchr/std"]
 memchr = { workspace = true }
 
 [dev-dependencies]
-# RNG
-rand = { workspace = true, features = ["small_rng"] }
+duramen-test = { workspace = true }
 
 # Benchmarking
 divan = { workspace = true }
