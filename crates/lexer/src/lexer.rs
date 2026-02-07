@@ -1,4 +1,11 @@
+#![expect(
+    clippy::arithmetic_side_effects,
+    clippy::cast_possible_truncation,
+    reason = "Truncation prevented by upfront size check"
+)]
+
 use crate::cursor::Cursor;
+use crate::error::LexerError;
 use crate::{Token, TokenKind};
 
 /// Lexer for source code.
@@ -8,10 +15,14 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     /// Creates a new lexer for the given source.
-    #[must_use]
-    pub const fn new(source: &'a str) -> Self {
-        Self {
-            cursor: Cursor::new(source),
+    ///
+    /// # Errors
+    ///
+    /// Returns [`LexerError::InputTooLarge`] if the source exceeds `u32::MAX` bytes.
+    pub const fn new(source: &'a str) -> Result<Self, LexerError> {
+        match Cursor::new(source) {
+            Ok(cursor) => Ok(Self { cursor }),
+            Err(error) => Err(error),
         }
     }
 
@@ -48,7 +59,7 @@ impl<'a> Lexer<'a> {
         let kind = self.scan_token();
         let len = self.cursor.position() - start;
 
-        Some(Token::new(kind, len))
+        Some(Token::new(kind, len as u32))
     }
 
     /// Scans the next token.
@@ -67,9 +78,7 @@ impl<'a> Lexer<'a> {
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
                 let start = self.cursor.position();
                 self.cursor.scan_identifier();
-                self.cursor
-                    .slice(start)
-                    .map_or(TokenKind::Unknown, TokenKind::from_identifier)
+                TokenKind::from_identifier(self.cursor.slice(start))
             }
             // Digits
             b'0'..=b'9' => {
@@ -249,31 +258,31 @@ mod tests {
 
     #[test]
     fn empty() {
-        let mut lexer = Lexer::new("");
+        let mut lexer = Lexer::new("").unwrap();
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn whitespace() {
-        let mut lexer = Lexer::new("  \t\n");
+        let mut lexer = Lexer::new("  \t\n").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Whitespace, 4)));
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn integer() {
-        let mut lexer = Lexer::new("365");
+        let mut lexer = Lexer::new("365").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Integer, 3)));
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn string() {
-        let mut lexer = Lexer::new(r#""alice""#);
+        let mut lexer = Lexer::new(r#""alice""#).unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::String, 7)));
         assert_eq!(lexer.next(), None);
 
-        let mut lexer = Lexer::new(r#""VacationPhoto94.jpg"#);
+        let mut lexer = Lexer::new(r#""VacationPhoto94.jpg"#).unwrap();
         assert_eq!(
             lexer.next(),
             Some(Token::new(TokenKind::StringUnterminated, 20))
@@ -283,37 +292,37 @@ mod tests {
 
     #[test]
     fn identifier() {
-        let mut lexer = Lexer::new("department");
+        let mut lexer = Lexer::new("department").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Identifier, 10)));
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn keyword() {
-        let mut lexer = Lexer::new("permit");
+        let mut lexer = Lexer::new("permit").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::PermitKeyword, 6)));
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn comment() {
-        let mut lexer = Lexer::new("// jane's friends view-permission policy");
+        let mut lexer = Lexer::new("// jane's friends view-permission policy").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Comment, 40)));
         assert_eq!(lexer.next(), None);
     }
 
     #[test]
     fn punctuation() {
-        let mut lexer = Lexer::new("::==");
+        let mut lexer = Lexer::new("::==").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Colon2, 2)));
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Equals2, 2)));
         assert_eq!(lexer.next(), None);
 
-        let mut lexer = Lexer::new(".");
+        let mut lexer = Lexer::new(".").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Dot, 1)));
         assert_eq!(lexer.next(), None);
 
-        let mut lexer = Lexer::new(">=");
+        let mut lexer = Lexer::new(">=").unwrap();
         assert_eq!(
             lexer.next(),
             Some(Token::new(TokenKind::GreaterThanEquals, 2))
@@ -323,11 +332,11 @@ mod tests {
 
     #[test]
     fn unknown() {
-        let mut lexer = Lexer::new("#");
+        let mut lexer = Lexer::new("#").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Unknown, 1)));
         assert_eq!(lexer.next(), None);
 
-        let mut lexer = Lexer::new("🦀");
+        let mut lexer = Lexer::new("🦀").unwrap();
         assert_eq!(lexer.next(), Some(Token::new(TokenKind::Unknown, 4)));
         assert_eq!(lexer.next(), None);
     }

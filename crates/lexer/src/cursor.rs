@@ -1,3 +1,11 @@
+#![expect(
+    clippy::arithmetic_side_effects,
+    clippy::indexing_slicing,
+    reason = "Position validated upfront and maintained within bounds"
+)]
+
+use crate::error::LexerError;
+
 /// Cursor for traversing the source.
 pub struct Cursor<'a> {
     source: &'a str,
@@ -6,12 +14,22 @@ pub struct Cursor<'a> {
 
 impl<'a> Cursor<'a> {
     /// Creates a new cursor at the start of the source.
-    #[must_use]
-    pub const fn new(source: &'a str) -> Self {
-        Self {
+    ///
+    /// # Errors
+    ///
+    /// Returns [`LexerError::InputTooLarge`] if the source exceeds `u32::MAX` bytes.
+    pub const fn new(source: &'a str) -> Result<Self, LexerError> {
+        if source.len() > u32::MAX as usize {
+            return Err(LexerError::InputTooLarge {
+                len: source.len(),
+                max: u32::MAX as usize,
+            });
+        }
+
+        Ok(Self {
             source,
             position: 0,
-        }
+        })
     }
 
     /// Returns the source as bytes.
@@ -45,27 +63,25 @@ impl<'a> Cursor<'a> {
 
     /// Advance by one byte.
     pub const fn bump(&mut self) {
-        self.position = self.position + 1;
+        self.position += 1;
     }
 
     /// Advance by `n` bytes.
     pub const fn bump_n(&mut self, n: usize) {
-        self.position = self.position + n;
+        self.position += n;
     }
 
     /// Advance by one UTF-8 character.
     pub fn bump_char(&mut self) {
-        if let Some(remaining) = self.source.get(self.position..)
-            && let Some(char) = remaining.chars().next()
-        {
+        if let Some(char) = self.source[self.position..].chars().next() {
             self.position += char.len_utf8();
         }
     }
 
     /// Returns a slice from `start` to current position.
     #[must_use]
-    pub fn slice(&self, start: usize) -> Option<&'a str> {
-        self.source.get(start..self.position)
+    pub fn slice(&self, start: usize) -> &'a str {
+        &self.source[start..self.position]
     }
 
     /// Skips whitespace characters.
@@ -145,70 +161,70 @@ mod tests {
 
     #[test]
     fn bump_char() {
-        let mut cursor = Cursor::new("🦀x");
+        let mut cursor = Cursor::new("🦀x").unwrap();
         cursor.bump_char();
         assert_eq!(cursor.current(), Some(b'x'));
 
-        let mut cursor = Cursor::new("");
+        let mut cursor = Cursor::new("").unwrap();
         cursor.bump_char();
         assert_eq!(cursor.current(), None);
     }
 
     #[test]
     fn skip_whitespace() {
-        let mut cursor = Cursor::new("  \t\n\r\x0B\x0Cx");
+        let mut cursor = Cursor::new("  \t\n\r\x0B\x0Cx").unwrap();
         cursor.skip_whitespace();
         assert_eq!(cursor.current(), Some(b'x'));
 
-        let mut cursor = Cursor::new("\u{00A0}\u{2003}\u{3000}x");
+        let mut cursor = Cursor::new("\u{00A0}\u{2003}\u{3000}x").unwrap();
         cursor.skip_whitespace();
         assert_eq!(cursor.current(), Some(b'x'));
     }
 
     #[test]
     fn skip_line() {
-        let mut cursor = Cursor::new("view-permission policy\npermit");
+        let mut cursor = Cursor::new("view-permission policy\npermit").unwrap();
         cursor.skip_line();
         assert_eq!(cursor.current(), Some(b'\n'));
 
-        let mut cursor = Cursor::new("view-permission policy");
+        let mut cursor = Cursor::new("view-permission policy").unwrap();
         cursor.skip_line();
         assert_eq!(cursor.current(), None);
 
-        let mut cursor = Cursor::new("");
+        let mut cursor = Cursor::new("").unwrap();
         cursor.skip_line();
         assert_eq!(cursor.current(), None);
     }
 
     #[test]
     fn scan_string() {
-        let mut cursor = Cursor::new("alice\";");
+        let mut cursor = Cursor::new("alice\";").unwrap();
         assert!(cursor.scan_string());
         assert_eq!(cursor.current(), Some(b';'));
 
-        let mut cursor = Cursor::new("jane\\\"s_photo\"x");
+        let mut cursor = Cursor::new("jane\\\"s_photo\"x").unwrap();
         assert!(cursor.scan_string());
         assert_eq!(cursor.current(), Some(b'x'));
 
-        let mut cursor = Cursor::new("\\🦀\"x");
+        let mut cursor = Cursor::new("\\🦀\"x").unwrap();
         assert!(cursor.scan_string());
         assert_eq!(cursor.current(), Some(b'x'));
 
-        let mut cursor = Cursor::new("VacationPhoto94.jpg");
+        let mut cursor = Cursor::new("VacationPhoto94.jpg").unwrap();
         assert!(!cursor.scan_string());
         assert_eq!(cursor.current(), None);
     }
 
     #[test]
     fn scan_identifier() {
-        let mut cursor = Cursor::new("jobLevel;");
+        let mut cursor = Cursor::new("jobLevel;").unwrap();
         cursor.scan_identifier();
         assert_eq!(cursor.current(), Some(b';'));
     }
 
     #[test]
     fn scan_integer() {
-        let mut cursor = Cursor::new("365 ");
+        let mut cursor = Cursor::new("365 ").unwrap();
         cursor.scan_integer();
         assert_eq!(cursor.current(), Some(b' '));
     }

@@ -1,4 +1,4 @@
-#![expect(clippy::indexing_slicing, reason = "Benches")]
+#![expect(clippy::indexing_slicing, clippy::unwrap_used, reason = "Benches")]
 
 use core::hint::black_box;
 
@@ -31,7 +31,7 @@ fn lexer_integers(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }
 
 #[divan::bench]
@@ -51,7 +51,7 @@ fn lexer_strings(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }
 
 #[divan::bench]
@@ -78,7 +78,7 @@ fn lexer_identifiers(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }
 
 #[divan::bench]
@@ -99,7 +99,7 @@ fn lexer_punctuation(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }
 
 #[divan::bench]
@@ -119,7 +119,7 @@ fn lexer_comments(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }
 
 #[divan::bench]
@@ -136,7 +136,7 @@ fn lexer_whitespace_ascii(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }
 
 #[divan::bench]
@@ -153,5 +153,5 @@ fn lexer_whitespace_unicode(bencher: Bencher<'_, '_>) {
 
     bencher
         .counter(BytesCount::of_str(&input))
-        .bench(|| black_box(Lexer::new(black_box(&input)).count()));
+        .bench(|| black_box(Lexer::new(black_box(&input)).unwrap().count()));
 }

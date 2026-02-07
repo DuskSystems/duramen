@@ -7,13 +7,18 @@ pub struct Token {
     pub kind: TokenKind,
 
     /// Length in bytes.
-    pub len: usize,
+    pub len: u32,
 }
+
+#[cfg(target_pointer_width = "64")]
+const _: () = {
+    assert!(core::mem::size_of::<Token>() == 8, "Token size");
+};
 
 impl Token {
     /// Creates a new token.
     #[must_use]
-    pub(crate) const fn new(kind: TokenKind, len: usize) -> Self {
+    pub(crate) const fn new(kind: TokenKind, len: u32) -> Self {
         Self { kind, len }
     }
 }
@@ -158,6 +163,11 @@ pub enum TokenKind {
     /// Unrecognized token.
     Unknown,
 }
+
+#[cfg(target_pointer_width = "64")]
+const _: () = {
+    assert!(core::mem::size_of::<TokenKind>() == 1, "TokenKind size");
+};
 
 impl TokenKind {
     /// Checks if this is a trivial token.
