@@ -21,14 +21,14 @@ impl Token {
 /// The kind of token.
 #[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
 pub enum TokenKind {
+    /// Identifier: `name`.
+    Identifier,
     /// Integer literal: `123`.
     Integer,
     /// String literal: `"hello"`.
     String,
     /// Unterminated string literal: `"hello`.
     StringUnterminated,
-    /// Identifier: `name`.
-    Identifier,
 
     /// Keyword: `action`.
     ActionKeyword,
@@ -234,7 +234,7 @@ impl TokenKind {
     pub const fn is_literal(self) -> bool {
         matches!(
             self,
-            Self::TrueKeyword | Self::FalseKeyword | Self::Integer | Self::String
+            Self::FalseKeyword | Self::Integer | Self::String | Self::TrueKeyword
         )
     }
 
@@ -311,10 +311,10 @@ impl TokenKind {
 impl fmt::Display for TokenKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let text = match self {
+            Self::Identifier => "identifier",
             Self::Integer => "integer",
             Self::String => "string",
             Self::StringUnterminated => "unterminated string",
-            Self::Identifier => "identifier",
 
             Self::ActionKeyword => "`action`",
             Self::AppliesToKeyword => "`appliesTo`",
