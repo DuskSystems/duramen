@@ -320,6 +320,7 @@ dependencies = [
  "duramen-lower",
  "duramen-parser",
  "duramen-runtime",
+ "duramen-syntax",
  "duramen-test",
  "duramen-validate",
 ]

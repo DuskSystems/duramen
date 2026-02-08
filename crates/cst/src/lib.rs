@@ -8,10 +8,18 @@ use core::ops::Range;
 
 use duramen_syntax::{Node, Syntax};
 
+mod common;
+pub use common::*;
+
+mod policy;
+pub use policy::*;
+
+mod schema;
+pub use schema::*;
+
 /// CST accessors, inspired by:
 /// <https://rust-lang.github.io/rust-analyzer/syntax/ast/trait.AstNode.html>.
 pub trait CstNode<'a>: Sized + 'a {
-    fn can_cast(kind: Syntax) -> bool;
     fn cast(node: Node<'a>) -> Option<Self>;
     fn syntax(&self) -> Node<'a>;
 

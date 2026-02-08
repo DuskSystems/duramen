@@ -199,6 +199,7 @@ duramen-lexer = { workspace = true }
 duramen-lower = { workspace = true }
 duramen-parser = { workspace = true }
 duramen-runtime = { workspace = true }
+duramen-syntax = { workspace = true }
 duramen-validate = { workspace = true }
 
 [dev-dependencies]
