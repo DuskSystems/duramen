@@ -10,7 +10,7 @@ pub struct VariableDefinition<'a> {
 impl<'a> CstNode<'a> for VariableDefinition<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
         match node.kind() {
-            Syntax::VariableDeclaration => Some(Self { node }),
+            Syntax::VariableDefinition => Some(Self { node }),
             _ => None,
         }
     }

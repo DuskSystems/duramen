@@ -146,8 +146,8 @@ pub enum Syntax {
     Policies,
     /// Policy statement.
     Policy,
-    /// Variable declaration: `principal == User::"alice"`.
-    VariableDeclaration,
+    /// Variable definition: `principal == User::"alice"`.
+    VariableDefinition,
     /// Condition clause: `when { ... }`.
     Condition,
 
@@ -157,7 +157,7 @@ pub enum Syntax {
     OrExpression,
     /// And expression: `a && b`.
     AndExpression,
-    /// Relational expression: `a < b`.
+    /// Relation expression: `a < b`.
     RelationExpression,
     /// Sum expression: `a + b`.
     SumExpression,
@@ -187,16 +187,16 @@ pub enum Syntax {
     /// Record: `{ key: value }`.
     Record,
 
-    /// Field: `.field`.
+    /// Field access: `.field`.
     Field,
-    /// Call: `.method(args)`.
+    /// Method call: `.method(args)`.
     Call,
-    /// Index: `[index]`.
+    /// Index access: `[index]`.
     Index,
 
     /// Record entry: `key: value`.
     RecordEntry,
-    /// Arguments: `(a, b, c)`.
+    /// Argument list: `(a, b, c)`.
     Arguments,
 
     /// Root node for schemas.
@@ -244,7 +244,7 @@ pub enum Syntax {
 
     /// Attribute declaration.
     AttributeDeclaration,
-    /// Types: `[A, B]`.
+    /// Type list: `[A, B]`.
     Types,
 }
 
@@ -380,13 +380,13 @@ impl fmt::Display for Syntax {
 
             Self::Policies => "policies",
             Self::Policy => "policy",
-            Self::VariableDeclaration => "variable declaration",
+            Self::VariableDefinition => "variable definition",
             Self::Condition => "condition",
 
             Self::IfExpression => "if expression",
             Self::OrExpression => "or expression",
             Self::AndExpression => "and expression",
-            Self::RelationExpression => "relational expression",
+            Self::RelationExpression => "relation expression",
             Self::SumExpression => "sum expression",
             Self::ProductExpression => "product expression",
             Self::HasExpression => "has expression",
@@ -403,7 +403,7 @@ impl fmt::Display for Syntax {
             Self::Record => "record",
 
             Self::Field => "field",
-            Self::Call => "call",
+            Self::Call => "method call",
             Self::Index => "index",
 
             Self::RecordEntry => "record entry",
@@ -495,7 +495,8 @@ impl From<TokenKind> for Syntax {
             TokenKind::Ampersand
             | TokenKind::Pipe
             | TokenKind::StringUnterminated
-            | TokenKind::Unknown => Self::Error,
+            | TokenKind::Unknown
+            | TokenKind::Eof => Self::Error,
             TokenKind::Ampersand2 => Self::And,
             TokenKind::Bang => Self::Not,
             TokenKind::BangEquals => Self::NotEqual,

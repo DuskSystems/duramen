@@ -1,3 +1,4 @@
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::ops::Range;
 
@@ -69,6 +70,20 @@ impl Tree {
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.nodes.is_empty()
+    }
+
+    /// Reconstructs the source text from the CST.
+    #[must_use]
+    pub fn print(&self, source: &str) -> String {
+        let mut output = String::new();
+
+        for node in self.children() {
+            if let Some(text) = source.get(node.range()) {
+                output.push_str(text);
+            }
+        }
+
+        output
     }
 }
 

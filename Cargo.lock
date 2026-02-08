@@ -391,6 +391,11 @@ dependencies = [
 name = "duramen-parser"
 version = "0.1.0"
 dependencies = [
+ "codspeed-divan-compat",
+ "duramen-cst",
+ "duramen-diagnostic",
+ "duramen-lexer",
+ "duramen-syntax",
  "duramen-test",
 ]
 

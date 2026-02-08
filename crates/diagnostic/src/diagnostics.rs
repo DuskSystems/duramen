@@ -17,8 +17,8 @@ impl Diagnostics {
     }
 
     /// Adds a diagnostic to the collection.
-    pub fn push(&mut self, diagnostic: Diagnostic) {
-        self.items.push(diagnostic);
+    pub fn push<D: Into<Diagnostic>>(&mut self, diagnostic: D) {
+        self.items.push(diagnostic.into());
     }
 
     /// Returns whether the collection is empty.

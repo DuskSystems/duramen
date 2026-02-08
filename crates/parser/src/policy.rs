@@ -1,0 +1,680 @@
+use duramen_diagnostic::Diagnostics;
+use duramen_lexer::TokenKind;
+use duramen_syntax::{Syntax, Tree};
+
+use crate::common::Parser;
+use crate::error::ParseError;
+
+/// Binding power and syntax kind for an infix operator.
+struct InfixOperator {
+    left: u8,
+    right: u8,
+    kind: Syntax,
+}
+
+/// Parses Cedar policy source text into a concrete syntax tree.
+pub struct PolicyParser<'a> {
+    parser: Parser<'a>,
+}
+
+impl<'a> PolicyParser<'a> {
+    /// Creates a new policy parser.
+    #[must_use]
+    pub const fn new(source: &'a str, diagnostics: &'a mut Diagnostics) -> Self {
+        Self {
+            parser: Parser::new(source, diagnostics),
+        }
+    }
+
+    /// Parses the source text and returns the concrete syntax tree.
+    #[must_use]
+    pub fn parse(mut self) -> Tree {
+        self.policies();
+        self.parser.builder.build()
+    }
+
+    /// Parses a sequence of policies.
+    ///
+    /// ```cedar
+    /// permit(principal, action, resource);
+    /// forbid(principal == User::"tim", action, resource);
+    /// ```
+    fn policies(&mut self) {
+        let branch = self.parser.builder.open(Syntax::Policies);
+        self.parser.next();
+
+        while !self.parser.at(&[TokenKind::Eof]) {
+            self.parser.advance.push(self.parser.position);
+            self.policy();
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+        }
+
+        self.parser.builder.close(&branch);
+    }
+
+    /// Parses a single policy.
+    ///
+    /// ```cedar
+    /// @id("prototypes access policy")
+    /// permit(principal, action == Action::"view", resource in Album::"device_prototypes")
+    /// when { principal.department == "HardwareEngineering" && principal.jobLevel >= 5 };
+    /// ```
+    fn policy(&mut self) {
+        let branch = self.parser.builder.open(Syntax::Policy);
+
+        if !self.parser.at(&[
+            TokenKind::Eof,
+            TokenKind::At,
+            TokenKind::PermitKeyword,
+            TokenKind::ForbidKeyword,
+        ]) {
+            let err = self.parser.builder.open(Syntax::Error);
+            while !self.parser.at(&[
+                TokenKind::Eof,
+                TokenKind::At,
+                TokenKind::PermitKeyword,
+                TokenKind::ForbidKeyword,
+            ]) {
+                self.parser.advance.push(self.parser.position);
+                self.parser.next();
+                self.parser
+                    .advance
+                    .pop(self.parser.position, self.parser.current.kind);
+            }
+
+            self.parser.builder.close(&err);
+        }
+
+        while self.parser.at(&[TokenKind::At]) {
+            self.parser.advance.push(self.parser.position);
+            self.parser.annotation();
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+        }
+
+        if self
+            .parser
+            .at(&[TokenKind::PermitKeyword, TokenKind::ForbidKeyword])
+        {
+            self.parser.next();
+        }
+
+        if self.parser.eat(TokenKind::OpenParenthesis) {
+            self.variable_declaration();
+            if self.parser.eat(TokenKind::Comma) {
+                self.variable_declaration();
+            }
+
+            if self.parser.eat(TokenKind::Comma) {
+                self.variable_declaration();
+            }
+
+            self.parser.eat(TokenKind::Comma);
+            self.parser.expect(TokenKind::CloseParenthesis);
+        }
+
+        while self
+            .parser
+            .at(&[TokenKind::WhenKeyword, TokenKind::UnlessKeyword])
+        {
+            self.parser.advance.push(self.parser.position);
+            self.condition();
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+        }
+
+        self.parser.eat(TokenKind::Semicolon);
+        self.parser.builder.close(&branch);
+    }
+
+    /// Parses a variable declaration.
+    ///
+    /// ```cedar
+    /// principal in UserGroup::"jane_friends"
+    /// ```
+    fn variable_declaration(&mut self) {
+        let branch = self.parser.builder.open(Syntax::VariableDefinition);
+
+        if self.parser.at(&[TokenKind::QuestionMark]) {
+            self.slot();
+            self.parser.builder.close(&branch);
+
+            return;
+        }
+
+        if self.parser.kind().is_identifier() {
+            self.parser.next();
+        }
+
+        if self.parser.eat(TokenKind::Colon) {
+            self.name();
+        }
+
+        if self.parser.eat(TokenKind::IsKeyword) {
+            self.pratt_expression(7);
+            if self.parser.eat(TokenKind::InKeyword) {
+                self.pratt_expression(7);
+            }
+        }
+
+        if self.parser.kind().is_comparison() || self.parser.at(&[TokenKind::Equals]) {
+            if self.parser.at(&[TokenKind::Equals]) {
+                self.parser.diagnostics.push(ParseError::SingleEquals {
+                    span: self.parser.span(),
+                });
+            }
+
+            self.parser.next();
+            self.expr();
+        }
+
+        self.parser.builder.close(&branch);
+    }
+
+    /// Parses a template slot.
+    ///
+    /// ```cedar
+    /// ?principal
+    /// ```
+    fn slot(&mut self) {
+        let checkpoint = self.parser.builder.checkpoint();
+
+        self.parser.next();
+        if self.parser.kind().is_identifier() {
+            self.parser.next();
+        }
+
+        self.parser.builder.commit(&checkpoint, Syntax::Slot);
+    }
+
+    /// Parses a condition.
+    ///
+    /// ```cedar
+    /// when { resource.owner == principal }
+    /// ```
+    fn condition(&mut self) {
+        let branch = self.parser.builder.open(Syntax::Condition);
+
+        self.parser.next();
+        if self.parser.eat(TokenKind::OpenBrace) {
+            if !self.parser.at(&[TokenKind::CloseBrace]) {
+                self.expr();
+            }
+
+            self.parser.expect(TokenKind::CloseBrace);
+        }
+
+        self.parser.builder.close(&branch);
+    }
+
+    /// Parses an expression.
+    ///
+    /// ```cedar
+    /// principal.department == "Engineering"
+    /// ```
+    fn expr(&mut self) {
+        let checkpoint = self.parser.builder.checkpoint();
+
+        if self.parser.at(&[TokenKind::IfKeyword]) {
+            self.parser.next();
+            self.expr();
+            if self.parser.eat(TokenKind::ThenKeyword) {
+                self.expr();
+            }
+
+            if self.parser.eat(TokenKind::ElseKeyword) {
+                self.expr();
+            }
+
+            self.parser
+                .builder
+                .commit(&checkpoint, Syntax::IfExpression);
+
+            return;
+        }
+
+        self.pratt_expression(0);
+    }
+
+    /// Returns the binding power and syntax node kind for the current infix operator.
+    const fn infix_operator(&self) -> Option<InfixOperator> {
+        match self.parser.kind() {
+            TokenKind::Pipe2 | TokenKind::Pipe => Some(InfixOperator {
+                left: 1,
+                right: 2,
+                kind: Syntax::OrExpression,
+            }),
+            TokenKind::Ampersand2 | TokenKind::Ampersand => Some(InfixOperator {
+                left: 3,
+                right: 4,
+                kind: Syntax::AndExpression,
+            }),
+            TokenKind::LessThan
+            | TokenKind::LessThanEquals
+            | TokenKind::GreaterThan
+            | TokenKind::GreaterThanEquals
+            | TokenKind::Equals2
+            | TokenKind::BangEquals
+            | TokenKind::InKeyword
+            | TokenKind::Equals => Some(InfixOperator {
+                left: 5,
+                right: 6,
+                kind: Syntax::RelationExpression,
+            }),
+            TokenKind::HasKeyword => Some(InfixOperator {
+                left: 5,
+                right: 6,
+                kind: Syntax::HasExpression,
+            }),
+            TokenKind::LikeKeyword => Some(InfixOperator {
+                left: 5,
+                right: 6,
+                kind: Syntax::LikeExpression,
+            }),
+            TokenKind::IsKeyword => Some(InfixOperator {
+                left: 5,
+                right: 6,
+                kind: Syntax::IsExpression,
+            }),
+            TokenKind::Plus | TokenKind::Minus => Some(InfixOperator {
+                left: 7,
+                right: 8,
+                kind: Syntax::SumExpression,
+            }),
+            TokenKind::Asterisk | TokenKind::Slash | TokenKind::Percent => Some(InfixOperator {
+                left: 9,
+                right: 10,
+                kind: Syntax::ProductExpression,
+            }),
+            _ => None,
+        }
+    }
+
+    /// Parses an expression using Pratt parsing.
+    fn pratt_expression(&mut self, min_bp: u8) {
+        let checkpoint = self.parser.builder.checkpoint();
+
+        self.unary_expression();
+
+        while let Some(op) = self.infix_operator() {
+            if op.left < min_bp {
+                break;
+            }
+
+            self.parser.advance.push(self.parser.position);
+
+            match self.parser.kind() {
+                TokenKind::Pipe => {
+                    self.parser.diagnostics.push(ParseError::SinglePipe {
+                        span: self.parser.span(),
+                    });
+                    self.parser.next();
+                    self.pratt_expression(op.right);
+                }
+                TokenKind::Ampersand => {
+                    self.parser.diagnostics.push(ParseError::SingleAmpersand {
+                        span: self.parser.span(),
+                    });
+                    self.parser.next();
+                    self.pratt_expression(op.right);
+                }
+                TokenKind::Equals => {
+                    self.parser.diagnostics.push(ParseError::SingleEquals {
+                        span: self.parser.span(),
+                    });
+                    self.parser.next();
+                    self.pratt_expression(op.right);
+                }
+                TokenKind::IsKeyword => {
+                    self.parser.next();
+                    self.name();
+                    if self.parser.eat(TokenKind::InKeyword) {
+                        self.pratt_expression(op.right);
+                    }
+                }
+                _ => {
+                    self.parser.next();
+                    self.pratt_expression(op.right);
+                }
+            }
+
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+
+            self.parser.builder.commit(&checkpoint, op.kind);
+        }
+    }
+
+    /// Parses a unary expression.
+    ///
+    /// ```cedar
+    /// !resource.isPublic
+    /// ```
+    fn unary_expression(&mut self) {
+        let checkpoint = self.parser.builder.checkpoint();
+
+        let mut unary = false;
+        while self.parser.at(&[TokenKind::Bang, TokenKind::Minus]) {
+            self.parser.advance.push(self.parser.position);
+            self.parser.next();
+            unary = true;
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+        }
+
+        self.member_expression();
+        if unary {
+            self.parser
+                .builder
+                .commit(&checkpoint, Syntax::UnaryExpression);
+        }
+    }
+
+    /// Parses member access.
+    ///
+    /// ```cedar
+    /// context.now.datetime.offset(duration("-24h"))
+    /// ```
+    fn member_expression(&mut self) {
+        let checkpoint = self.parser.builder.checkpoint();
+
+        self.primary();
+        let mut access = false;
+        while self.parser.at(&[
+            TokenKind::Dot,
+            TokenKind::OpenParenthesis,
+            TokenKind::OpenBracket,
+        ]) {
+            self.parser.advance.push(self.parser.position);
+            match self.parser.kind() {
+                TokenKind::Dot => {
+                    let inner = self.parser.builder.checkpoint();
+
+                    self.parser.next();
+                    if self.parser.kind().is_identifier() {
+                        self.parser.next();
+                    }
+
+                    if self.parser.at(&[TokenKind::OpenParenthesis]) {
+                        self.parser.next();
+                        if !self.parser.at(&[TokenKind::CloseParenthesis]) {
+                            self.argument_list();
+                        }
+
+                        self.parser.expect(TokenKind::CloseParenthesis);
+                        self.parser.builder.commit(&inner, Syntax::Call);
+                    } else {
+                        self.parser.builder.commit(&inner, Syntax::Field);
+                    }
+                }
+                TokenKind::OpenParenthesis => {
+                    let inner = self.parser.builder.checkpoint();
+
+                    self.parser.next();
+                    if !self.parser.at(&[TokenKind::CloseParenthesis]) {
+                        self.argument_list();
+                    }
+
+                    self.parser.expect(TokenKind::CloseParenthesis);
+                    self.parser.builder.commit(&inner, Syntax::Call);
+                }
+                _ => {
+                    let inner = self.parser.builder.checkpoint();
+
+                    self.parser.next();
+                    self.expr();
+                    self.parser.expect(TokenKind::CloseBracket);
+
+                    self.parser.builder.commit(&inner, Syntax::Index);
+                }
+            }
+            access = true;
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+        }
+
+        if access {
+            self.parser
+                .builder
+                .commit(&checkpoint, Syntax::MemberExpression);
+        }
+    }
+
+    /// Parses a primary expression.
+    ///
+    /// ```cedar
+    /// User::"alice"
+    /// ```
+    fn primary(&mut self) {
+        let checkpoint = self.parser.builder.checkpoint();
+
+        if self.parser.kind().is_literal() {
+            self.parser.next();
+            self.parser.builder.commit(&checkpoint, Syntax::Literal);
+
+            return;
+        }
+
+        if self.parser.at(&[TokenKind::QuestionMark]) {
+            self.slot();
+            return;
+        }
+
+        if self.parser.at(&[TokenKind::OpenParenthesis]) {
+            self.parser.next();
+            self.expr();
+            self.parser.expect(TokenKind::CloseParenthesis);
+            self.parser
+                .builder
+                .commit(&checkpoint, Syntax::Parenthesized);
+
+            return;
+        }
+
+        if self.parser.at(&[TokenKind::OpenBracket]) {
+            self.parser.next();
+            if !self.parser.at(&[TokenKind::CloseBracket]) {
+                self.argument_list();
+            }
+
+            self.parser.expect(TokenKind::CloseBracket);
+            self.parser.builder.commit(&checkpoint, Syntax::List);
+
+            return;
+        }
+
+        if self.parser.at(&[TokenKind::OpenBrace]) {
+            self.parser.next();
+            self.record_entries();
+            self.parser.expect(TokenKind::CloseBrace);
+            self.parser.builder.commit(&checkpoint, Syntax::Record);
+
+            return;
+        }
+
+        if self.parser.kind().is_identifier() {
+            self.name();
+            return;
+        }
+
+        if !self.parser.at(&[TokenKind::Eof]) {
+            let err = self.parser.builder.open(Syntax::Error);
+            self.parser.next();
+            self.parser.builder.close(&err);
+        }
+    }
+
+    /// Parses a record entry.
+    ///
+    /// ```cedar
+    /// "field": value
+    /// ```
+    fn record_entry(&mut self) {
+        let branch = self.parser.builder.open(Syntax::RecordEntry);
+
+        if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
+            self.parser.next();
+            if self.parser.eat(TokenKind::Colon) {
+                self.expr();
+            }
+        }
+
+        if !self
+            .parser
+            .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
+        {
+            let err = self.parser.builder.open(Syntax::Error);
+            while !self
+                .parser
+                .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
+            {
+                self.parser.advance.push(self.parser.position);
+                self.parser.next();
+                self.parser
+                    .advance
+                    .pop(self.parser.position, self.parser.current.kind);
+            }
+
+            self.parser.builder.close(&err);
+        }
+
+        self.parser.builder.close(&branch);
+    }
+
+    /// Parses comma-separated record entries inside braces.
+    ///
+    /// ```cedar
+    /// "name": "alice", "age": 30
+    /// ```
+    fn record_entries(&mut self) {
+        while !self.parser.at(&[TokenKind::Eof, TokenKind::CloseBrace]) {
+            self.parser.advance.push(self.parser.position);
+            self.record_entry();
+            let comma = self.parser.eat(TokenKind::Comma);
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+            if !comma {
+                break;
+            }
+        }
+    }
+
+    /// Parses a comma-separated argument list.
+    ///
+    /// ```cedar
+    /// ip("192.168.0.1"), ip("10.0.0.0/8")
+    /// ```
+    fn argument_list(&mut self) {
+        let branch = self.parser.builder.open(Syntax::Arguments);
+        self.expr();
+
+        while self.parser.at(&[TokenKind::Comma]) {
+            self.parser.advance.push(self.parser.position);
+            self.parser.next();
+            if self
+                .parser
+                .at(&[TokenKind::CloseParenthesis, TokenKind::CloseBracket])
+            {
+                self.parser
+                    .advance
+                    .pop(self.parser.position, self.parser.current.kind);
+                break;
+            }
+
+            self.expr();
+            self.parser
+                .advance
+                .pop(self.parser.position, self.parser.current.kind);
+        }
+
+        self.parser.builder.close(&branch);
+    }
+
+    /// Parses a name or entity reference.
+    ///
+    /// ```cedar
+    /// User::"alice"
+    /// ```
+    fn name(&mut self) {
+        let checkpoint = self.parser.builder.checkpoint();
+        let branch = self.parser.builder.open(Syntax::Name);
+
+        if self.parser.kind().is_identifier() {
+            self.parser.next();
+            while self.parser.at(&[TokenKind::Colon2]) {
+                if matches!(
+                    self.parser.lexer.peek_kind(),
+                    Some(TokenKind::String | TokenKind::OpenBrace)
+                ) {
+                    self.parser.builder.close(&branch);
+                    self.parser.advance.push(self.parser.position);
+                    self.parser.next();
+                    if self.parser.at(&[TokenKind::String]) {
+                        self.parser.next();
+                        self.parser
+                            .advance
+                            .pop(self.parser.position, self.parser.current.kind);
+                        self.parser
+                            .builder
+                            .commit(&checkpoint, Syntax::EntityReference);
+
+                        return;
+                    }
+
+                    if self.parser.at(&[TokenKind::OpenBrace]) {
+                        self.parser.next();
+                        self.record_entries();
+                        self.parser.expect(TokenKind::CloseBrace);
+                        self.parser
+                            .advance
+                            .pop(self.parser.position, self.parser.current.kind);
+                        self.parser
+                            .builder
+                            .commit(&checkpoint, Syntax::EntityReference);
+
+                        return;
+                    }
+
+                    self.parser
+                        .advance
+                        .pop(self.parser.position, self.parser.current.kind);
+                    break;
+                }
+
+                self.parser.advance.push(self.parser.position);
+                self.parser.next();
+                let ident = self.parser.kind().is_identifier();
+                if ident {
+                    self.parser.next();
+                }
+
+                self.parser
+                    .advance
+                    .pop(self.parser.position, self.parser.current.kind);
+                if !ident {
+                    break;
+                }
+            }
+        } else if !self.parser.at(&[TokenKind::Eof]) {
+            self.parser.diagnostics.push(ParseError::UnexpectedToken {
+                span: self.parser.span(),
+            });
+            self.parser.builder.close(&branch);
+            let err = self.parser.builder.open(Syntax::Error);
+            self.parser.next();
+            self.parser.builder.close(&err);
+
+            return;
+        }
+
+        self.parser.builder.close(&branch);
+    }
+}

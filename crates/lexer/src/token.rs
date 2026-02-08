@@ -157,6 +157,8 @@ pub enum TokenKind {
 
     /// Unrecognized token.
     Unknown,
+    /// End of file.
+    Eof,
 }
 
 impl TokenKind {
@@ -382,6 +384,7 @@ impl fmt::Display for TokenKind {
             Self::Whitespace => "whitespace",
 
             Self::Unknown => "unknown",
+            Self::Eof => "end of file",
         };
 
         f.write_str(text)

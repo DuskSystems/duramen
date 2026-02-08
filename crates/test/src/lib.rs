@@ -15,29 +15,46 @@ pub use {anstream, datatest_stable, insta};
 #[macro_export]
 macro_rules! corpus {
     (policy = $policy_fn:ident) => {
+        $crate::corpus!(@wrap $policy_fn);
         $crate::datatest_stable::harness! {
-            { test = $policy_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedar$" },
-            { test = $policy_fn, root = $crate::CEDAR_INTEGRATION_TESTS, pattern = r".*[.]cedar$" },
-            { test = $policy_fn, root = $crate::CEDAR_POLICY_PARSER_TESTS, pattern = r".*[.]cedar$" },
+            { test = corpus::$policy_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedar$" },
+            { test = corpus::$policy_fn, root = $crate::CEDAR_INTEGRATION_TESTS, pattern = r".*[.]cedar$" },
+            { test = corpus::$policy_fn, root = $crate::CEDAR_POLICY_PARSER_TESTS, pattern = r".*[.]cedar$" },
         }
     };
 
     (schema = $schema_fn:ident) => {
+        $crate::corpus!(@wrap $schema_fn);
         $crate::datatest_stable::harness! {
-            { test = $schema_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedarschema$" },
-            { test = $schema_fn, root = $crate::CEDAR_SAMPLE_DATA, pattern = r".*[.]cedarschema$" },
-            { test = $schema_fn, root = $crate::CEDAR_SCHEMA_PARSER_TESTS, pattern = r".*[.]cedarschema$" },
+            { test = corpus::$schema_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedarschema$" },
+            { test = corpus::$schema_fn, root = $crate::CEDAR_SAMPLE_DATA, pattern = r".*[.]cedarschema$" },
+            { test = corpus::$schema_fn, root = $crate::CEDAR_SCHEMA_PARSER_TESTS, pattern = r".*[.]cedarschema$" },
         }
     };
 
     (policy = $policy_fn:ident, schema = $schema_fn:ident) => {
+        $crate::corpus!(@wrap $policy_fn, $schema_fn);
         $crate::datatest_stable::harness! {
-            { test = $policy_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedar$" },
-            { test = $policy_fn, root = $crate::CEDAR_INTEGRATION_TESTS, pattern = r".*[.]cedar$" },
-            { test = $policy_fn, root = $crate::CEDAR_POLICY_PARSER_TESTS, pattern = r".*[.]cedar$" },
-            { test = $schema_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedarschema$" },
-            { test = $schema_fn, root = $crate::CEDAR_SAMPLE_DATA, pattern = r".*[.]cedarschema$" },
-            { test = $schema_fn, root = $crate::CEDAR_SCHEMA_PARSER_TESTS, pattern = r".*[.]cedarschema$" },
+            { test = corpus::$policy_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedar$" },
+            { test = corpus::$policy_fn, root = $crate::CEDAR_INTEGRATION_TESTS, pattern = r".*[.]cedar$" },
+            { test = corpus::$policy_fn, root = $crate::CEDAR_POLICY_PARSER_TESTS, pattern = r".*[.]cedar$" },
+            { test = corpus::$schema_fn, root = $crate::CEDAR_CORPUS, pattern = r".*[.]cedarschema$" },
+            { test = corpus::$schema_fn, root = $crate::CEDAR_SAMPLE_DATA, pattern = r".*[.]cedarschema$" },
+            { test = corpus::$schema_fn, root = $crate::CEDAR_SCHEMA_PARSER_TESTS, pattern = r".*[.]cedarschema$" },
+        }
+    };
+
+    (@wrap $($inner:ident),+) => {
+        mod corpus {
+            $(
+                pub(super) fn $inner(
+                    path: &::std::path::Path,
+                    source: String,
+                ) -> $crate::datatest_stable::Result<()> {
+                    super::$inner(path, &source);
+                    Ok(())
+                }
+            )+
         }
     };
 }

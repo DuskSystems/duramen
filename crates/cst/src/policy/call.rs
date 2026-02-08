@@ -3,11 +3,11 @@ use duramen_syntax::{Node, Syntax};
 use crate::CstNode;
 
 #[derive(Clone, Copy, Debug)]
-pub struct MethodCall<'a> {
+pub struct Call<'a> {
     node: Node<'a>,
 }
 
-impl<'a> CstNode<'a> for MethodCall<'a> {
+impl<'a> CstNode<'a> for Call<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
         match node.kind() {
             Syntax::Call => Some(Self { node }),
