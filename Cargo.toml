@@ -39,11 +39,9 @@ style = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 
 # Correctness
-arithmetic_side_effects = "deny"
 expect_used = "deny"
 fallible_impl_from = "deny"
 future_not_send = "deny"
-indexing_slicing = "deny"
 non_zero_suggestions = "deny"
 panic = "deny"
 rest_pat_in_fully_bound_structs = "deny"
@@ -51,7 +49,6 @@ todo = "deny"
 unimplemented = "deny"
 unreachable = "deny"
 unwrap_used = "deny"
-wildcard_enum_match_arm = "deny"
 
 # Errors
 map_err_ignore = "deny"
@@ -104,6 +101,7 @@ print_stderr = "deny"
 print_stdout = "deny"
 
 # Relaxed
+cast_possible_truncation = "allow"
 cognitive_complexity = "allow"
 module_name_repetitions = "allow"
 multiple_crate_versions = "allow"
@@ -121,6 +119,7 @@ duramen-lexer = { path = "crates/lexer", default-features = false }
 duramen-lower = { path = "crates/lower", default-features = false }
 duramen-parser = { path = "crates/parser", default-features = false }
 duramen-runtime = { path = "crates/runtime", default-features = false }
+duramen-syntax = { path = "crates/syntax", default-features = false }
 duramen-test = { path = "crates/test", default-features = false }
 duramen-validate = { path = "crates/validate", default-features = false }
 

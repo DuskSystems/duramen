@@ -31,7 +31,7 @@ pub const INTEGER_TABLE: [bool; 256] = {
 
     let mut index = 0;
     while index < 256 {
-        table[index] = matches!(index as u8, b'0'..=b'9');
+        table[index] = (index as u8).is_ascii_digit();
         index += 1;
     }
 

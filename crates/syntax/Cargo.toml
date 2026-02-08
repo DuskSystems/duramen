@@ -1,6 +1,6 @@
 [package]
-name = "duramen-cst"
-description = "Duramen CST (Concrete Syntax Tree)"
+name = "duramen-syntax"
+description = "Duramen syntax tree"
 include = ["/src", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
 publish = false
 
@@ -17,10 +17,10 @@ workspace = true
 
 [features]
 default = ["std"]
-std = ["duramen-syntax/std"]
+std = ["duramen-lexer/std"]
 
 [dependencies]
-duramen-syntax = { workspace = true }
+duramen-lexer = { workspace = true }
 
 [dev-dependencies]
 duramen-test = { workspace = true }
