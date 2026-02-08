@@ -3,14 +3,14 @@ use duramen_syntax::{Node, Syntax};
 use crate::CstNode;
 
 #[derive(Clone, Copy, Debug)]
-pub struct TypeList<'a> {
+pub struct Index<'a> {
     node: Node<'a>,
 }
 
-impl<'a> CstNode<'a> for TypeList<'a> {
+impl<'a> CstNode<'a> for Index<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
         match node.kind() {
-            Syntax::Types => Some(Self { node }),
+            Syntax::Index => Some(Self { node }),
             _ => None,
         }
     }

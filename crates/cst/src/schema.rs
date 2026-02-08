@@ -1,3 +1,7 @@
+use duramen_syntax::{Node, Syntax};
+
+use crate::CstNode;
+
 mod action_attributes;
 pub use action_attributes::ActionAttributes;
 
@@ -52,14 +56,11 @@ pub use set_type::SetType;
 mod type_declaration;
 pub use type_declaration::TypeDeclaration;
 
-mod r#type;
-pub use r#type::TypeExpression;
+mod type_expression;
+pub use type_expression::TypeExpression;
 
-mod type_list;
-use duramen_syntax::{Node, Syntax};
-pub use type_list::TypeList;
-
-use crate::CstNode;
+mod types;
+pub use types::Types;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Schema<'a> {

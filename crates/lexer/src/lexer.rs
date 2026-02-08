@@ -21,7 +21,11 @@ impl<'a> Lexer<'a> {
         let checkpoint = self.cursor.checkpoint();
 
         loop {
-            let token = self.next_token()?;
+            let Some(token) = self.next_token() else {
+                self.cursor.restore(checkpoint);
+                return None;
+            };
+
             if !token.kind.is_trivial() {
                 self.cursor.restore(checkpoint);
                 return Some(token.kind);

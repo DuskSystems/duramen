@@ -24,12 +24,12 @@ pub struct Builder {
 }
 
 impl Builder {
-    /// Creates a new builder with a capacity hint.
+    /// Creates a new builder.
     #[must_use]
-    pub fn new(capacity: usize) -> Self {
+    pub const fn new() -> Self {
         Self {
-            nodes: Vec::with_capacity(capacity),
-            parents: Vec::with_capacity(8),
+            nodes: Vec::new(),
+            parents: Vec::new(),
             sibling: None,
             root: None,
             cursor: 0,
@@ -121,7 +121,9 @@ impl Builder {
             if parent.first == Some(first) {
                 parent.first = Some(wrapper);
             }
-        } else if self.root == Some(first) {
+        }
+
+        if self.root == Some(first) {
             self.root = Some(wrapper);
         }
 
@@ -159,7 +161,9 @@ impl Builder {
             if parent.first.is_none() {
                 parent.first = Some(index);
             }
-        } else if self.root.is_none() {
+        }
+
+        if self.root.is_none() {
             self.root = Some(index);
         }
     }

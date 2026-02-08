@@ -1,20 +1,20 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, FieldAccess, IndexAccess, MethodCall};
+use crate::{Call, CstNode, Field, Index};
 
 #[derive(Clone, Copy, Debug)]
 pub enum MemberAccess<'a> {
-    Field(FieldAccess<'a>),
-    Call(MethodCall<'a>),
-    Index(IndexAccess<'a>),
+    Field(Field<'a>),
+    Call(Call<'a>),
+    Index(Index<'a>),
 }
 
 impl<'a> CstNode<'a> for MemberAccess<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
         match node.kind() {
-            Syntax::Field => FieldAccess::cast(node).map(Self::Field),
-            Syntax::Call => MethodCall::cast(node).map(Self::Call),
-            Syntax::Index => IndexAccess::cast(node).map(Self::Index),
+            Syntax::Field => Field::cast(node).map(Self::Field),
+            Syntax::Call => Call::cast(node).map(Self::Call),
+            Syntax::Index => Index::cast(node).map(Self::Index),
             _ => None,
         }
     }
