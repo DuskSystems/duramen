@@ -1,3 +1,4 @@
+use alloc::format;
 use core::ops::Range;
 
 use duramen_diagnostic::{Diagnostic, Suggestion};
@@ -23,6 +24,8 @@ pub enum ParseError {
         span: Range<usize>,
         expected: TokenKind,
     },
+    /// Expression nesting exceeds the maximum depth.
+    NestingTooDeep { span: Range<usize> },
 }
 
 impl From<ParseError> for Diagnostic {
@@ -50,9 +53,10 @@ impl From<ParseError> for Diagnostic {
             ParseError::UnexpectedToken { span } => {
                 Self::error("unexpected token").with_label(span, "expected identifier")
             }
-            ParseError::Expected { span, expected } => {
-                Self::error(alloc::format!("expected {expected}"))
-                    .with_label(span, alloc::format!("expected {expected}"))
+            ParseError::Expected { span, expected } => Self::error(format!("expected {expected}"))
+                .with_label(span, format!("expected {expected}")),
+            ParseError::NestingTooDeep { span } => {
+                Self::error("nesting too deep").with_label(span, "maximum nesting depth exceeded")
             }
         }
     }

@@ -36,11 +36,9 @@ impl<'a> SchemaParser<'a> {
         self.parser.next();
 
         while !self.parser.at(&[TokenKind::Eof]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.namespace();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         self.parser.builder.close(&branch);
@@ -112,11 +110,9 @@ impl<'a> SchemaParser<'a> {
 
         self.parser.next();
         while !self.parser.at(&[TokenKind::Eof, TokenKind::CloseBrace]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.declaration();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         self.parser.expect(TokenKind::CloseBrace);
@@ -152,11 +148,9 @@ impl<'a> SchemaParser<'a> {
             let checkpoint = self.parser.builder.checkpoint();
 
             while self.parser.at(&[TokenKind::At]) {
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.parser.annotation();
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
             }
 
             match self.parser.kind() {
@@ -202,11 +196,9 @@ impl<'a> SchemaParser<'a> {
             TokenKind::At,
             TokenKind::CloseBrace,
         ]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.next();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         self.parser.builder.close(&err);
@@ -293,12 +285,10 @@ impl<'a> SchemaParser<'a> {
     /// ```
     fn attribute_entries(&mut self) {
         while !self.parser.at(&[TokenKind::Eof, TokenKind::CloseBrace]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.attribute_declaration();
             let comma = self.parser.eat(TokenKind::Comma);
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
             if !comma {
                 break;
             }
@@ -314,7 +304,7 @@ impl<'a> SchemaParser<'a> {
         let branch = self.parser.builder.open(Syntax::EntityTags);
 
         self.parser.next();
-        self.type_expr();
+        self.type_expression();
 
         self.parser.builder.close(&branch);
     }
@@ -370,12 +360,10 @@ impl<'a> SchemaParser<'a> {
 
         self.parser.next();
         while !self.parser.at(&[TokenKind::CloseBracket, TokenKind::Eof]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.qualified_name();
             let comma = self.parser.eat(TokenKind::Comma);
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
             if !comma {
                 break;
             }
@@ -396,12 +384,10 @@ impl<'a> SchemaParser<'a> {
 
         if self.parser.eat(TokenKind::OpenBrace) {
             while !self.parser.at(&[TokenKind::Eof, TokenKind::CloseBrace]) {
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.applies_to_entry();
                 let comma = self.parser.eat(TokenKind::Comma);
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
                 if !comma {
                     break;
                 }
@@ -437,7 +423,7 @@ impl<'a> SchemaParser<'a> {
         self.parser.next();
         if self.parser.eat(TokenKind::Colon) {
             if is_context {
-                self.type_expr();
+                self.type_expression();
             } else {
                 self.type_list();
             }
@@ -483,7 +469,7 @@ impl<'a> SchemaParser<'a> {
         }
 
         self.parser.expect(TokenKind::Equals);
-        self.type_expr();
+        self.type_expression();
         self.parser.expect(TokenKind::Semicolon);
     }
 
@@ -492,7 +478,17 @@ impl<'a> SchemaParser<'a> {
     /// ```cedarschema
     /// Set<User>
     /// ```
-    fn type_expr(&mut self) {
+    fn type_expression(&mut self) {
+        if !self.parser.depth_push() {
+            return;
+        }
+
+        self.type_expression_inner();
+        self.parser.depth_pop();
+    }
+
+    /// Parses the inner type expression after the depth guard.
+    fn type_expression_inner(&mut self) {
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::SetKeyword])
@@ -500,7 +496,7 @@ impl<'a> SchemaParser<'a> {
         {
             self.parser.next();
             self.parser.next();
-            self.type_expr();
+            self.type_expression();
             self.parser.expect(TokenKind::GreaterThan);
             self.parser.builder.commit(&checkpoint, Syntax::SetType);
 
@@ -540,18 +536,16 @@ impl<'a> SchemaParser<'a> {
         let checkpoint = self.parser.builder.checkpoint();
 
         while self.parser.at(&[TokenKind::At]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.annotation();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
             self.parser.next();
             self.parser.eat(TokenKind::QuestionMark);
             if self.parser.eat(TokenKind::Colon) {
-                self.type_expr();
+                self.type_expression();
             }
         }
 
@@ -564,11 +558,9 @@ impl<'a> SchemaParser<'a> {
                 .parser
                 .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
             {
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.parser.next();
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
             }
 
             self.parser.builder.close(&err);
@@ -594,12 +586,11 @@ impl<'a> SchemaParser<'a> {
 
         self.parser.next();
         while !self.parser.at(&[TokenKind::CloseBracket, TokenKind::Eof]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.name();
             let comma = self.parser.eat(TokenKind::Comma);
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
+
             if !comma {
                 break;
             }
@@ -620,12 +611,11 @@ impl<'a> SchemaParser<'a> {
                 break;
             }
 
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.next();
             let comma = self.parser.eat(TokenKind::Comma);
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
+
             if !comma {
                 break;
             }
@@ -669,16 +659,14 @@ impl<'a> SchemaParser<'a> {
                     break;
                 }
 
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.parser.next();
                 let ident = self.parser.kind().is_identifier();
                 if ident {
                     self.parser.next();
                 }
 
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
                 if !ident {
                     break;
                 }
@@ -707,12 +695,10 @@ impl<'a> SchemaParser<'a> {
     fn name_list(&mut self) {
         self.name();
         while self.parser.at(&[TokenKind::Comma]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.next();
             self.name();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
     }
 
@@ -724,12 +710,10 @@ impl<'a> SchemaParser<'a> {
     fn action_name_list(&mut self) {
         self.action_name();
         while self.parser.at(&[TokenKind::Comma]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.next();
             self.action_name();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
     }
 
