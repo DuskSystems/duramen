@@ -44,11 +44,9 @@ impl<'a> PolicyParser<'a> {
         self.parser.next();
 
         while !self.parser.at(&[TokenKind::Eof]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.policy();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         self.parser.builder.close(&branch);
@@ -77,22 +75,18 @@ impl<'a> PolicyParser<'a> {
                 TokenKind::PermitKeyword,
                 TokenKind::ForbidKeyword,
             ]) {
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.parser.next();
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
             }
 
             self.parser.builder.close(&err);
         }
 
         while self.parser.at(&[TokenKind::At]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.annotation();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         if self
@@ -120,11 +114,9 @@ impl<'a> PolicyParser<'a> {
             .parser
             .at(&[TokenKind::WhenKeyword, TokenKind::UnlessKeyword])
         {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.condition();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         self.parser.eat(TokenKind::Semicolon);
@@ -169,7 +161,7 @@ impl<'a> PolicyParser<'a> {
             }
 
             self.parser.next();
-            self.expr();
+            self.expression();
         }
 
         self.parser.builder.close(&branch);
@@ -202,7 +194,7 @@ impl<'a> PolicyParser<'a> {
         self.parser.next();
         if self.parser.eat(TokenKind::OpenBrace) {
             if !self.parser.at(&[TokenKind::CloseBrace]) {
-                self.expr();
+                self.expression();
             }
 
             self.parser.expect(TokenKind::CloseBrace);
@@ -216,28 +208,32 @@ impl<'a> PolicyParser<'a> {
     /// ```cedar
     /// principal.department == "Engineering"
     /// ```
-    fn expr(&mut self) {
+    fn expression(&mut self) {
+        if !self.parser.depth_push() {
+            return;
+        }
+
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::IfKeyword]) {
             self.parser.next();
-            self.expr();
+            self.expression();
             if self.parser.eat(TokenKind::ThenKeyword) {
-                self.expr();
+                self.expression();
             }
 
             if self.parser.eat(TokenKind::ElseKeyword) {
-                self.expr();
+                self.expression();
             }
 
             self.parser
                 .builder
                 .commit(&checkpoint, Syntax::IfExpression);
-
-            return;
+        } else {
+            self.pratt_expression(0);
         }
 
-        self.pratt_expression(0);
+        self.parser.depth_pop();
     }
 
     /// Returns the binding power and syntax node kind for the current infix operator.
@@ -305,7 +301,7 @@ impl<'a> PolicyParser<'a> {
                 break;
             }
 
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
 
             match self.parser.kind() {
                 TokenKind::Pipe => {
@@ -342,9 +338,7 @@ impl<'a> PolicyParser<'a> {
                 }
             }
 
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
 
             self.parser.builder.commit(&checkpoint, op.kind);
         }
@@ -360,12 +354,10 @@ impl<'a> PolicyParser<'a> {
 
         let mut unary = false;
         while self.parser.at(&[TokenKind::Bang, TokenKind::Minus]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.next();
             unary = true;
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         self.member_expression();
@@ -391,7 +383,7 @@ impl<'a> PolicyParser<'a> {
             TokenKind::OpenParenthesis,
             TokenKind::OpenBracket,
         ]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             match self.parser.kind() {
                 TokenKind::Dot => {
                     let inner = self.parser.builder.checkpoint();
@@ -428,16 +420,14 @@ impl<'a> PolicyParser<'a> {
                     let inner = self.parser.builder.checkpoint();
 
                     self.parser.next();
-                    self.expr();
+                    self.expression();
                     self.parser.expect(TokenKind::CloseBracket);
 
                     self.parser.builder.commit(&inner, Syntax::Index);
                 }
             }
             access = true;
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
         }
 
         if access {
@@ -469,7 +459,7 @@ impl<'a> PolicyParser<'a> {
 
         if self.parser.at(&[TokenKind::OpenParenthesis]) {
             self.parser.next();
-            self.expr();
+            self.expression();
             self.parser.expect(TokenKind::CloseParenthesis);
             self.parser
                 .builder
@@ -522,7 +512,7 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
             self.parser.next();
             if self.parser.eat(TokenKind::Colon) {
-                self.expr();
+                self.expression();
             }
         }
 
@@ -535,11 +525,9 @@ impl<'a> PolicyParser<'a> {
                 .parser
                 .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
             {
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.parser.next();
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
             }
 
             self.parser.builder.close(&err);
@@ -555,12 +543,10 @@ impl<'a> PolicyParser<'a> {
     /// ```
     fn record_entries(&mut self) {
         while !self.parser.at(&[TokenKind::Eof, TokenKind::CloseBrace]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.record_entry();
             let comma = self.parser.eat(TokenKind::Comma);
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.parser.advance_pop();
             if !comma {
                 break;
             }
@@ -574,25 +560,21 @@ impl<'a> PolicyParser<'a> {
     /// ```
     fn argument_list(&mut self) {
         let branch = self.parser.builder.open(Syntax::Arguments);
-        self.expr();
+        self.expression();
 
         while self.parser.at(&[TokenKind::Comma]) {
-            self.parser.advance.push(self.parser.position);
+            self.parser.advance_push();
             self.parser.next();
             if self
                 .parser
                 .at(&[TokenKind::CloseParenthesis, TokenKind::CloseBracket])
             {
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
                 break;
             }
 
-            self.expr();
-            self.parser
-                .advance
-                .pop(self.parser.position, self.parser.current.kind);
+            self.expression();
+            self.parser.advance_pop();
         }
 
         self.parser.builder.close(&branch);
@@ -615,13 +597,11 @@ impl<'a> PolicyParser<'a> {
                     Some(TokenKind::String | TokenKind::OpenBrace)
                 ) {
                     self.parser.builder.close(&branch);
-                    self.parser.advance.push(self.parser.position);
+                    self.parser.advance_push();
                     self.parser.next();
                     if self.parser.at(&[TokenKind::String]) {
                         self.parser.next();
-                        self.parser
-                            .advance
-                            .pop(self.parser.position, self.parser.current.kind);
+                        self.parser.advance_pop();
                         self.parser
                             .builder
                             .commit(&checkpoint, Syntax::EntityReference);
@@ -633,9 +613,7 @@ impl<'a> PolicyParser<'a> {
                         self.parser.next();
                         self.record_entries();
                         self.parser.expect(TokenKind::CloseBrace);
-                        self.parser
-                            .advance
-                            .pop(self.parser.position, self.parser.current.kind);
+                        self.parser.advance_pop();
                         self.parser
                             .builder
                             .commit(&checkpoint, Syntax::EntityReference);
@@ -643,22 +621,18 @@ impl<'a> PolicyParser<'a> {
                         return;
                     }
 
-                    self.parser
-                        .advance
-                        .pop(self.parser.position, self.parser.current.kind);
+                    self.parser.advance_pop();
                     break;
                 }
 
-                self.parser.advance.push(self.parser.position);
+                self.parser.advance_push();
                 self.parser.next();
                 let ident = self.parser.kind().is_identifier();
                 if ident {
                     self.parser.next();
                 }
 
-                self.parser
-                    .advance
-                    .pop(self.parser.position, self.parser.current.kind);
+                self.parser.advance_pop();
                 if !ident {
                     break;
                 }

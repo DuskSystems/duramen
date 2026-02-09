@@ -1,20 +1,28 @@
+#[cfg(debug_assertions)]
+use alloc::vec::Vec;
 use core::ops::Range;
 
 use duramen_diagnostic::Diagnostics;
 use duramen_lexer::{Lexer, Token, TokenKind};
 use duramen_syntax::{Builder, Syntax};
 
-use crate::advance::Advance;
 use crate::error::ParseError;
+
+/// Maximum nesting depth.
+const DEPTH_LIMIT: usize = 16;
 
 /// Shared parser infrastructure for policy and schema parsers.
 pub struct Parser<'a> {
     pub lexer: Lexer<'a>,
     pub builder: Builder,
-    pub advance: Advance,
+    pub diagnostics: &'a mut Diagnostics,
+
     pub position: usize,
     pub current: Token,
-    pub diagnostics: &'a mut Diagnostics,
+
+    depth: usize,
+    #[cfg(debug_assertions)]
+    advances: Vec<usize>,
 }
 
 impl<'a> Parser<'a> {
@@ -24,13 +32,17 @@ impl<'a> Parser<'a> {
         Self {
             lexer: Lexer::new(source),
             builder: Builder::new(),
-            advance: Advance::new(),
+            diagnostics,
+
             position: 0,
             current: Token {
                 kind: TokenKind::Eof,
                 len: 0,
             },
-            diagnostics,
+
+            depth: 0,
+            #[cfg(debug_assertions)]
+            advances: Vec::new(),
         }
     }
 
@@ -126,4 +138,47 @@ impl<'a> Parser<'a> {
 
         self.builder.close(&branch);
     }
+
+    /// Enters a nested expression, returning `false` if too deep.
+    #[must_use]
+    pub fn depth_push(&mut self) -> bool {
+        if self.depth >= DEPTH_LIMIT {
+            self.diagnostics
+                .push(ParseError::NestingTooDeep { span: self.span() });
+            return false;
+        }
+
+        self.depth += 1;
+        true
+    }
+
+    /// Exits a nested expression.
+    pub const fn depth_pop(&mut self) {
+        self.depth -= 1;
+    }
+
+    #[cfg(debug_assertions)]
+    pub fn advance_push(&mut self) {
+        self.advances.push(self.position);
+    }
+
+    #[cfg(not(debug_assertions))]
+    pub fn advance_push(&mut self) {}
+
+    #[cfg(debug_assertions)]
+    #[expect(clippy::panic, reason = "Debug assertion")]
+    pub fn advance_pop(&mut self) {
+        let Some(start) = self.advances.pop() else {
+            panic!("`advance_pop` called without prior `advance_push`");
+        };
+
+        assert!(
+            self.position > start,
+            "parser did not advance: stuck at position {start} (token {:?})",
+            self.current.kind
+        );
+    }
+
+    #[cfg(not(debug_assertions))]
+    pub fn advance_pop(&mut self) {}
 }

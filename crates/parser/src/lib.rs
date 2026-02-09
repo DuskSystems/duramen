@@ -5,7 +5,6 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-mod advance;
 mod common;
 
 mod error;
