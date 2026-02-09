@@ -12,7 +12,7 @@ allow-print-in-tests = true
 allow-unwrap-in-tests = true
 
 disallowed-types = [
-  # Prefer `hashbrown` or `rustc-hash`.
+  # Prefer `indexmap`, `mitsein` or `rustc-hash`.
   "std::collections::HashMap",
   "std::collections::HashSet",
 
