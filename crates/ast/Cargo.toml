@@ -17,7 +17,13 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["indexmap/std", "mitsein/std", "rustc-hash/std"]
+
+[dependencies]
+# Collections
+indexmap = { workspace = true }
+mitsein = { workspace = true, features = ["indexmap"] }
+rustc-hash = { workspace = true }
 
 [dev-dependencies]
 duramen-test = { workspace = true }

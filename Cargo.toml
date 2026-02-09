@@ -133,9 +133,6 @@ memchr = { version = "2.7", default-features = false }
 # Collections
 indexmap = { version = "2.13", default-features = false }
 mitsein = { version = "0.9", default-features = false }
-
-# Hashing
-hashbrown = { version = "0.15", default-features = false }
 rustc-hash = { version = "2.1", default-features = false }
 
 # Time
