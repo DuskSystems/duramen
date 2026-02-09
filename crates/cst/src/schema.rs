@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{Annotation, CstNode};
 
 mod action_attributes;
 pub use action_attributes::ActionAttributes;
@@ -11,8 +11,8 @@ pub use action_declaration::ActionDeclaration;
 mod action_parents;
 pub use action_parents::ActionParents;
 
-mod applies_to_clause;
-pub use applies_to_clause::AppliesToClause;
+mod applies_to;
+pub use applies_to::AppliesTo;
 
 mod attribute_declaration;
 pub use attribute_declaration::AttributeDeclaration;
@@ -38,8 +38,8 @@ pub use entity_type::EntityType;
 mod enum_type;
 pub use enum_type::EnumType;
 
-mod namespace_declaration;
-pub use namespace_declaration::NamespaceDeclaration;
+mod namespace;
+pub use namespace::Namespace;
 
 mod principal_types;
 pub use principal_types::PrincipalTypes;
@@ -77,5 +77,32 @@ impl<'a> CstNode<'a> for Schema<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> Schema<'a> {
+    /// Returns an iterator over namespace children.
+    pub fn namespaces(&self) -> impl Iterator<Item = Namespace<'a>> {
+        self.node.children().filter_map(Namespace::cast)
+    }
+
+    /// Returns an iterator over top-level entity declaration children.
+    pub fn entity_declarations(&self) -> impl Iterator<Item = EntityDeclaration<'a>> {
+        self.node.children().filter_map(EntityDeclaration::cast)
+    }
+
+    /// Returns an iterator over top-level action declaration children.
+    pub fn action_declarations(&self) -> impl Iterator<Item = ActionDeclaration<'a>> {
+        self.node.children().filter_map(ActionDeclaration::cast)
+    }
+
+    /// Returns an iterator over top-level type declaration children.
+    pub fn type_declarations(&self) -> impl Iterator<Item = TypeDeclaration<'a>> {
+        self.node.children().filter_map(TypeDeclaration::cast)
+    }
+
+    /// Returns an iterator over top-level annotation children.
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> {
+        self.node.children().filter_map(Annotation::cast)
     }
 }

@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{CstNode, Policy};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Policies<'a> {
@@ -17,5 +17,12 @@ impl<'a> CstNode<'a> for Policies<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> Policies<'a> {
+    /// Returns an iterator over the policy children.
+    pub fn policies(&self) -> impl Iterator<Item = Policy<'a>> {
+        self.node.children().filter_map(Policy::cast)
     }
 }

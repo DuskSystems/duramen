@@ -1,7 +1,6 @@
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::Name;
 use crate::schema::{AttributeDeclaration, TypeExpression};
@@ -25,7 +24,6 @@ impl<'a> StandardEntity<'a> {
         parents: Vec<Name<'a>>,
         attributes: Vec<(Cow<'a, str>, AttributeDeclaration<'a>)>,
         tags: Option<TypeExpression<'a>>,
-        span: Range<usize>,
     ) -> Result<Self, Error> {
         let mut parent_set = IndexSet::with_capacity_and_hasher(parents.len(), FxBuildHasher);
 
@@ -35,7 +33,6 @@ impl<'a> StandardEntity<'a> {
             if !inserted {
                 return Err(Error::DuplicateKey {
                     key: String::from(parent_set[index].basename().as_str()),
-                    span,
                 });
             }
         }
@@ -46,7 +43,6 @@ impl<'a> StandardEntity<'a> {
             if map.contains_key(&*key) {
                 return Err(Error::DuplicateKey {
                     key: key.into_owned(),
-                    span,
                 });
             }
 

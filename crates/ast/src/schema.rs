@@ -27,8 +27,8 @@ pub use entity_kind::EntityKind;
 mod entity_type_set;
 pub use entity_type_set::EntityTypeSet;
 
-mod enum_choices;
-pub use enum_choices::EnumChoices;
+mod enum_type;
+pub use enum_type::EnumType;
 
 mod namespace;
 pub use namespace::Namespace;

@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{CstNode, Expression};
 
 #[derive(Clone, Copy, Debug)]
 pub struct RecordEntry<'a> {
@@ -17,5 +17,27 @@ impl<'a> CstNode<'a> for RecordEntry<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> RecordEntry<'a> {
+    /// Returns the key token (string or identifier).
+    #[must_use]
+    pub fn key(&self) -> Option<Node<'a>> {
+        self.node
+            .children()
+            .find(|child| child.kind() == Syntax::String || child.kind().is_identifier())
+    }
+
+    /// Returns the value expression.
+    #[must_use]
+    pub fn value(&self) -> Option<Expression<'a>> {
+        self.node.children().find_map(Expression::cast)
+    }
+
+    /// Returns the colon token.
+    #[must_use]
+    pub fn colon(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::Colon)
     }
 }

@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::Annotations;
 
@@ -36,8 +35,8 @@ pub use pattern::Pattern;
 mod pattern_element;
 pub use pattern_element::PatternElement;
 
-mod policy_set;
-pub use policy_set::PolicySet;
+mod policies;
+pub use policies::Policies;
 
 mod principal_constraint;
 pub use principal_constraint::PrincipalConstraint;
@@ -69,7 +68,6 @@ pub struct Policy<'a> {
     action: ActionConstraint<'a>,
     resource: ResourceConstraint<'a>,
     conditions: Vec<Condition<'a>>,
-    span: Range<usize>,
 }
 
 impl<'a> Policy<'a> {
@@ -82,7 +80,6 @@ impl<'a> Policy<'a> {
         action: ActionConstraint<'a>,
         resource: ResourceConstraint<'a>,
         conditions: Vec<Condition<'a>>,
-        span: Range<usize>,
     ) -> Self {
         Self {
             annotations,
@@ -91,7 +88,6 @@ impl<'a> Policy<'a> {
             action,
             resource,
             conditions,
-            span,
         }
     }
 
@@ -129,11 +125,5 @@ impl<'a> Policy<'a> {
     #[must_use]
     pub fn conditions(&self) -> &[Condition<'a>] {
         &self.conditions
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }

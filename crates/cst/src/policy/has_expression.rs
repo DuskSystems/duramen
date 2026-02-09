@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{CstNode, Expression};
 
 #[derive(Clone, Copy, Debug)]
 pub struct HasExpression<'a> {
@@ -17,5 +17,25 @@ impl<'a> CstNode<'a> for HasExpression<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> HasExpression<'a> {
+    /// Returns the expression being tested.
+    #[must_use]
+    pub fn expression(&self) -> Option<Expression<'a>> {
+        self.node.children().find_map(Expression::cast)
+    }
+
+    /// Returns the attribute expression.
+    #[must_use]
+    pub fn attribute(&self) -> Option<Expression<'a>> {
+        self.node.children().filter_map(Expression::cast).nth(1)
+    }
+
+    /// Returns the `has` keyword token.
+    #[must_use]
+    pub fn has_token(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::HasKeyword)
     }
 }

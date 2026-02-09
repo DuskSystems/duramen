@@ -120,12 +120,12 @@ pub enum Syntax {
     NotEqual,
     /// Logical or: `||`.
     Or,
-    /// Percent: `%`.
-    Percent,
+    /// Modulo: `%`.
+    Modulo,
     /// Plus: `+`.
     Plus,
-    /// Slash: `/`.
-    Slash,
+    /// Divide: `/`.
+    Divide,
     /// Wildcard: `*`.
     Wildcard,
 
@@ -366,9 +366,9 @@ impl fmt::Display for Syntax {
             Self::Not => "!",
             Self::NotEqual => "!=",
             Self::Or => "||",
-            Self::Percent => "%",
+            Self::Modulo => "%",
             Self::Plus => "+",
-            Self::Slash => "/",
+            Self::Divide => "/",
             Self::Wildcard => "*",
 
             Self::Comment => "comment",
@@ -507,10 +507,10 @@ impl From<TokenKind> for Syntax {
             TokenKind::LessThan => Self::LessThan,
             TokenKind::LessThanEquals => Self::LessThanEquals,
             TokenKind::Minus => Self::Minus,
-            TokenKind::Percent => Self::Percent,
+            TokenKind::Percent => Self::Modulo,
             TokenKind::Pipe2 => Self::Or,
             TokenKind::Plus => Self::Plus,
-            TokenKind::Slash => Self::Slash,
+            TokenKind::Slash => Self::Divide,
             TokenKind::Asterisk => Self::Wildcard,
 
             TokenKind::Comment => Self::Comment,
@@ -583,9 +583,9 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::Not => Ok(Self::Bang),
             Syntax::NotEqual => Ok(Self::BangEquals),
             Syntax::Or => Ok(Self::Pipe2),
-            Syntax::Percent => Ok(Self::Percent),
+            Syntax::Modulo => Ok(Self::Percent),
             Syntax::Plus => Ok(Self::Plus),
-            Syntax::Slash => Ok(Self::Slash),
+            Syntax::Divide => Ok(Self::Slash),
             Syntax::Wildcard => Ok(Self::Asterisk),
 
             Syntax::Comment => Ok(Self::Comment),

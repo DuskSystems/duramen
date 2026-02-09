@@ -1,4 +1,4 @@
-use crate::{CstNode, Node, Syntax};
+use crate::{Annotation, CstNode, Node, Syntax};
 
 mod addition_operator;
 pub use addition_operator::AdditionOperator;
@@ -123,5 +123,58 @@ impl<'a> CstNode<'a> for Policy<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> Policy<'a> {
+    /// Returns an iterator over the annotation children.
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> {
+        self.node.children().filter_map(Annotation::cast)
+    }
+
+    /// Returns the effect (`permit` or `forbid`).
+    #[must_use]
+    pub fn effect(&self) -> Option<Effect> {
+        self.node.children().find_map(|child| match child.kind() {
+            Syntax::PermitKeyword => Some(Effect::Permit),
+            Syntax::ForbidKeyword => Some(Effect::Forbid),
+            _ => None,
+        })
+    }
+
+    /// Returns the effect keyword token.
+    #[must_use]
+    pub fn effect_token(&self) -> Option<Node<'a>> {
+        self.node
+            .children()
+            .find(|child| matches!(child.kind(), Syntax::PermitKeyword | Syntax::ForbidKeyword))
+    }
+
+    /// Returns an iterator over the variable definition children.
+    pub fn variable_definitions(&self) -> impl Iterator<Item = VariableDefinition<'a>> {
+        self.node.children().filter_map(VariableDefinition::cast)
+    }
+
+    /// Returns an iterator over the condition children.
+    pub fn conditions(&self) -> impl Iterator<Item = Condition<'a>> {
+        self.node.children().filter_map(Condition::cast)
+    }
+
+    /// Returns the opening parenthesis token.
+    #[must_use]
+    pub fn open_parenthesis(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::OpenParenthesis)
+    }
+
+    /// Returns the closing parenthesis token.
+    #[must_use]
+    pub fn close_parenthesis(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::CloseParenthesis)
+    }
+
+    /// Returns the semicolon token.
+    #[must_use]
+    pub fn semicolon(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::Semicolon)
     }
 }

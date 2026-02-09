@@ -1,5 +1,4 @@
 use core::fmt;
-use core::ops::Range;
 
 use crate::policy::Expression;
 
@@ -24,14 +23,13 @@ impl fmt::Display for ConditionKind {
 pub struct Condition<'a> {
     kind: ConditionKind,
     body: Expression<'a>,
-    span: Range<usize>,
 }
 
 impl<'a> Condition<'a> {
     /// Creates a new condition.
     #[must_use]
-    pub const fn new(kind: ConditionKind, body: Expression<'a>, span: Range<usize>) -> Self {
-        Self { kind, body, span }
+    pub const fn new(kind: ConditionKind, body: Expression<'a>) -> Self {
+        Self { kind, body }
     }
 
     /// Returns the condition kind.
@@ -44,11 +42,5 @@ impl<'a> Condition<'a> {
     #[must_use]
     pub const fn body(&self) -> &Expression<'a> {
         &self.body
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }

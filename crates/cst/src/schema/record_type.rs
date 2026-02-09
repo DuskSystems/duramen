@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{AttributeDeclaration, CstNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct RecordType<'a> {
@@ -17,5 +17,24 @@ impl<'a> CstNode<'a> for RecordType<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> RecordType<'a> {
+    /// Returns an iterator over attribute declaration children.
+    pub fn attributes(&self) -> impl Iterator<Item = AttributeDeclaration<'a>> {
+        self.node.children().filter_map(AttributeDeclaration::cast)
+    }
+
+    /// Returns the opening brace token.
+    #[must_use]
+    pub fn open_brace(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::OpenBrace)
+    }
+
+    /// Returns the closing brace token.
+    #[must_use]
+    pub fn close_brace(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::CloseBrace)
     }
 }

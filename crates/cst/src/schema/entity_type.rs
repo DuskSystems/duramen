@@ -19,3 +19,11 @@ impl<'a> CstNode<'a> for EntityType<'a> {
         self.node
     }
 }
+
+impl<'a> EntityType<'a> {
+    /// Returns the `entity` keyword token.
+    #[must_use]
+    pub fn keyword(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::EntityKeyword)
+    }
+}

@@ -1,6 +1,5 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::schema::AttributeDeclaration;
 use crate::{Error, FxBuildHasher, IndexMap};
@@ -17,17 +16,13 @@ impl<'a> RecordType<'a> {
     /// # Errors
     ///
     /// Returns an error if any attribute name appears more than once.
-    pub fn new(
-        attributes: Vec<(Cow<'a, str>, AttributeDeclaration<'a>)>,
-        span: Range<usize>,
-    ) -> Result<Self, Error> {
+    pub fn new(attributes: Vec<(Cow<'a, str>, AttributeDeclaration<'a>)>) -> Result<Self, Error> {
         let mut map = IndexMap::with_capacity_and_hasher(attributes.len(), FxBuildHasher);
 
         for (key, value) in attributes {
             if map.contains_key(&*key) {
                 return Err(Error::DuplicateKey {
                     key: key.into_owned(),
-                    span,
                 });
             }
 

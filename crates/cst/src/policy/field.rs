@@ -19,3 +19,19 @@ impl<'a> CstNode<'a> for Field<'a> {
         self.node
     }
 }
+
+impl<'a> Field<'a> {
+    /// Returns the `.` dot token.
+    #[must_use]
+    pub fn dot(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::Dot)
+    }
+
+    /// Returns the field name token.
+    #[must_use]
+    pub fn name(&self) -> Option<Node<'a>> {
+        self.node
+            .children()
+            .find(|child| child.kind().is_identifier())
+    }
+}

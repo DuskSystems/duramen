@@ -1,6 +1,6 @@
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum MultiplicationOperator {
-    Times,
+    Multiply,
     Divide,
     Modulo,
 }

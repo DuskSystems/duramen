@@ -1,6 +1,5 @@
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::{Annotations, Identifier};
 use crate::schema::EntityKind;
@@ -12,7 +11,6 @@ pub struct EntityDeclaration<'a> {
     annotations: Annotations<'a>,
     names: IndexSet1<Identifier<'a>>,
     kind: EntityKind<'a>,
-    span: Range<usize>,
 }
 
 impl<'a> EntityDeclaration<'a> {
@@ -25,7 +23,6 @@ impl<'a> EntityDeclaration<'a> {
         annotations: Annotations<'a>,
         names: Vec<Identifier<'a>>,
         kind: EntityKind<'a>,
-        span: Range<usize>,
     ) -> Result<Self, Error> {
         let mut set = IndexSet::with_capacity_and_hasher(names.len(), FxBuildHasher);
 
@@ -35,19 +32,16 @@ impl<'a> EntityDeclaration<'a> {
             if !inserted {
                 return Err(Error::DuplicateKey {
                     key: String::from(set[index].as_str()),
-                    span,
                 });
             }
         }
 
-        let names =
-            IndexSet1::try_from(set).map_err(|_empty| Error::Empty { span: span.clone() })?;
+        let names = IndexSet1::try_from(set).map_err(|_empty| Error::Empty)?;
 
         Ok(Self {
             annotations,
             names,
             kind,
-            span,
         })
     }
 
@@ -66,11 +60,5 @@ impl<'a> EntityDeclaration<'a> {
     #[must_use]
     pub const fn kind(&self) -> &EntityKind<'a> {
         &self.kind
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }

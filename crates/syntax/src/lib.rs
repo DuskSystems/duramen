@@ -12,4 +12,4 @@ mod syntax;
 pub use syntax::Syntax;
 
 mod tree;
-pub use tree::{Node, Tree};
+pub use tree::{Ancestors, Children, Descendants, Node, Preorder, Tree, WalkEvent};
