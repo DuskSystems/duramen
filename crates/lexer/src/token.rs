@@ -1,7 +1,7 @@
 use core::fmt;
 
 /// A token produced by the lexer.
-#[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub struct Token {
     /// The kind of token.
     pub kind: TokenKind,
@@ -19,7 +19,7 @@ impl Token {
 }
 
 /// The kind of token.
-#[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum TokenKind {
     /// Identifier: `name`.
     Identifier,

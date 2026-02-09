@@ -19,3 +19,19 @@ impl<'a> CstNode<'a> for Name<'a> {
         self.node
     }
 }
+
+impl<'a> Name<'a> {
+    /// Returns the identifier segment tokens.
+    pub fn segments(&self) -> impl Iterator<Item = Node<'a>> {
+        self.node
+            .children()
+            .filter(|child| child.kind().is_identifier())
+    }
+
+    /// Returns the path separator (`::`) tokens.
+    pub fn separators(&self) -> impl Iterator<Item = Node<'a>> {
+        self.node
+            .children()
+            .filter(|child| child.kind() == Syntax::PathSeparator)
+    }
+}

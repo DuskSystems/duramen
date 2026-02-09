@@ -48,6 +48,7 @@ impl Builder {
             kind,
             start: self.cursor,
             end: self.cursor,
+            parent: self.parent(),
             first: None,
             next: None,
         };
@@ -105,11 +106,18 @@ impl Builder {
             kind,
             start,
             end,
+            parent: self.parent(),
             first: Some(first),
             next: None,
         };
 
         self.nodes.push(node);
+
+        let mut child = Some(first);
+        while let Some(child_idx) = child {
+            self.nodes[child_idx].parent = Some(wrapper);
+            child = self.nodes[child_idx].next;
+        }
 
         if let Some(previous) = checkpoint.0 {
             let prev_node = &mut self.nodes[previous];
@@ -141,6 +149,7 @@ impl Builder {
             kind,
             start,
             end,
+            parent: self.parent(),
             first: None,
             next: None,
         };

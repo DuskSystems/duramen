@@ -1,8 +1,8 @@
-use crate::schema::{EnumChoices, StandardEntity};
+use crate::schema::{EnumType, StandardEntity};
 
 /// The kind of entity declaration.
 #[derive(Clone, Debug)]
 pub enum EntityKind<'a> {
     Standard(StandardEntity<'a>),
-    Enum(EnumChoices<'a>),
+    Enum(EnumType<'a>),
 }

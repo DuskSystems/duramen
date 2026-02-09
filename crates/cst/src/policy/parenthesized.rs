@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{CstNode, Expression};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Parenthesized<'a> {
@@ -17,5 +17,25 @@ impl<'a> CstNode<'a> for Parenthesized<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> Parenthesized<'a> {
+    /// Returns the inner expression.
+    #[must_use]
+    pub fn expression(&self) -> Option<Expression<'a>> {
+        self.node.children().find_map(Expression::cast)
+    }
+
+    /// Returns the opening parenthesis token.
+    #[must_use]
+    pub fn open_parenthesis(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::OpenParenthesis)
+    }
+
+    /// Returns the closing parenthesis token.
+    #[must_use]
+    pub fn close_parenthesis(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::CloseParenthesis)
     }
 }

@@ -1,6 +1,5 @@
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::Name;
 use crate::{Error, FxBuildHasher, IndexSet, IndexSet1};
@@ -17,7 +16,7 @@ impl<'a> EntityTypeSet<'a> {
     /// # Errors
     ///
     /// Returns an error if `types` is empty or contains duplicates.
-    pub fn new(types: Vec<Name<'a>>, span: Range<usize>) -> Result<Self, Error> {
+    pub fn new(types: Vec<Name<'a>>) -> Result<Self, Error> {
         let mut set = IndexSet::with_capacity_and_hasher(types.len(), FxBuildHasher);
 
         for name in types {
@@ -26,12 +25,11 @@ impl<'a> EntityTypeSet<'a> {
             if !inserted {
                 return Err(Error::DuplicateKey {
                     key: String::from(set[index].basename().as_str()),
-                    span,
                 });
             }
         }
 
-        let set = IndexSet1::try_from(set).map_err(|_empty| Error::Empty { span })?;
+        let set = IndexSet1::try_from(set).map_err(|_empty| Error::Empty)?;
 
         Ok(Self { types: set })
     }

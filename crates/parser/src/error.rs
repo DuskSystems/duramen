@@ -5,7 +5,7 @@ use duramen_diagnostic::{Diagnostic, Suggestion};
 use duramen_lexer::TokenKind;
 
 /// Errors reported during parsing.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum ParseError {
     /// Single `&` used instead of `&&`.
     SingleAmpersand { span: Range<usize> },

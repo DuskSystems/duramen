@@ -105,29 +105,29 @@ pub enum Syntax {
     /// Equal: `==`.
     Equal,
     /// Greater than: `>`.
-    GreaterThan,
+    Greater,
     /// Greater than or equal: `>=`.
-    GreaterThanEquals,
+    GreaterEqual,
     /// Less than: `<`.
-    LessThan,
+    Less,
     /// Less than or equal: `<=`.
-    LessThanEquals,
-    /// Minus: `-`.
-    Minus,
+    LessEqual,
+    /// Subtract: `-`.
+    Subtract,
     /// Logical not: `!`.
     Not,
     /// Not equal: `!=`.
     NotEqual,
     /// Logical or: `||`.
     Or,
-    /// Percent: `%`.
-    Percent,
-    /// Plus: `+`.
-    Plus,
-    /// Slash: `/`.
-    Slash,
-    /// Wildcard: `*`.
-    Wildcard,
+    /// Modulo: `%`.
+    Modulo,
+    /// Add: `+`.
+    Add,
+    /// Divide: `/`.
+    Divide,
+    /// Multiply: `*`.
+    Multiply,
 
     /// Line comment: `// ...`.
     Comment,
@@ -358,18 +358,18 @@ impl fmt::Display for Syntax {
             Self::And => "&&",
             Self::Assign => "=",
             Self::Equal => "==",
-            Self::GreaterThan => ">",
-            Self::GreaterThanEquals => ">=",
-            Self::LessThan => "<",
-            Self::LessThanEquals => "<=",
-            Self::Minus => "-",
+            Self::Greater => ">",
+            Self::GreaterEqual => ">=",
+            Self::Less => "<",
+            Self::LessEqual => "<=",
+            Self::Subtract => "-",
             Self::Not => "!",
             Self::NotEqual => "!=",
             Self::Or => "||",
-            Self::Percent => "%",
-            Self::Plus => "+",
-            Self::Slash => "/",
-            Self::Wildcard => "*",
+            Self::Modulo => "%",
+            Self::Add => "+",
+            Self::Divide => "/",
+            Self::Multiply => "*",
 
             Self::Comment => "comment",
             Self::Whitespace => "whitespace",
@@ -502,16 +502,16 @@ impl From<TokenKind> for Syntax {
             TokenKind::BangEquals => Self::NotEqual,
             TokenKind::Equals => Self::Assign,
             TokenKind::Equals2 => Self::Equal,
-            TokenKind::GreaterThan => Self::GreaterThan,
-            TokenKind::GreaterThanEquals => Self::GreaterThanEquals,
-            TokenKind::LessThan => Self::LessThan,
-            TokenKind::LessThanEquals => Self::LessThanEquals,
-            TokenKind::Minus => Self::Minus,
-            TokenKind::Percent => Self::Percent,
+            TokenKind::GreaterThan => Self::Greater,
+            TokenKind::GreaterThanEquals => Self::GreaterEqual,
+            TokenKind::LessThan => Self::Less,
+            TokenKind::LessThanEquals => Self::LessEqual,
+            TokenKind::Minus => Self::Subtract,
+            TokenKind::Percent => Self::Modulo,
             TokenKind::Pipe2 => Self::Or,
-            TokenKind::Plus => Self::Plus,
-            TokenKind::Slash => Self::Slash,
-            TokenKind::Asterisk => Self::Wildcard,
+            TokenKind::Plus => Self::Add,
+            TokenKind::Slash => Self::Divide,
+            TokenKind::Asterisk => Self::Multiply,
 
             TokenKind::Comment => Self::Comment,
             TokenKind::Whitespace => Self::Whitespace,
@@ -575,18 +575,18 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::And => Ok(Self::Ampersand2),
             Syntax::Assign => Ok(Self::Equals),
             Syntax::Equal => Ok(Self::Equals2),
-            Syntax::GreaterThan => Ok(Self::GreaterThan),
-            Syntax::GreaterThanEquals => Ok(Self::GreaterThanEquals),
-            Syntax::LessThan => Ok(Self::LessThan),
-            Syntax::LessThanEquals => Ok(Self::LessThanEquals),
-            Syntax::Minus => Ok(Self::Minus),
+            Syntax::Greater => Ok(Self::GreaterThan),
+            Syntax::GreaterEqual => Ok(Self::GreaterThanEquals),
+            Syntax::Less => Ok(Self::LessThan),
+            Syntax::LessEqual => Ok(Self::LessThanEquals),
+            Syntax::Subtract => Ok(Self::Minus),
             Syntax::Not => Ok(Self::Bang),
             Syntax::NotEqual => Ok(Self::BangEquals),
             Syntax::Or => Ok(Self::Pipe2),
-            Syntax::Percent => Ok(Self::Percent),
-            Syntax::Plus => Ok(Self::Plus),
-            Syntax::Slash => Ok(Self::Slash),
-            Syntax::Wildcard => Ok(Self::Asterisk),
+            Syntax::Modulo => Ok(Self::Percent),
+            Syntax::Add => Ok(Self::Plus),
+            Syntax::Divide => Ok(Self::Slash),
+            Syntax::Multiply => Ok(Self::Asterisk),
 
             Syntax::Comment => Ok(Self::Comment),
             Syntax::Whitespace => Ok(Self::Whitespace),

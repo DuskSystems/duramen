@@ -1,7 +1,6 @@
 use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::Annotations;
 use crate::schema::{ActionReference, AppliesTo, AttributeDeclaration};
@@ -15,7 +14,6 @@ pub struct ActionDeclaration<'a> {
     parents: IndexSet<ActionReference<'a>>,
     applies_to: Option<AppliesTo<'a>>,
     attributes: IndexMap<Cow<'a, str>, AttributeDeclaration<'a>>,
-    span: Range<usize>,
 }
 
 impl<'a> ActionDeclaration<'a> {
@@ -31,7 +29,6 @@ impl<'a> ActionDeclaration<'a> {
         parents: Vec<ActionReference<'a>>,
         applies_to: Option<AppliesTo<'a>>,
         attributes: Vec<(Cow<'a, str>, AttributeDeclaration<'a>)>,
-        span: Range<usize>,
     ) -> Result<Self, Error> {
         let mut name_set = IndexSet::with_capacity_and_hasher(names.len(), FxBuildHasher);
 
@@ -41,13 +38,11 @@ impl<'a> ActionDeclaration<'a> {
             if !inserted {
                 return Err(Error::DuplicateKey {
                     key: String::from(&*name_set[index]),
-                    span,
                 });
             }
         }
 
-        let names =
-            IndexSet1::try_from(name_set).map_err(|_empty| Error::Empty { span: span.clone() })?;
+        let names = IndexSet1::try_from(name_set).map_err(|_empty| Error::Empty)?;
 
         let mut parent_set = IndexSet::with_capacity_and_hasher(parents.len(), FxBuildHasher);
 
@@ -57,7 +52,6 @@ impl<'a> ActionDeclaration<'a> {
             if !inserted {
                 return Err(Error::DuplicateKey {
                     key: String::from(parent_set[index].id()),
-                    span: span.clone(),
                 });
             }
         }
@@ -68,7 +62,6 @@ impl<'a> ActionDeclaration<'a> {
             if map.contains_key(&*key) {
                 return Err(Error::DuplicateKey {
                     key: key.into_owned(),
-                    span,
                 });
             }
 
@@ -81,7 +74,6 @@ impl<'a> ActionDeclaration<'a> {
             parents: parent_set,
             applies_to,
             attributes: map,
-            span,
         })
     }
 
@@ -116,11 +108,5 @@ impl<'a> ActionDeclaration<'a> {
     /// Returns an iterator over attribute name-declaration pairs.
     pub fn attributes(&self) -> impl Iterator<Item = (&str, &AttributeDeclaration<'a>)> {
         self.attributes.iter().map(|(key, value)| (&**key, value))
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }

@@ -1,37 +1,29 @@
 use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::Name;
 use crate::policy::{
     BinaryOperator, Literal, Pattern, RecordExpression, SlotKind, UnaryOperator, Variable,
 };
 
-/// An expression with source span.
+/// An expression node.
 #[derive(Clone, Debug)]
 pub struct Expression<'a> {
     kind: ExpressionKind<'a>,
-    span: Range<usize>,
 }
 
 impl<'a> Expression<'a> {
     /// Creates a new expression.
     #[must_use]
-    pub const fn new(kind: ExpressionKind<'a>, span: Range<usize>) -> Self {
-        Self { kind, span }
+    pub const fn new(kind: ExpressionKind<'a>) -> Self {
+        Self { kind }
     }
 
     /// Returns the expression kind.
     #[must_use]
     pub const fn kind(&self) -> &ExpressionKind<'a> {
         &self.kind
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }
 

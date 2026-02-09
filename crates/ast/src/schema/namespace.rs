@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::common::{Annotations, Name};
 use crate::schema::Declaration;
@@ -10,7 +9,6 @@ pub struct Namespace<'a> {
     annotations: Annotations<'a>,
     name: Option<Name<'a>>,
     declarations: Vec<Declaration<'a>>,
-    span: Range<usize>,
 }
 
 impl<'a> Namespace<'a> {
@@ -20,13 +18,11 @@ impl<'a> Namespace<'a> {
         annotations: Annotations<'a>,
         name: Option<Name<'a>>,
         declarations: Vec<Declaration<'a>>,
-        span: Range<usize>,
     ) -> Self {
         Self {
             annotations,
             name,
             declarations,
-            span,
         }
     }
 
@@ -46,11 +42,5 @@ impl<'a> Namespace<'a> {
     #[must_use]
     pub fn declarations(&self) -> &[Declaration<'a>] {
         &self.declarations
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }

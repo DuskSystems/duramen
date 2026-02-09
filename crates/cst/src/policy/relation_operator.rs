@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
-pub enum RelationalOperator {
+pub enum RelationOperator {
     Less,
     LessEqual,
     Greater,

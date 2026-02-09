@@ -2,7 +2,7 @@ use alloc::string::String;
 use core::ops::Range;
 
 /// The kind of suggestion.
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum SuggestionKind {
     Fix,
     Hint,

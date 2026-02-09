@@ -1,6 +1,5 @@
 use alloc::string::String;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::policy::EntityReference;
 use crate::{Error, FxBuildHasher, IndexSet, IndexSet1};
@@ -17,7 +16,7 @@ impl<'a> ActionList<'a> {
     /// # Errors
     ///
     /// Returns an error if `actions` is empty or contains duplicates.
-    pub fn new(actions: Vec<EntityReference<'a>>, span: Range<usize>) -> Result<Self, Error> {
+    pub fn new(actions: Vec<EntityReference<'a>>) -> Result<Self, Error> {
         let mut set = IndexSet::with_capacity_and_hasher(actions.len(), FxBuildHasher);
 
         for action in actions {
@@ -26,12 +25,11 @@ impl<'a> ActionList<'a> {
             if !inserted {
                 return Err(Error::DuplicateKey {
                     key: String::from(set[index].id()),
-                    span,
                 });
             }
         }
 
-        let set = IndexSet1::try_from(set).map_err(|_empty| Error::Empty { span })?;
+        let set = IndexSet1::try_from(set).map_err(|_empty| Error::Empty)?;
 
         Ok(Self { actions: set })
     }

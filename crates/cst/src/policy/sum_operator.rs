@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
-pub enum AdditionOperator {
-    Plus,
-    Minus,
+pub enum SumOperator {
+    Add,
+    Subtract,
 }

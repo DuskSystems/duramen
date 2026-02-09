@@ -9,7 +9,7 @@ use annotate_snippets::{AnnotationKind, Group, Level, Patch, Renderer, Snippet};
 use crate::suggestion::Suggestion;
 
 /// The kind of diagnostic.
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum DiagnosticKind {
     Error,
     Warning,

@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{CstNode, Name, Types};
 
 #[derive(Clone, Copy, Debug)]
 pub struct ResourceTypes<'a> {
@@ -17,5 +17,31 @@ impl<'a> CstNode<'a> for ResourceTypes<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> ResourceTypes<'a> {
+    /// Returns the bracketed types list.
+    #[must_use]
+    pub fn types(&self) -> Option<Types<'a>> {
+        self.node.children().find_map(Types::cast)
+    }
+
+    /// Returns the single unbracketed type name.
+    #[must_use]
+    pub fn name(&self) -> Option<Name<'a>> {
+        self.node.children().find_map(Name::cast)
+    }
+
+    /// Returns the `resource` keyword token.
+    #[must_use]
+    pub fn keyword(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::ResourceKeyword)
+    }
+
+    /// Returns the colon token.
+    #[must_use]
+    pub fn colon(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::Colon)
     }
 }

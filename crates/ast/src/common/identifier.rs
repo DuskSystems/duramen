@@ -1,5 +1,4 @@
 use core::fmt;
-use core::ops::Range;
 
 use crate::Error;
 
@@ -13,9 +12,9 @@ impl<'a> Identifier<'a> {
     /// # Errors
     ///
     /// Returns an error if `value` is empty.
-    pub const fn new(value: &'a str, span: Range<usize>) -> Result<Self, Error> {
+    pub const fn new(value: &'a str) -> Result<Self, Error> {
         if value.is_empty() {
-            return Err(Error::Empty { span });
+            return Err(Error::Empty);
         }
 
         Ok(Self(value))

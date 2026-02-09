@@ -1,6 +1,5 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
-use core::ops::Range;
 
 use crate::policy::Expression;
 use crate::{Error, FxBuildHasher, IndexMap};
@@ -17,17 +16,13 @@ impl<'a> RecordExpression<'a> {
     /// # Errors
     ///
     /// Returns an error if any key appears more than once.
-    pub fn new(
-        entries: Vec<(Cow<'a, str>, Expression<'a>)>,
-        span: Range<usize>,
-    ) -> Result<Self, Error> {
+    pub fn new(entries: Vec<(Cow<'a, str>, Expression<'a>)>) -> Result<Self, Error> {
         let mut map = IndexMap::with_capacity_and_hasher(entries.len(), FxBuildHasher);
 
         for (key, value) in entries {
             if map.contains_key(&*key) {
                 return Err(Error::DuplicateKey {
                     key: key.into_owned(),
-                    span,
                 });
             }
 

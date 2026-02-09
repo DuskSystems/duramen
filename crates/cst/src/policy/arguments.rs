@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::CstNode;
+use crate::{CstNode, Expression};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Arguments<'a> {
@@ -17,5 +17,12 @@ impl<'a> CstNode<'a> for Arguments<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> Arguments<'a> {
+    /// Returns an iterator over the argument expressions.
+    pub fn expressions(&self) -> impl Iterator<Item = Expression<'a>> {
+        self.node.children().filter_map(Expression::cast)
     }
 }

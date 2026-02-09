@@ -11,11 +11,11 @@ pub(crate) type IndexMap<K, V> = indexmap::IndexMap<K, V, FxBuildHasher>;
 pub(crate) type IndexSet<T> = indexmap::IndexSet<T, FxBuildHasher>;
 pub(crate) type IndexSet1<T> = mitsein::index_set1::IndexSet1<T, FxBuildHasher>;
 
-mod error;
-pub use error::Error;
-
 mod common;
 pub use common::*;
+
+mod error;
+pub use error::Error;
 
 mod policy;
 pub use policy::*;

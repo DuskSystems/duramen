@@ -1,5 +1,3 @@
-use core::ops::Range;
-
 use crate::common::{Annotations, Identifier};
 use crate::schema::TypeExpression;
 
@@ -9,7 +7,6 @@ pub struct TypeDeclaration<'a> {
     annotations: Annotations<'a>,
     name: Identifier<'a>,
     definition: TypeExpression<'a>,
-    span: Range<usize>,
 }
 
 impl<'a> TypeDeclaration<'a> {
@@ -19,13 +16,11 @@ impl<'a> TypeDeclaration<'a> {
         annotations: Annotations<'a>,
         name: Identifier<'a>,
         definition: TypeExpression<'a>,
-        span: Range<usize>,
     ) -> Self {
         Self {
             annotations,
             name,
             definition,
-            span,
         }
     }
 
@@ -45,11 +40,5 @@ impl<'a> TypeDeclaration<'a> {
     #[must_use]
     pub const fn definition(&self) -> &TypeExpression<'a> {
         &self.definition
-    }
-
-    /// Returns the source span.
-    #[must_use]
-    pub const fn span(&self) -> &Range<usize> {
-        &self.span
     }
 }

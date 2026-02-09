@@ -1,7 +1,4 @@
-use crate::{CstNode, Node, Syntax};
-
-mod addition_operator;
-pub use addition_operator::AdditionOperator;
+use crate::{Annotation, CstNode, Node, Syntax};
 
 mod and_expression;
 pub use and_expression::AndExpression;
@@ -60,9 +57,6 @@ pub use member_access::MemberAccess;
 mod member_expression;
 pub use member_expression::MemberExpression;
 
-mod multiplication_operator;
-pub use multiplication_operator::MultiplicationOperator;
-
 mod or_expression;
 pub use or_expression::OrExpression;
 
@@ -75,6 +69,9 @@ pub use policies::Policies;
 mod product_expression;
 pub use product_expression::ProductExpression;
 
+mod product_operator;
+pub use product_operator::ProductOperator;
+
 mod record;
 pub use record::Record;
 
@@ -84,8 +81,8 @@ pub use record_entry::RecordEntry;
 mod relation_expression;
 pub use relation_expression::RelationExpression;
 
-mod relational_operator;
-pub use relational_operator::RelationalOperator;
+mod relation_operator;
+pub use relation_operator::RelationOperator;
 
 mod slot;
 pub use slot::Slot;
@@ -95,6 +92,9 @@ pub use slot_kind::SlotKind;
 
 mod sum_expression;
 pub use sum_expression::SumExpression;
+
+mod sum_operator;
+pub use sum_operator::SumOperator;
 
 mod unary_expression;
 pub use unary_expression::UnaryExpression;
@@ -123,5 +123,58 @@ impl<'a> CstNode<'a> for Policy<'a> {
 
     fn syntax(&self) -> Node<'a> {
         self.node
+    }
+}
+
+impl<'a> Policy<'a> {
+    /// Returns an iterator over the annotation children.
+    pub fn annotations(&self) -> impl Iterator<Item = Annotation<'a>> {
+        self.node.children().filter_map(Annotation::cast)
+    }
+
+    /// Returns the effect (`permit` or `forbid`).
+    #[must_use]
+    pub fn effect(&self) -> Option<Effect> {
+        self.node.children().find_map(|child| match child.kind() {
+            Syntax::PermitKeyword => Some(Effect::Permit),
+            Syntax::ForbidKeyword => Some(Effect::Forbid),
+            _ => None,
+        })
+    }
+
+    /// Returns the effect keyword token.
+    #[must_use]
+    pub fn effect_token(&self) -> Option<Node<'a>> {
+        self.node
+            .children()
+            .find(|child| matches!(child.kind(), Syntax::PermitKeyword | Syntax::ForbidKeyword))
+    }
+
+    /// Returns an iterator over the variable definition children.
+    pub fn variable_definitions(&self) -> impl Iterator<Item = VariableDefinition<'a>> {
+        self.node.children().filter_map(VariableDefinition::cast)
+    }
+
+    /// Returns an iterator over the condition children.
+    pub fn conditions(&self) -> impl Iterator<Item = Condition<'a>> {
+        self.node.children().filter_map(Condition::cast)
+    }
+
+    /// Returns the opening parenthesis token.
+    #[must_use]
+    pub fn open_parenthesis(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::OpenParenthesis)
+    }
+
+    /// Returns the closing parenthesis token.
+    #[must_use]
+    pub fn close_parenthesis(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::CloseParenthesis)
+    }
+
+    /// Returns the semicolon token.
+    #[must_use]
+    pub fn semicolon(&self) -> Option<Node<'a>> {
+        self.node.child(Syntax::Semicolon)
     }
 }
