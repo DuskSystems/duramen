@@ -6,7 +6,7 @@ extern crate std;
 
 use core::ops::Range;
 
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::Node;
 
 mod common;
 pub use common::*;

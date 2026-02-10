@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{Annotation, CstNode, EntityAttributes, EntityParents, EntityTags, EnumType, Name};
+use crate::CstNode;
+use crate::common::{Annotation, Name};
+use crate::schema::{EntityAttributes, EntityParents, EntityTags, EnumType};
 
 #[derive(Clone, Copy, Debug)]
 pub struct EntityDeclaration<'a> {

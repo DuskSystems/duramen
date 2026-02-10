@@ -1,4 +1,8 @@
+use alloc::string::String;
+
+use crate::RESERVED_TYPE_NAMES;
 use crate::common::{Annotations, Identifier};
+use crate::error::Error;
 use crate::schema::TypeExpression;
 
 /// A declaration of a named type.
@@ -11,17 +15,26 @@ pub struct TypeDeclaration<'a> {
 
 impl<'a> TypeDeclaration<'a> {
     /// Creates a type declaration.
-    #[must_use]
-    pub const fn new(
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `name` is invalid.
+    pub fn new(
         annotations: Annotations<'a>,
         name: Identifier<'a>,
         definition: TypeExpression<'a>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, Error> {
+        if RESERVED_TYPE_NAMES.contains(&name.as_str()) {
+            return Err(Error::ReservedTypeName {
+                name: String::from(name.as_str()),
+            });
+        }
+
+        Ok(Self {
             annotations,
             name,
             definition,
-        }
+        })
     }
 
     /// Returns the type annotations.

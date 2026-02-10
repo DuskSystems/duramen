@@ -1,7 +1,7 @@
 use alloc::vec::{IntoIter, Vec};
 use core::slice::Iter;
 
-use crate::Diagnostic;
+use crate::diagnostic::{Diagnostic, DiagnosticKind};
 
 /// Collection of diagnostics.
 #[derive(Debug, Default)]
@@ -25,6 +25,14 @@ impl Diagnostics {
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.items.is_empty()
+    }
+
+    /// Returns whether any diagnostic is an error.
+    #[must_use]
+    pub fn has_error(&self) -> bool {
+        self.items
+            .iter()
+            .any(|diagnostic| diagnostic.kind() == DiagnosticKind::Error)
     }
 
     /// Returns the number of diagnostics.

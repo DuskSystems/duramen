@@ -2,7 +2,8 @@ use alloc::borrow::Cow;
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use crate::{Error, FxBuildHasher, IndexSet, IndexSet1};
+use crate::error::Error;
+use crate::{FxBuildHasher, IndexSet, IndexSet1};
 
 /// An enum type with a set of variant names.
 #[derive(Clone, Debug)]
@@ -15,7 +16,7 @@ impl<'a> EnumType<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `variants` is empty or contains duplicates.
+    /// Returns an error if `variants` is invalid.
     pub fn new(variants: Vec<Cow<'a, str>>) -> Result<Self, Error> {
         let mut set = IndexSet::with_capacity_and_hasher(variants.len(), FxBuildHasher);
 

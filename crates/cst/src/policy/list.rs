@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{Arguments, CstNode};
+use crate::CstNode;
+use crate::policy::Arguments;
 
 #[derive(Clone, Copy, Debug)]
 pub struct List<'a> {

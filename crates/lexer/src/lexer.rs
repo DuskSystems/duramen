@@ -1,5 +1,5 @@
 use crate::cursor::Cursor;
-use crate::{Token, TokenKind};
+use crate::token::{Token, TokenKind};
 
 /// Lexer for source code.
 pub struct Lexer<'a> {

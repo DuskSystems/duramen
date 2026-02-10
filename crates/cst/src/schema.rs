@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{Annotation, CstNode};
+use crate::CstNode;
+use crate::common::Annotation;
 
 mod action_attributes;
 pub use action_attributes::ActionAttributes;

@@ -2,7 +2,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use core::ops::Range;
 
-use crate::Syntax;
+use crate::syntax::Syntax;
 
 /// Internal node storage.
 #[derive(Clone, Debug)]

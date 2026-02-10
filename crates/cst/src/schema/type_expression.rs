@@ -1,4 +1,8 @@
-use crate::{CstNode, EntityType, EnumType, Name, Node, RecordType, SetType, Syntax};
+use duramen_syntax::{Node, Syntax};
+
+use crate::CstNode;
+use crate::common::Name;
+use crate::schema::{EntityType, EnumType, RecordType, SetType};
 
 #[derive(Clone, Copy, Debug)]
 pub enum TypeExpression<'a> {

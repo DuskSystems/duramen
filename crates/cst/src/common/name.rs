@@ -34,4 +34,17 @@ impl<'a> Name<'a> {
             .children()
             .filter(|child| child.kind() == Syntax::PathSeparator)
     }
+
+    /// Returns the text of the last identifier segment.
+    #[must_use]
+    pub fn basename(&self, source: &'a str) -> Option<&'a str> {
+        self.segments().last().map(|node| &source[node.range()])
+    }
+
+    /// Returns whether the name has more than one segment.
+    #[must_use]
+    pub fn is_qualified(&self) -> bool {
+        let mut segments = self.segments();
+        segments.next().is_some() && segments.next().is_some()
+    }
 }

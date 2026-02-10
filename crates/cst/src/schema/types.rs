@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Name};
+use crate::CstNode;
+use crate::common::Name;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Types<'a> {

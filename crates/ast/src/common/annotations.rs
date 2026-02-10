@@ -3,7 +3,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::common::Identifier;
-use crate::{Error, FxBuildHasher, IndexMap};
+use crate::error::Error;
+use crate::{FxBuildHasher, IndexMap};
 
 /// The value of an annotation.
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -21,7 +22,7 @@ impl<'a> Annotations<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if any key appears more than once.
+    /// Returns an error if `entries` is invalid.
     pub fn new(entries: Vec<(Identifier<'a>, AnnotationValue<'a>)>) -> Result<Self, Error> {
         let mut map = IndexMap::with_capacity_and_hasher(entries.len(), FxBuildHasher);
         for (key, value) in entries {

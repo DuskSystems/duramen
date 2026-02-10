@@ -1,8 +1,9 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use crate::error::Error;
 use crate::policy::EntityReference;
-use crate::{Error, FxBuildHasher, IndexSet, IndexSet1};
+use crate::{FxBuildHasher, IndexSet, IndexSet1};
 
 /// A set of entity references in an action constraint.
 #[derive(Clone, Debug)]
@@ -15,7 +16,7 @@ impl<'a> ActionList<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `actions` is empty or contains duplicates.
+    /// Returns an error if `actions` is invalid.
     pub fn new(actions: Vec<EntityReference<'a>>) -> Result<Self, Error> {
         let mut set = IndexSet::with_capacity_and_hasher(actions.len(), FxBuildHasher);
 

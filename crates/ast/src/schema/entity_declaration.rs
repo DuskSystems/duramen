@@ -2,8 +2,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::common::{Annotations, Identifier};
+use crate::error::Error;
 use crate::schema::EntityKind;
-use crate::{Error, FxBuildHasher, IndexSet, IndexSet1};
+use crate::{FxBuildHasher, IndexSet, IndexSet1, RESERVED_TYPE_NAMES};
 
 /// A declaration of one or more entity types.
 #[derive(Clone, Debug)]
@@ -18,7 +19,7 @@ impl<'a> EntityDeclaration<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `names` is empty or contains duplicates.
+    /// Returns an error if `names` is invalid.
     pub fn new(
         annotations: Annotations<'a>,
         names: Vec<Identifier<'a>>,
@@ -27,6 +28,12 @@ impl<'a> EntityDeclaration<'a> {
         let mut set = IndexSet::with_capacity_and_hasher(names.len(), FxBuildHasher);
 
         for name in names {
+            if RESERVED_TYPE_NAMES.contains(&name.as_str()) {
+                return Err(Error::ReservedTypeName {
+                    name: String::from(name.as_str()),
+                });
+            }
+
             let (index, inserted) = set.insert_full(name);
 
             if !inserted {

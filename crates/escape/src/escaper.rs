@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 use duramen_ast::PatternElement;
 use memchr::{memchr2, memchr3};
 
-use crate::EscapeError;
+use crate::error::EscapeError;
 
 /// Handles unescaping of string and pattern literals.
 pub struct Escaper<'a> {

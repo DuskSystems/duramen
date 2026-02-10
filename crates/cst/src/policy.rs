@@ -1,4 +1,7 @@
-use crate::{Annotation, CstNode, Node, Syntax};
+use duramen_syntax::{Node, Syntax};
+
+use crate::CstNode;
+use crate::common::Annotation;
 
 mod and_expression;
 pub use and_expression::AndExpression;
@@ -86,9 +89,6 @@ pub use relation_operator::RelationOperator;
 
 mod slot;
 pub use slot::Slot;
-
-mod slot_kind;
-pub use slot_kind::SlotKind;
 
 mod sum_expression;
 pub use sum_expression::SumExpression;

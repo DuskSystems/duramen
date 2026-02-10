@@ -43,3 +43,10 @@ path = "fuzz_targets/escape.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "lower"
+path = "fuzz_targets/lower.rs"
+test = false
+doc = false
+bench = false

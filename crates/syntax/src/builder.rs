@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use crate::Syntax;
+use crate::syntax::Syntax;
 use crate::tree::{NodeData, Tree};
 
 /// Branch for walking nodes.

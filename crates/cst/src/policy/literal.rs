@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, LiteralKind};
+use crate::CstNode;
+use crate::policy::LiteralKind;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Literal<'a> {

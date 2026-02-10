@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Expression, Name};
+use crate::CstNode;
+use crate::common::Name;
+use crate::policy::Expression;
 
 #[derive(Clone, Copy, Debug)]
 pub struct IsExpression<'a> {

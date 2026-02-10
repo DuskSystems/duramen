@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Expression, SumOperator};
+use crate::CstNode;
+use crate::policy::{Expression, SumOperator};
 
 #[derive(Clone, Copy, Debug)]
 pub struct SumExpression<'a> {

@@ -1,8 +1,9 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 
+use crate::error::Error;
 use crate::policy::Expression;
-use crate::{Error, FxBuildHasher, IndexMap};
+use crate::{FxBuildHasher, IndexMap};
 
 /// An ordered record of key-value expression pairs.
 #[derive(Clone, Debug)]
@@ -15,7 +16,7 @@ impl<'a> RecordExpression<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if any key appears more than once.
+    /// Returns an error if `entries` is invalid.
     pub fn new(entries: Vec<(Cow<'a, str>, Expression<'a>)>) -> Result<Self, Error> {
         let mut map = IndexMap::with_capacity_and_hasher(entries.len(), FxBuildHasher);
 

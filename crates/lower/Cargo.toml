@@ -17,7 +17,32 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = [
+  "duramen-ast/std",
+  "duramen-cst/std",
+  "duramen-diagnostic/std",
+  "duramen-escape/std",
+  "duramen-syntax/std",
+]
+
+[dependencies]
+duramen-ast = { workspace = true }
+duramen-cst = { workspace = true }
+duramen-diagnostic = { workspace = true }
+duramen-escape = { workspace = true }
+duramen-syntax = { workspace = true }
 
 [dev-dependencies]
+duramen-parser = { workspace = true }
 duramen-test = { workspace = true }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[test]]
+name = "corpus"
+harness = false
+
+[[bench]]
+name = "corpus"
+harness = false

@@ -1,9 +1,11 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{
-    AndExpression, CstNode, EntityReference, HasExpression, IfExpression, IsExpression,
-    LikeExpression, List, Literal, MemberExpression, Name, OrExpression, Parenthesized,
-    ProductExpression, Record, RelationExpression, Slot, SumExpression, UnaryExpression,
+use crate::CstNode;
+use crate::common::Name;
+use crate::policy::{
+    AndExpression, EntityReference, HasExpression, IfExpression, IsExpression, LikeExpression,
+    List, Literal, MemberExpression, OrExpression, Parenthesized, ProductExpression, Record,
+    RelationExpression, Slot, SumExpression, UnaryExpression,
 };
 
 #[derive(Clone, Copy, Debug)]

@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Expression, Name, Slot, Variable};
+use crate::CstNode;
+use crate::common::Name;
+use crate::policy::{Expression, Slot, Variable};
 
 #[derive(Clone, Copy, Debug)]
 pub struct VariableDefinition<'a> {

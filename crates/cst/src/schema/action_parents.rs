@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, EntityReference, Name};
+use crate::CstNode;
+use crate::common::Name;
+use crate::policy::EntityReference;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ActionParents<'a> {
