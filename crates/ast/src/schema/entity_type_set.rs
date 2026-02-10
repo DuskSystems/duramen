@@ -2,7 +2,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::common::Name;
-use crate::{Error, FxBuildHasher, IndexSet, IndexSet1};
+use crate::error::Error;
+use crate::{FxBuildHasher, IndexSet, IndexSet1};
 
 /// A set of entity type names.
 #[derive(Clone, Debug)]
@@ -15,7 +16,7 @@ impl<'a> EntityTypeSet<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `types` is empty or contains duplicates.
+    /// Returns an error if `types` is invalid.
     pub fn new(types: Vec<Name<'a>>) -> Result<Self, Error> {
         let mut set = IndexSet::with_capacity_and_hasher(types.len(), FxBuildHasher);
 

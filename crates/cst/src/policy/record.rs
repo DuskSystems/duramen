@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, RecordEntry};
+use crate::CstNode;
+use crate::policy::RecordEntry;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Record<'a> {

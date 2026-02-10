@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{ContextType, CstNode, PrincipalTypes, ResourceTypes};
+use crate::CstNode;
+use crate::schema::{ContextType, PrincipalTypes, ResourceTypes};
 
 #[derive(Clone, Copy, Debug)]
 pub struct AppliesTo<'a> {

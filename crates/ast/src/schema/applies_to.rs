@@ -2,8 +2,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::common::Name;
+use crate::error::Error;
 use crate::schema::ContextType;
-use crate::{Error, FxBuildHasher, IndexSet};
+use crate::{FxBuildHasher, IndexSet};
 
 /// Specifies which principal and resource types an action applies to.
 #[derive(Clone, Debug)]
@@ -18,7 +19,7 @@ impl<'a> AppliesTo<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `principals` or `resources` contain duplicates.
+    /// Returns an error if any argument is invalid.
     pub fn new(
         principals: Vec<Name<'a>>,
         resources: Vec<Name<'a>>,

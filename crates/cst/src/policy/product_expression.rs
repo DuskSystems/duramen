@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Expression, ProductOperator};
+use crate::CstNode;
+use crate::policy::{Expression, ProductOperator};
 
 #[derive(Clone, Copy, Debug)]
 pub struct ProductExpression<'a> {

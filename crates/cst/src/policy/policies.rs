@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Policy};
+use crate::CstNode;
+use crate::policy::Policy;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Policies<'a> {

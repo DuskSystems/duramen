@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{Call, CstNode, Field, Index};
+use crate::CstNode;
+use crate::policy::{Call, Field, Index};
 
 #[derive(Clone, Copy, Debug)]
 pub enum MemberAccess<'a> {

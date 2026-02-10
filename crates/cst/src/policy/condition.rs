@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{ConditionKind, CstNode, Expression};
+use crate::CstNode;
+use crate::policy::{ConditionKind, Expression};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Condition<'a> {

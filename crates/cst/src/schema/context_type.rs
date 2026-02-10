@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, TypeExpression};
+use crate::CstNode;
+use crate::schema::TypeExpression;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ContextType<'a> {

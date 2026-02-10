@@ -3,8 +3,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::common::Annotations;
+use crate::error::Error;
 use crate::schema::{ActionReference, AppliesTo, AttributeDeclaration};
-use crate::{Error, FxBuildHasher, IndexMap, IndexSet, IndexSet1};
+use crate::{FxBuildHasher, IndexMap, IndexSet, IndexSet1};
 
 /// A declaration of one or more actions.
 #[derive(Clone, Debug)]
@@ -21,8 +22,7 @@ impl<'a> ActionDeclaration<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `names` is empty, or `names`, `parents`, or
-    /// `attributes` contain duplicates.
+    /// Returns an error if any argument is invalid.
     pub fn new(
         annotations: Annotations<'a>,
         names: Vec<Cow<'a, str>>,
@@ -33,6 +33,12 @@ impl<'a> ActionDeclaration<'a> {
         let mut name_set = IndexSet::with_capacity_and_hasher(names.len(), FxBuildHasher);
 
         for name in names {
+            if name.starts_with("__cedar") {
+                return Err(Error::ReservedPrefix {
+                    name: name.into_owned(),
+                });
+            }
+
             let (index, inserted) = name_set.insert_full(name);
 
             if !inserted {

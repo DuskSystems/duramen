@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{AttributeDeclaration, CstNode};
+use crate::CstNode;
+use crate::schema::AttributeDeclaration;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ActionAttributes<'a> {

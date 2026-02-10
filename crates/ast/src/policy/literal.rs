@@ -1,12 +1,10 @@
-use alloc::borrow::Cow;
-
-use crate::policy::EntityReference;
+use crate::policy::{BoolLiteral, EntityReference, IntegerLiteral, StringLiteral};
 
 /// A literal value.
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum Literal<'a> {
-    Bool(bool),
-    Integer(i64),
-    String(Cow<'a, str>),
+    Bool(BoolLiteral),
+    Integer(IntegerLiteral),
+    String(StringLiteral<'a>),
     Entity(EntityReference<'a>),
 }

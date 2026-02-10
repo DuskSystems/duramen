@@ -1,6 +1,9 @@
+use alloc::format;
 use core::error::Error;
 use core::fmt;
 use core::ops::Range;
+
+use duramen_diagnostic::Diagnostic;
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum EscapeError {
@@ -43,3 +46,10 @@ impl fmt::Display for EscapeError {
 }
 
 impl Error for EscapeError {}
+
+impl From<EscapeError> for Diagnostic {
+    fn from(value: EscapeError) -> Self {
+        let span = value.span().clone();
+        Self::error(format!("{value}")).with_label(span, "invalid escape")
+    }
+}

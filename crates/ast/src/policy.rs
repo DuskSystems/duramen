@@ -11,6 +11,9 @@ pub use action_list::ActionList;
 mod binary_operator;
 pub use binary_operator::BinaryOperator;
 
+mod bool_literal;
+pub use bool_literal::BoolLiteral;
+
 mod condition;
 pub use condition::{Condition, ConditionKind};
 
@@ -25,6 +28,9 @@ pub use entity_reference::EntityReference;
 
 mod expression;
 pub use expression::{Expression, ExpressionKind};
+
+mod integer_literal;
+pub use integer_literal::IntegerLiteral;
 
 mod literal;
 pub use literal::Literal;
@@ -52,6 +58,9 @@ pub use scope_constraint::ScopeConstraint;
 
 mod slot_kind;
 pub use slot_kind::SlotKind;
+
+mod string_literal;
+pub use string_literal::StringLiteral;
 
 mod unary_operator;
 pub use unary_operator::UnaryOperator;

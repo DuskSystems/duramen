@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Name, RecordEntry};
+use crate::CstNode;
+use crate::common::Name;
+use crate::policy::RecordEntry;
 
 #[derive(Clone, Copy, Debug)]
 pub struct EntityReference<'a> {

@@ -21,6 +21,7 @@ std = ["memchr/std"]
 
 [dependencies]
 duramen-ast = { workspace = true }
+duramen-diagnostic = { workspace = true }
 
 # SIMD
 memchr = { workspace = true }

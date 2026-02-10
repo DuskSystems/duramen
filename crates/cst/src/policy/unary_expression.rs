@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Expression, UnaryOperator};
+use crate::CstNode;
+use crate::policy::{Expression, UnaryOperator};
 
 #[derive(Clone, Copy, Debug)]
 pub struct UnaryExpression<'a> {

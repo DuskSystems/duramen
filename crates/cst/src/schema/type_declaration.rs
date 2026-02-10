@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{Annotation, CstNode, Name, TypeExpression};
+use crate::CstNode;
+use crate::common::{Annotation, Name};
+use crate::schema::TypeExpression;
 
 #[derive(Clone, Copy, Debug)]
 pub struct TypeDeclaration<'a> {

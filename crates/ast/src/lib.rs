@@ -17,6 +17,17 @@ pub use common::*;
 mod error;
 pub use error::Error;
 
+/// Reserved type names in schema context.
+pub(crate) const RESERVED_TYPE_NAMES: &[&str] = &[
+    "Bool",
+    "Long",
+    "String",
+    "Set",
+    "Record",
+    "Entity",
+    "Extension",
+];
+
 mod policy;
 pub use policy::*;
 

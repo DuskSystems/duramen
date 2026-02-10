@@ -1,6 +1,6 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, SlotKind};
+use crate::CstNode;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Slot<'a> {
@@ -21,16 +21,6 @@ impl<'a> CstNode<'a> for Slot<'a> {
 }
 
 impl<'a> Slot<'a> {
-    /// Returns the slot kind based on the identifier.
-    #[must_use]
-    pub fn kind(&self) -> Option<SlotKind> {
-        self.name().map(|token| match token.kind() {
-            Syntax::PrincipalKeyword => SlotKind::Principal,
-            Syntax::ResourceKeyword => SlotKind::Resource,
-            _ => SlotKind::Other,
-        })
-    }
-
     /// Returns the `?` token.
     #[must_use]
     pub fn question_mark(&self) -> Option<Node<'a>> {

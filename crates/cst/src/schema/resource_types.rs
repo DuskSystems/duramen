@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Name, Types};
+use crate::CstNode;
+use crate::common::Name;
+use crate::schema::Types;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ResourceTypes<'a> {

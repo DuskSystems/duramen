@@ -1,6 +1,7 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{CstNode, Expression, MemberAccess};
+use crate::CstNode;
+use crate::policy::{Expression, MemberAccess};
 
 #[derive(Clone, Copy, Debug)]
 pub struct MemberExpression<'a> {

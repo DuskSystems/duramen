@@ -3,8 +3,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use crate::common::Name;
+use crate::error::Error;
 use crate::schema::{AttributeDeclaration, TypeExpression};
-use crate::{Error, FxBuildHasher, IndexMap, IndexSet};
+use crate::{FxBuildHasher, IndexMap, IndexSet};
 
 /// A standard entity with parents, attributes, and optional tags.
 #[derive(Clone, Debug)]
@@ -19,7 +20,7 @@ impl<'a> StandardEntity<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `parents` or `attributes` contain duplicates.
+    /// Returns an error if any argument is invalid.
     pub fn new(
         parents: Vec<Name<'a>>,
         attributes: Vec<(Cow<'a, str>, AttributeDeclaration<'a>)>,

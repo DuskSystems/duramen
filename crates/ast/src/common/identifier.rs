@@ -1,6 +1,7 @@
+use alloc::string::String;
 use core::fmt;
 
-use crate::Error;
+use crate::error::Error;
 
 /// A non-empty identifier string.
 #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
@@ -11,10 +12,16 @@ impl<'a> Identifier<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `value` is empty.
-    pub const fn new(value: &'a str) -> Result<Self, Error> {
+    /// Returns an error if `value` is invalid.
+    pub fn new(value: &'a str) -> Result<Self, Error> {
         if value.is_empty() {
             return Err(Error::Empty);
+        }
+
+        if value.starts_with("__cedar") {
+            return Err(Error::ReservedPrefix {
+                name: String::from(value),
+            });
         }
 
         Ok(Self(value))

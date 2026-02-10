@@ -1,8 +1,9 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 
+use crate::error::Error;
 use crate::schema::AttributeDeclaration;
-use crate::{Error, FxBuildHasher, IndexMap};
+use crate::{FxBuildHasher, IndexMap};
 
 /// An ordered record of attribute declarations.
 #[derive(Clone, Debug)]
@@ -15,7 +16,7 @@ impl<'a> RecordType<'a> {
     ///
     /// # Errors
     ///
-    /// Returns an error if any attribute name appears more than once.
+    /// Returns an error if `attributes` is invalid.
     pub fn new(attributes: Vec<(Cow<'a, str>, AttributeDeclaration<'a>)>) -> Result<Self, Error> {
         let mut map = IndexMap::with_capacity_and_hasher(attributes.len(), FxBuildHasher);
 

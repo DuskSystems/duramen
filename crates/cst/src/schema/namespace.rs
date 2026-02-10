@@ -1,6 +1,8 @@
 use duramen_syntax::{Node, Syntax};
 
-use crate::{ActionDeclaration, Annotation, CstNode, EntityDeclaration, Name, TypeDeclaration};
+use crate::CstNode;
+use crate::common::{Annotation, Name};
+use crate::schema::{ActionDeclaration, EntityDeclaration, TypeDeclaration};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Namespace<'a> {
