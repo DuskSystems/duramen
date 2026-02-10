@@ -19,5 +19,18 @@ workspace = true
 default = ["std"]
 std = []
 
+[dependencies]
+duramen-ast = { workspace = true }
+
+# Escape
+rustc-literal-escaper = { workspace = true }
+
 [dev-dependencies]
 duramen-test = { workspace = true }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[bench]]
+name = "escape"
+harness = false
