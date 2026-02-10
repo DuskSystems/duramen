@@ -6,7 +6,7 @@ members = [".", "crates/*", "fuzz"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.89"
+rust-version = "1.88"
 repository = "https://github.com/DuskSystems/duramen"
 license = "MIT OR Apache-2.0"
 keywords = ["cedar", "policy", "authorization"]
@@ -126,9 +126,6 @@ duramen-validate = { path = "crates/validate", default-features = false }
 # Upstream
 cedar-policy = { version = "=4.8.2", default-features = false }
 cedar-policy-core = { version = "=4.8.2", default-features = false }
-
-# Escape
-rustc-literal-escaper = { version = "0.0.7", default-features = false }
 
 # SIMD
 memchr = { version = "2.7", default-features = false }

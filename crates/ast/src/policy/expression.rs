@@ -65,7 +65,7 @@ pub enum ExpressionKind<'a> {
     },
     Like {
         expression: Box<Expression<'a>>,
-        pattern: Pattern,
+        pattern: Pattern<'a>,
     },
     Is {
         expression: Box<Expression<'a>>,

@@ -1,11 +1,21 @@
+use alloc::borrow::Cow;
+
 use duramen_ast::PatternElement;
 use duramen_escape::Escaper;
 use duramen_test::insta::assert_snapshot;
+
+extern crate alloc;
 
 #[test]
 fn str() {
     let result = Escaper::new(r#""hello\nworld""#, 0).unescape_str().unwrap();
     assert_eq!(result, "hello\nworld");
+}
+
+#[test]
+fn str_borrowed() {
+    let result = Escaper::new(r#""hello""#, 0).unescape_str().unwrap();
+    assert_eq!(result, Cow::Borrowed("hello"));
 }
 
 #[test]
@@ -32,9 +42,9 @@ fn pattern_wildcard() {
     assert_eq!(
         result,
         [
-            PatternElement::Char('a'),
+            PatternElement::Literal(Cow::Borrowed("a")),
             PatternElement::Wildcard,
-            PatternElement::Char('b'),
+            PatternElement::Literal(Cow::Borrowed("b")),
         ]
     );
 }
@@ -42,14 +52,7 @@ fn pattern_wildcard() {
 #[test]
 fn pattern_escaped_star() {
     let result = Escaper::new(r#""a\*b""#, 0).unescape_pattern().unwrap();
-    assert_eq!(
-        result,
-        [
-            PatternElement::Char('a'),
-            PatternElement::Char('*'),
-            PatternElement::Char('b'),
-        ]
-    );
+    assert_eq!(result, [PatternElement::Literal(Cow::Owned("a*b".into()))]);
 }
 
 #[test]

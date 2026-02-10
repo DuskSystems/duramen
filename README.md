@@ -2,7 +2,7 @@
 [![crates.io](https://img.shields.io/crates/v/duramen)](https://crates.io/crates/duramen)
 [![documentation](https://docs.rs/duramen/badge.svg)](https://docs.rs/duramen)
 
-![rust: 1.89+](https://img.shields.io/badge/rust-1.89+-orange.svg)
+![rust: 1.88+](https://img.shields.io/badge/rust-1.88+-orange.svg)
 ![`unsafe`: forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)
 ![`wasm`: compatible](https://img.shields.io/badge/wasm-compatible-success.svg)
 ![`no-std`: compatible](https://img.shields.io/badge/no--std-compatible-success.svg)

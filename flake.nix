@@ -213,7 +213,7 @@
 
           buildInputs = with pkgs; [
             # Rust
-            (rust-bin.stable."1.89.0".minimal.override {
+            (rust-bin.stable."1.88.0".minimal.override {
               targets = [
                 "thumbv7m-none-eabi"
                 "wasm32-unknown-unknown"

@@ -358,7 +358,7 @@ dependencies = [
  "codspeed-divan-compat",
  "duramen-ast",
  "duramen-test",
- "rustc-literal-escaper",
+ "memchr",
 ]
 
 [[package]]
@@ -865,12 +865,6 @@ name = "rustc-hash"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
-
-[[package]]
-name = "rustc-literal-escaper"
-version = "0.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8be87abb9e40db7466e0681dc8ecd9dcfd40360cb10b4c8fe24a7c4c3669b198"
 
 [[package]]
 name = "rustix"

@@ -36,3 +36,10 @@ path = "fuzz_targets/parser.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "escape"
+path = "fuzz_targets/escape.rs"
+test = false
+doc = false
+bench = false
