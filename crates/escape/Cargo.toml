@@ -17,13 +17,13 @@ workspace = true
 
 [features]
 default = ["std"]
-std = []
+std = ["memchr/std"]
 
 [dependencies]
 duramen-ast = { workspace = true }
 
-# Escape
-rustc-literal-escaper = { workspace = true }
+# SIMD
+memchr = { workspace = true }
 
 [dev-dependencies]
 duramen-test = { workspace = true }

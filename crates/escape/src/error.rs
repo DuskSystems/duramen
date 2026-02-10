@@ -2,53 +2,42 @@ use core::error::Error;
 use core::fmt;
 use core::ops::Range;
 
-use rustc_literal_escaper::EscapeError as RustcEscapeError;
-
-#[derive(Debug)]
-pub struct EscapeError {
-    kind: RustcEscapeError,
-    span: Range<usize>,
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub enum EscapeError {
+    LoneSlash { span: Range<usize> },
+    InvalidEscape { span: Range<usize> },
+    BareCarriageReturn { span: Range<usize> },
+    InvalidHexEscape { span: Range<usize> },
+    OutOfRangeHexEscape { span: Range<usize> },
+    InvalidUnicodeEscape { span: Range<usize> },
+    OutOfRangeUnicodeEscape { span: Range<usize> },
 }
 
 impl EscapeError {
-    pub(crate) const fn new(kind: RustcEscapeError, span: Range<usize>) -> Self {
-        Self { kind, span }
-    }
-
     #[must_use]
     pub const fn span(&self) -> &Range<usize> {
-        &self.span
+        match self {
+            Self::LoneSlash { span }
+            | Self::InvalidEscape { span }
+            | Self::BareCarriageReturn { span }
+            | Self::InvalidHexEscape { span }
+            | Self::OutOfRangeHexEscape { span }
+            | Self::InvalidUnicodeEscape { span }
+            | Self::OutOfRangeUnicodeEscape { span } => span,
+        }
     }
 }
 
 impl fmt::Display for EscapeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.kind {
-            RustcEscapeError::LoneSlash => f.write_str("unexpected end of escape sequence"),
-            RustcEscapeError::InvalidEscape | RustcEscapeError::EscapeOnlyChar => {
-                f.write_str("invalid escape sequence")
-            }
-            RustcEscapeError::BareCarriageReturn
-            | RustcEscapeError::BareCarriageReturnInRawString => {
-                f.write_str("bare carriage return not allowed")
-            }
-            RustcEscapeError::TooShortHexEscape | RustcEscapeError::InvalidCharInHexEscape => {
-                f.write_str("invalid hex escape")
-            }
-            RustcEscapeError::OutOfRangeHexEscape => f.write_str("out of range hex escape"),
-            RustcEscapeError::NoBraceInUnicodeEscape
-            | RustcEscapeError::InvalidCharInUnicodeEscape
-            | RustcEscapeError::EmptyUnicodeEscape
-            | RustcEscapeError::UnclosedUnicodeEscape
-            | RustcEscapeError::LeadingUnderscoreUnicodeEscape => {
-                f.write_str("invalid unicode escape")
-            }
-            RustcEscapeError::OverlongUnicodeEscape
-            | RustcEscapeError::LoneSurrogateUnicodeEscape
-            | RustcEscapeError::OutOfRangeUnicodeEscape => {
-                f.write_str("out of range unicode escape")
-            }
-            _ => f.write_str("invalid escape sequence"),
+        match self {
+            Self::LoneSlash { .. } => f.write_str("unexpected end of escape sequence"),
+            Self::InvalidEscape { .. } => f.write_str("invalid escape sequence"),
+            Self::BareCarriageReturn { .. } => f.write_str("bare carriage return not allowed"),
+            Self::InvalidHexEscape { .. } => f.write_str("invalid hex escape"),
+            Self::OutOfRangeHexEscape { .. } => f.write_str("out of range hex escape"),
+            Self::InvalidUnicodeEscape { .. } => f.write_str("invalid unicode escape"),
+            Self::OutOfRangeUnicodeEscape { .. } => f.write_str("out of range unicode escape"),
         }
     }
 }

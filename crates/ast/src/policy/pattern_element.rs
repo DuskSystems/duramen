@@ -1,6 +1,8 @@
+use alloc::borrow::Cow;
+
 /// An element of a `like` pattern.
-#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
-pub enum PatternElement {
-    Char(char),
+#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+pub enum PatternElement<'a> {
+    Literal(Cow<'a, str>),
     Wildcard,
 }
