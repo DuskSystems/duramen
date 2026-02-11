@@ -83,7 +83,7 @@ fn expr6() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn expr_overflow_1() {
     let source = source! {r"
@@ -98,7 +98,7 @@ fn expr_overflow_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn expr_overflow_2() {
     let source = source! {r"
@@ -161,7 +161,7 @@ fn variable4() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn variable6() {
     let source = source! {r"
@@ -265,7 +265,7 @@ fn member6() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn member7() {
     let source = source! {r#"
@@ -312,7 +312,7 @@ fn member9() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn ident3_1() {
     let source = source! {r"
@@ -344,7 +344,7 @@ fn ident3_2() {
 // fn ident3_3() {}
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn ident3_4() {
     let source = source! {r"
@@ -359,7 +359,7 @@ fn ident3_4() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn ident3_5() {
     let source = source! {r"
@@ -387,7 +387,7 @@ fn ident4_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn ident4_2() {
     let source = source! {r"
@@ -698,7 +698,7 @@ fn comments_policy_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn comments_policy_2() {
     let source = source! {r"
@@ -717,7 +717,7 @@ fn comments_policy_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn comments_policy_3() {
     let source = source! {r"
@@ -771,7 +771,7 @@ fn no_comments_policy2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn no_comments_policy4() {
     let source = source! {r#"
@@ -820,7 +820,7 @@ fn policies1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policies2() {
     let source = source! {r#"
@@ -909,7 +909,7 @@ fn policies5() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policies6() {
     let source = source! {r#"
@@ -972,7 +972,7 @@ fn policy_annotations_no_value_ok() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_id_1() {
     let source = source! {r#"
@@ -987,7 +987,7 @@ fn policy_annotations_bad_id_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_id_2() {
     let source = source! {r#"
@@ -1002,7 +1002,7 @@ fn policy_annotations_bad_id_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_id_3() {
     let source = source! {r#"
@@ -1017,7 +1017,7 @@ fn policy_annotations_bad_id_3() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_val_1() {
     let source = source! {r#"
@@ -1032,7 +1032,7 @@ fn policy_annotations_bad_val_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_val_2() {
     let source = source! {r"
@@ -1047,7 +1047,7 @@ fn policy_annotations_bad_val_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_val_3() {
     let source = source! {r"
@@ -1062,7 +1062,7 @@ fn policy_annotations_bad_val_3() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotation_bad_position() {
     let source = source! {r#"
@@ -1076,7 +1076,7 @@ fn policy_annotation_bad_position() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn error_recovery_1() {
     let source = source! {r"
@@ -1093,7 +1093,7 @@ fn error_recovery_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn error_recovery_2() {
     let source = source! {r"
@@ -1110,7 +1110,7 @@ fn error_recovery_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn error_recovery_3() {
     let source = source! {r"
@@ -1410,7 +1410,7 @@ fn extended_has_19() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn extended_has_20() {
     let source = source! {r"
@@ -1427,7 +1427,7 @@ fn extended_has_20() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn extended_has_21() {
     let source = source! {r"
@@ -1507,7 +1507,7 @@ fn trailing_comma_5() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn invalid_token_1() {
     let source = source! {r"
@@ -1522,7 +1522,7 @@ fn invalid_token_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn invalid_token_2() {
     let source = source! {"
@@ -1537,7 +1537,7 @@ fn invalid_token_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_1() {
     let source = source! {r#"
@@ -1554,7 +1554,7 @@ fn unclosed_strings_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_2() {
     let source = source! {r#"
@@ -1568,7 +1568,7 @@ fn unclosed_strings_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_3() {
     let source = source! {r#"
@@ -1582,7 +1582,7 @@ fn unclosed_strings_3() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_4() {
     let source = source! {r#"
@@ -1600,7 +1600,7 @@ fn unclosed_strings_4() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn single_quote_string_1() {
     let source = source! {r"
@@ -1617,7 +1617,7 @@ fn single_quote_string_1() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn single_quote_string_2() {
     let source = source! {r"
@@ -1631,7 +1631,7 @@ fn single_quote_string_2() {
 }
 
 // UPSTREAM
-// See: crates/lower/tests/upstream_parser_policy.rs
+// See: crates/lowerer/tests/upstream_parser_policy.rs
 #[test]
 fn single_quote_string_3() {
     let source = source! {r"

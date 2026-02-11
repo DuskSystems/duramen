@@ -45,8 +45,8 @@ doc = false
 bench = false
 
 [[bin]]
-name = "lower"
-path = "fuzz_targets/lower.rs"
+name = "lowerer"
+path = "fuzz_targets/lowerer.rs"
 test = false
 doc = false
 bench = false

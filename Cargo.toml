@@ -116,7 +116,7 @@ duramen-diagnostic = { path = "crates/diagnostic", default-features = false }
 duramen-escape = { path = "crates/escape", default-features = false }
 duramen-evaluate = { path = "crates/evaluate", default-features = false }
 duramen-lexer = { path = "crates/lexer", default-features = false }
-duramen-lower = { path = "crates/lower", default-features = false }
+duramen-lowerer = { path = "crates/lowerer", default-features = false }
 duramen-parser = { path = "crates/parser", default-features = false }
 duramen-runtime = { path = "crates/runtime", default-features = false }
 duramen-syntax = { path = "crates/syntax", default-features = false }
@@ -184,7 +184,7 @@ std = [
     "duramen-escape/std",
     "duramen-evaluate/std",
     "duramen-lexer/std",
-    "duramen-lower/std",
+    "duramen-lowerer/std",
     "duramen-parser/std",
     "duramen-runtime/std",
     "duramen-validate/std",
@@ -197,7 +197,7 @@ duramen-diagnostic = { workspace = true }
 duramen-escape = { workspace = true }
 duramen-evaluate = { workspace = true }
 duramen-lexer = { workspace = true }
-duramen-lower = { workspace = true }
+duramen-lowerer = { workspace = true }
 duramen-parser = { workspace = true }
 duramen-runtime = { workspace = true }
 duramen-syntax = { workspace = true }

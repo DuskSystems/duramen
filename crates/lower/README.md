@@ -1,3 +1,0 @@
-# `duramen-lower`
-
-Duramen Lower.

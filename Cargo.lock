@@ -317,7 +317,7 @@ dependencies = [
  "duramen-escape",
  "duramen-evaluate",
  "duramen-lexer",
- "duramen-lower",
+ "duramen-lowerer",
  "duramen-parser",
  "duramen-runtime",
  "duramen-syntax",
@@ -389,7 +389,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "duramen-lower"
+name = "duramen-lowerer"
 version = "0.1.0"
 dependencies = [
  "codspeed-divan-compat",
