@@ -1,6 +1,6 @@
 [package]
-name = "duramen-lower"
-description = "Duramen Lower"
+name = "duramen-lowerer"
+description = "Duramen Lowerer"
 include = ["/src", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
 publish = false
 

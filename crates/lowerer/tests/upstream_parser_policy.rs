@@ -2,7 +2,7 @@
 
 use duramen_cst::{CstNode as _, Policies};
 use duramen_diagnostic::Diagnostics;
-use duramen_lower::PolicyLowerer;
+use duramen_lowerer::PolicyLowerer;
 use duramen_parser::PolicyParser;
 use duramen_test::{assert_diagnostics_snapshot, source};
 

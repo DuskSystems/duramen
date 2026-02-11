@@ -81,7 +81,7 @@ fn unescape_str_none(bencher: Bencher<'_, '_>) {
 
     bencher.counter(BytesCount::new(bytes)).bench(|| {
         for input in &inputs {
-            drop(black_box(Escaper::new(black_box(input)).unescape_str()));
+            let _result = black_box(Escaper::new(black_box(input)).unescape_str());
         }
     });
 }
@@ -92,7 +92,7 @@ fn unescape_str(bencher: Bencher<'_, '_>) {
 
     bencher.counter(BytesCount::new(bytes)).bench(|| {
         for input in &inputs {
-            drop(black_box(Escaper::new(black_box(input)).unescape_str()));
+            let _result = black_box(Escaper::new(black_box(input)).unescape_str());
         }
     });
 }
@@ -103,7 +103,7 @@ fn unescape_str_rare(bencher: Bencher<'_, '_>) {
 
     bencher.counter(BytesCount::new(bytes)).bench(|| {
         for input in &inputs {
-            drop(black_box(Escaper::new(black_box(input)).unescape_str()));
+            let _result = black_box(Escaper::new(black_box(input)).unescape_str());
         }
     });
 }
@@ -114,7 +114,7 @@ fn unescape_pattern_none(bencher: Bencher<'_, '_>) {
 
     bencher.counter(BytesCount::new(bytes)).bench(|| {
         for input in &inputs {
-            drop(black_box(Escaper::new(black_box(input)).unescape_pattern()));
+            let _result = black_box(Escaper::new(black_box(input)).unescape_pattern());
         }
     });
 }
@@ -125,7 +125,7 @@ fn unescape_pattern(bencher: Bencher<'_, '_>) {
 
     bencher.counter(BytesCount::new(bytes)).bench(|| {
         for input in &inputs {
-            drop(black_box(Escaper::new(black_box(input)).unescape_pattern()));
+            let _result = black_box(Escaper::new(black_box(input)).unescape_pattern());
         }
     });
 }
@@ -136,7 +136,7 @@ fn unescape_pattern_rare(bencher: Bencher<'_, '_>) {
 
     bencher.counter(BytesCount::new(bytes)).bench(|| {
         for input in &inputs {
-            drop(black_box(Escaper::new(black_box(input)).unescape_pattern()));
+            let _result = black_box(Escaper::new(black_box(input)).unescape_pattern());
         }
     });
 }

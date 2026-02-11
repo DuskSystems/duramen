@@ -749,7 +749,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         Some(result)
     }
 
-    /// Lowers a single member access (.field, .`method()`, [index]).
+    /// Lowers a single member access.
     fn lower_member_access(
         &mut self,
         base: ast::Expression<'src>,

@@ -6,7 +6,7 @@ use divan::counter::ItemsCount;
 use divan::{AllocProfiler, Bencher};
 use duramen_cst::{CstNode as _, Policies, Schema};
 use duramen_diagnostic::Diagnostics;
-use duramen_lower::{PolicyLowerer, SchemaLowerer};
+use duramen_lowerer::{PolicyLowerer, SchemaLowerer};
 use duramen_parser::{PolicyParser, SchemaParser};
 use duramen_test::{POLICIES, SCHEMAS};
 
