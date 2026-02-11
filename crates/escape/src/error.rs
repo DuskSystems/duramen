@@ -29,6 +29,25 @@ impl EscapeError {
             | Self::OutOfRangeUnicodeEscape { span } => span,
         }
     }
+
+    /// Shifts the span by the given byte offset.
+    #[must_use]
+    pub const fn offset(mut self, offset: usize) -> Self {
+        match &mut self {
+            Self::LoneSlash { span }
+            | Self::InvalidEscape { span }
+            | Self::BareCarriageReturn { span }
+            | Self::InvalidHexEscape { span }
+            | Self::OutOfRangeHexEscape { span }
+            | Self::InvalidUnicodeEscape { span }
+            | Self::OutOfRangeUnicodeEscape { span } => {
+                span.start += offset;
+                span.end += offset;
+            }
+        }
+
+        self
+    }
 }
 
 impl fmt::Display for EscapeError {

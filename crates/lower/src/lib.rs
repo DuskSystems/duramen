@@ -106,13 +106,13 @@ impl<'a, 'src> LowerContext<'a, 'src> {
 
             let value = if let Some(value_node) = annotation.value() {
                 let raw = self.text(value_node);
-                let start = value_node.range().start;
+                let offset = value_node.range().start;
 
-                match Escaper::new(raw, start).unescape_str() {
+                match Escaper::new(raw).unescape_str() {
                     Ok(unescaped) => ast::AnnotationValue::String(unescaped),
                     Err(errors) => {
                         for error in errors {
-                            self.diagnostic(error);
+                            self.diagnostic(error.offset(offset));
                         }
                         continue;
                     }
@@ -136,13 +136,13 @@ impl<'a, 'src> LowerContext<'a, 'src> {
     /// Extracts a string literal's content (unescaped) from a CST string token.
     fn lower_string(&mut self, node: Node<'_>) -> Option<Cow<'src, str>> {
         let raw = self.text(node);
-        let start = node.range().start;
+        let offset = node.range().start;
 
-        match Escaper::new(raw, start).unescape_str() {
+        match Escaper::new(raw).unescape_str() {
             Ok(unescaped) => Some(unescaped),
             Err(errors) => {
                 for error in errors {
-                    self.diagnostic(error);
+                    self.diagnostic(error.offset(offset));
                 }
                 None
             }
