@@ -43,8 +43,17 @@
     in
     {
       overlays = {
-        default = rust-overlay.overlays.default;
+        default = nixpkgs.lib.composeManyExtensions [
+          rust-overlay.overlays.default
+          (final: prev: {
+            cedar = prev.callPackage ./pkgs/cedar.nix { };
+          })
+        ];
       };
+
+      packages = perSystemPkgs (pkgs: {
+        cedar = pkgs.cedar;
+      });
 
       devShells = perSystemPkgs (pkgs: {
         # nix develop
