@@ -3,7 +3,6 @@ use duramen_lexer::TokenKind;
 use duramen_syntax::{Syntax, Tree};
 
 use crate::common::Parser;
-use crate::error::ParseError;
 
 /// Binding power and syntax kind for an infix operator.
 struct InfixOperator {
@@ -107,7 +106,7 @@ impl<'a> PolicyParser<'a> {
             }
 
             self.parser.eat(TokenKind::Comma);
-            self.parser.expect(TokenKind::CloseParenthesis);
+            self.parser.eat(TokenKind::CloseParenthesis);
         }
 
         while self
@@ -154,12 +153,6 @@ impl<'a> PolicyParser<'a> {
         }
 
         if self.parser.kind().is_comparison() || self.parser.at(&[TokenKind::Equals]) {
-            if self.parser.at(&[TokenKind::Equals]) {
-                self.parser.diagnostics.push(ParseError::SingleEquals {
-                    span: self.parser.span(),
-                });
-            }
-
             self.parser.next();
             self.expression();
         }
@@ -197,7 +190,7 @@ impl<'a> PolicyParser<'a> {
                 self.expression();
             }
 
-            self.parser.expect(TokenKind::CloseBrace);
+            self.parser.eat(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -303,39 +296,15 @@ impl<'a> PolicyParser<'a> {
 
             self.parser.advance_push();
 
-            match self.parser.kind() {
-                TokenKind::Pipe => {
-                    self.parser.diagnostics.push(ParseError::SinglePipe {
-                        span: self.parser.span(),
-                    });
-                    self.parser.next();
+            if self.parser.kind() == TokenKind::IsKeyword {
+                self.parser.next();
+                self.name();
+                if self.parser.eat(TokenKind::InKeyword) {
                     self.pratt_expression(op.right);
                 }
-                TokenKind::Ampersand => {
-                    self.parser.diagnostics.push(ParseError::SingleAmpersand {
-                        span: self.parser.span(),
-                    });
-                    self.parser.next();
-                    self.pratt_expression(op.right);
-                }
-                TokenKind::Equals => {
-                    self.parser.diagnostics.push(ParseError::SingleEquals {
-                        span: self.parser.span(),
-                    });
-                    self.parser.next();
-                    self.pratt_expression(op.right);
-                }
-                TokenKind::IsKeyword => {
-                    self.parser.next();
-                    self.name();
-                    if self.parser.eat(TokenKind::InKeyword) {
-                        self.pratt_expression(op.right);
-                    }
-                }
-                _ => {
-                    self.parser.next();
-                    self.pratt_expression(op.right);
-                }
+            } else {
+                self.parser.next();
+                self.pratt_expression(op.right);
             }
 
             self.parser.advance_pop();
@@ -399,7 +368,7 @@ impl<'a> PolicyParser<'a> {
                             self.argument_list();
                         }
 
-                        self.parser.expect(TokenKind::CloseParenthesis);
+                        self.parser.eat(TokenKind::CloseParenthesis);
                         self.parser.builder.commit(&inner, Syntax::Call);
                     } else {
                         self.parser.builder.commit(&inner, Syntax::Field);
@@ -413,7 +382,7 @@ impl<'a> PolicyParser<'a> {
                         self.argument_list();
                     }
 
-                    self.parser.expect(TokenKind::CloseParenthesis);
+                    self.parser.eat(TokenKind::CloseParenthesis);
                     self.parser.builder.commit(&inner, Syntax::Call);
                 }
                 _ => {
@@ -421,7 +390,7 @@ impl<'a> PolicyParser<'a> {
 
                     self.parser.next();
                     self.expression();
-                    self.parser.expect(TokenKind::CloseBracket);
+                    self.parser.eat(TokenKind::CloseBracket);
 
                     self.parser.builder.commit(&inner, Syntax::Index);
                 }
@@ -460,7 +429,7 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::OpenParenthesis]) {
             self.parser.next();
             self.expression();
-            self.parser.expect(TokenKind::CloseParenthesis);
+            self.parser.eat(TokenKind::CloseParenthesis);
             self.parser
                 .builder
                 .commit(&checkpoint, Syntax::Parenthesized);
@@ -474,7 +443,7 @@ impl<'a> PolicyParser<'a> {
                 self.argument_list();
             }
 
-            self.parser.expect(TokenKind::CloseBracket);
+            self.parser.eat(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Syntax::List);
 
             return;
@@ -483,7 +452,7 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.record_entries();
-            self.parser.expect(TokenKind::CloseBrace);
+            self.parser.eat(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Syntax::Record);
 
             return;
@@ -612,7 +581,7 @@ impl<'a> PolicyParser<'a> {
                     if self.parser.at(&[TokenKind::OpenBrace]) {
                         self.parser.next();
                         self.record_entries();
-                        self.parser.expect(TokenKind::CloseBrace);
+                        self.parser.eat(TokenKind::CloseBrace);
                         self.parser.advance_pop();
                         self.parser
                             .builder
@@ -638,9 +607,6 @@ impl<'a> PolicyParser<'a> {
                 }
             }
         } else if !self.parser.at(&[TokenKind::Eof]) {
-            self.parser.diagnostics.push(ParseError::UnexpectedToken {
-                span: self.parser.span(),
-            });
             self.parser.builder.close(&branch);
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
