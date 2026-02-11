@@ -3,7 +3,6 @@ use duramen_lexer::TokenKind;
 use duramen_syntax::{Syntax, Tree};
 
 use crate::common::Parser;
-use crate::error::ParseError;
 
 /// Parses Cedar schema source text into a concrete syntax tree.
 pub struct SchemaParser<'a> {
@@ -115,7 +114,7 @@ impl<'a> SchemaParser<'a> {
             self.parser.advance_pop();
         }
 
-        self.parser.expect(TokenKind::CloseBrace);
+        self.parser.eat(TokenKind::CloseBrace);
     }
 
     /// Parses a declaration (entity, action, type, or nested namespace).
@@ -231,7 +230,7 @@ impl<'a> SchemaParser<'a> {
 
                 self.parser.next();
                 self.enum_variants();
-                self.parser.expect(TokenKind::CloseBracket);
+                self.parser.eat(TokenKind::CloseBracket);
 
                 self.parser.builder.close(&branch);
             }
@@ -246,7 +245,7 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        self.parser.expect(TokenKind::Semicolon);
+        self.parser.eat(TokenKind::Semicolon);
     }
 
     /// Parses entity parents.
@@ -273,7 +272,7 @@ impl<'a> SchemaParser<'a> {
 
         self.parser.next();
         self.attribute_entries();
-        self.parser.expect(TokenKind::CloseBrace);
+        self.parser.eat(TokenKind::CloseBrace);
 
         self.parser.builder.close(&branch);
     }
@@ -339,7 +338,7 @@ impl<'a> SchemaParser<'a> {
             self.action_attributes();
         }
 
-        self.parser.expect(TokenKind::Semicolon);
+        self.parser.eat(TokenKind::Semicolon);
     }
 
     /// Parses action parents.
@@ -369,7 +368,7 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        self.parser.expect(TokenKind::CloseBracket);
+        self.parser.eat(TokenKind::CloseBracket);
         self.parser.builder.close(&branch);
     }
 
@@ -393,7 +392,7 @@ impl<'a> SchemaParser<'a> {
                 }
             }
 
-            self.parser.expect(TokenKind::CloseBrace);
+            self.parser.eat(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -443,7 +442,7 @@ impl<'a> SchemaParser<'a> {
         self.parser.next();
         if self.parser.eat(TokenKind::OpenBrace) {
             self.attribute_entries();
-            self.parser.expect(TokenKind::CloseBrace);
+            self.parser.eat(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -468,9 +467,9 @@ impl<'a> SchemaParser<'a> {
             self.name();
         }
 
-        self.parser.expect(TokenKind::Equals);
+        self.parser.eat(TokenKind::Equals);
         self.type_expression();
-        self.parser.expect(TokenKind::Semicolon);
+        self.parser.eat(TokenKind::Semicolon);
     }
 
     /// Parses a type expression.
@@ -497,7 +496,7 @@ impl<'a> SchemaParser<'a> {
             self.parser.next();
             self.parser.next();
             self.type_expression();
-            self.parser.expect(TokenKind::GreaterThan);
+            self.parser.eat(TokenKind::GreaterThan);
             self.parser.builder.commit(&checkpoint, Syntax::SetType);
 
             return;
@@ -509,7 +508,7 @@ impl<'a> SchemaParser<'a> {
             self.parser.next();
             self.parser.next();
             self.enum_variants();
-            self.parser.expect(TokenKind::CloseBracket);
+            self.parser.eat(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Syntax::EnumType);
 
             return;
@@ -518,7 +517,7 @@ impl<'a> SchemaParser<'a> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.attribute_entries();
-            self.parser.expect(TokenKind::CloseBrace);
+            self.parser.eat(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Syntax::RecordType);
 
             return;
@@ -596,7 +595,7 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        self.parser.expect(TokenKind::CloseBracket);
+        self.parser.eat(TokenKind::CloseBracket);
         self.parser.builder.close(&branch);
     }
 
@@ -677,10 +676,6 @@ impl<'a> SchemaParser<'a> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            self.parser.diagnostics.push(ParseError::UnexpectedToken {
-                span: self.parser.span(),
-            });
-
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
@@ -733,10 +728,6 @@ impl<'a> SchemaParser<'a> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            self.parser.diagnostics.push(ParseError::UnexpectedToken {
-                span: self.parser.span(),
-            });
-
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);

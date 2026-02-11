@@ -71,31 +71,9 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Consumes the current token if it matches the given kind, or pushes an error diagnostic.
-    pub fn expect(&mut self, kind: TokenKind) {
-        if !self.eat(kind) {
-            self.diagnostics.push(ParseError::Expected {
-                span: self.span(),
-                expected: kind,
-            });
-        }
-    }
-
     /// Consumes the current token and moves to the next non-trivial token.
     pub fn next(&mut self) {
         if self.current.kind != TokenKind::Eof {
-            match self.current.kind {
-                TokenKind::StringUnterminated => {
-                    self.diagnostics
-                        .push(ParseError::UnterminatedString { span: self.span() });
-                }
-                TokenKind::Unknown => {
-                    self.diagnostics
-                        .push(ParseError::UnknownCharacter { span: self.span() });
-                }
-                _ => {}
-            }
-
             self.builder
                 .token(Syntax::from(self.current.kind), self.current.len);
 
@@ -133,7 +111,7 @@ impl<'a> Parser<'a> {
 
         if self.eat(TokenKind::OpenParenthesis) {
             self.eat(TokenKind::String);
-            self.expect(TokenKind::CloseParenthesis);
+            self.eat(TokenKind::CloseParenthesis);
         }
 
         self.builder.close(&branch);
