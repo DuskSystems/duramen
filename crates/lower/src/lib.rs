@@ -8,10 +8,13 @@ extern crate std;
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
 
+use duramen_cst::CstNode as _;
 use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
-use duramen_syntax::Node;
+use duramen_syntax::{Node, Syntax};
 use {duramen_ast as ast, duramen_cst as cst};
+
+use crate::error::LowerError;
 
 mod error;
 
@@ -94,6 +97,27 @@ impl<'a, 'src> LowerContext<'a, 'src> {
         let mut entries = Vec::new();
 
         for annotation in annotations {
+            let node = annotation.syntax();
+            if node.child(Syntax::OpenParenthesis).is_some()
+                && node.child(Syntax::CloseParenthesis).is_none()
+            {
+                let span = node
+                    .after(Syntax::OpenParenthesis)
+                    .find(|child| !child.kind().is_trivial())
+                    .map_or_else(
+                        || {
+                            let end = node.range().end;
+                            end..end
+                        },
+                        |child| child.first().range(),
+                    );
+
+                self.diagnostic(LowerError::ExpectedToken {
+                    span,
+                    expected: "`)`",
+                });
+            }
+
             let Some(name_node) = annotation.name() else {
                 continue;
             };

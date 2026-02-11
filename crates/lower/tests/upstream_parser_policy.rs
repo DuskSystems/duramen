@@ -7,10 +7,9 @@ use duramen_parser::PolicyParser;
 use duramen_test::{assert_diagnostics_snapshot, source};
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn variable6() {
     let source = source! {r"
-        permit(var : in 6, action, resource);
+        permit (var : in 6, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -20,24 +19,28 @@ fn variable6() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
-      ╭▸ test:1:17
+      ╭▸ test:1:9
       │
-    1 │ permit(var : in 6, action, resource);
-      ╰╴                ━ expected `)`
+    1 │ permit (var : in 6, action, resource);
+      ╰╴        ━━━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:18
+      │
+    1 │ permit (var : in 6, action, resource);
+      ╰╴                 ━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn member7() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-            one{num:true,trivia:"first!"}
+            one{num: true, trivia: "first!"}
         };
     "#};
 
@@ -48,22 +51,35 @@ fn member7() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `}`
+      ╭▸ test:3:5
+      │
+    3 │     one{num: true, trivia: "first!"}
+      ╰╴    ━━━ expected `}`
+    error: unknown variable `one`
+      ╭▸ test:3:5
+      │
+    3 │     one{num: true, trivia: "first!"}
+      │     ━━━ not a valid variable
+      ╰╴
+    note: `principal`, `action`, `resource`, and `context` are the only variables
+    error: missing policy effect
       ╭▸ test:3:8
       │
-    3 │     one{num:true,trivia:"first!"}
-      ╰╴       ━ expected `}`
+    3 │       one{num: true, trivia: "first!"}
+      │ ┏━━━━━━━━┛
+    4 │ ┃ };
+      ╰╴┗━━━┛ expected `permit` or `forbid`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn ident3_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if };
     "};
 
@@ -78,18 +94,17 @@ fn ident3_1() {
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `}`
-      ╭▸ test:2:12
+      ╭▸ test:2:8
       │
     2 │ when { if };
-      ╰╴           ━ expected `}`
+      ╰╴       ━━ expected `}`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn ident3_4() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if::then::else };
     "};
 
@@ -104,18 +119,17 @@ fn ident3_4() {
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `}`
-      ╭▸ test:2:24
+      ╭▸ test:2:8
       │
     2 │ when { if::then::else };
-      ╰╴                       ━ expected `}`
+      ╰╴       ━━ expected `}`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn ident3_5() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if::true::then::false::else::true };
     "};
 
@@ -126,22 +140,26 @@ fn ident3_5() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `}`
+      ╭▸ test:2:8
+      │
+    2 │ when { if::true::then::false::else::true };
+      ╰╴       ━━ expected `}`
+    error: missing policy effect
       ╭▸ test:2:12
       │
     2 │ when { if::true::then::false::else::true };
-      ╰╴           ━━━━ expected `}`
+      ╰╴           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn comments_policy_3() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { 1 /* multi-line
         comment */d };
     "};
@@ -153,24 +171,37 @@ fn comments_policy_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `}`
-      ╭▸ test:2:13
+      ╭▸ test:2:8
       │
     2 │ when { 1 /* multi-line
-      ╰╴            ━━━━━ expected `}`
+      ╰╴       ━ expected `}`
+    error: division and remainder are not supported
+      ╭▸ test:2:8
+      │
+    2 │ when { 1 /* multi-line
+      │        ━━━━━ not supported
+      ╰╴
+    note: only `*` with an integer literal is allowed
+    error: missing policy effect
+      ╭▸ test:2:13
+      │
+    2 │   when { 1 /* multi-line
+      │ ┏━━━━━━━━━━━━━┛
+    3 │ ┃ comment */d };
+      ╰╴┗━━━━━━━━━━━━━━━┛ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn no_comments_policy4() {
     let source = source! {r#"
-        permit(principal,action,resource,context)
+        permit (principal, action, resource, context)
         when {
-            context.contains(3,"four",five(6,7))
+            context.contains(3, "four", five(6, 7))
         };
     "#};
 
@@ -181,22 +212,30 @@ fn no_comments_policy4() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
-      ╭▸ test:1:34
+      ╭▸ test:1:9
       │
-    1 │ permit(principal,action,resource,context)
-      ╰╴                                 ━━━━━━━ expected `)`
-    ");
+    1 │ permit (principal, action, resource, context)
+      ╰╴        ━━━━━━━━━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:38
+      │
+    1 │   permit (principal, action, resource, context)
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    2 │ ┃ when {
+    3 │ ┃     context.contains(3, "four", five(6, 7))
+    4 │ ┃ };
+      ╰╴┗━━━┛ expected `permit` or `forbid`
+    "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn policies2() {
     let source = source! {r#"
-        permit(
+        permit (
             principal in Group::"jane_friends",  // Policy c1
             action in [PhotoOp::"view", PhotoOp::"comment"],
             resource in Album::"jane_trips",
@@ -211,22 +250,27 @@ fn policies2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
+      ╭▸ test:2:5
+      │
+    2 │     principal in Group::"jane_friends",  // Policy c1
+      ╰╴    ━━━━━━━━━ expected `)`
+    error: missing policy effect
       ╭▸ test:5:5
       │
-    5 │     context:Group
-      ╰╴    ━━━━━━━ expected `)`
-    ");
+    5 │ ┏     context:Group
+    6 │ ┃ );
+      ╰╴┗━━━┛ expected `permit` or `forbid`
+    "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn policy_annotations_bad_val_1() {
     let source = source! {r#"
-        @bad_annotation("bad","annotation")
+        @bad_annotation("bad", "annotation")
         permit (principal, action, resource);
     "#};
 
@@ -237,19 +281,23 @@ fn policy_annotations_bad_val_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
-      ╭▸ test:1:22
+      ╭▸ test:1:17
       │
-    1 │ @bad_annotation("bad","annotation")
-      ╰╴                     ━ expected `)`
+    1 │ @bad_annotation("bad", "annotation")
+      ╰╴                ━━━━━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ @bad_annotation("bad", "annotation")
+      ╰╴━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn policy_annotations_bad_val_3() {
     let source = source! {r"
         @bad_annotation(bad_annotation)
@@ -263,19 +311,23 @@ fn policy_annotations_bad_val_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
       ╭▸ test:1:17
       │
     1 │ @bad_annotation(bad_annotation)
-      ╰╴                ━━━━━━━━━━━━━━ expected `)`
+      ╰╴                ━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ @bad_annotation(bad_annotation)
+      ╰╴━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn policy_annotation_bad_position() {
     let source = source! {r#"
         permit (@comment("your name here") principal, action, resource);
@@ -288,7 +340,7 @@ fn policy_annotation_bad_position() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
@@ -296,17 +348,26 @@ fn policy_annotation_bad_position() {
       │
     1 │ permit (@comment("your name here") principal, action, resource);
       ╰╴        ━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:9
+      │
+    1 │ permit (@comment("your name here") principal, action, resource);
+      ╰╴        ━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
+    error: missing policy effect
+      ╭▸ test:1:36
+      │
+    1 │ permit (@comment("your name here") principal, action, resource);
+      ╰╴                                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn error_recovery_1() {
     let source = source! {r"
-        permit(principal, action, !)
+        permit (principal, action, !)
         when { principal.foo == resource.bar};
 
-        permit(principal, action, resource);
+        permit (principal, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -320,21 +381,55 @@ fn error_recovery_1() {
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
-      ╭▸ test:1:27
+      ╭▸ test:1:9
       │
-    1 │ permit(principal, action, !)
-      ╰╴                          ━ expected `)`
+    1 │ permit (principal, action, !)
+      ╰╴        ━━━━━━━━━ expected `)`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn error_recovery_2() {
     let source = source! {r"
-        permit(principal, action, !)
+        permit (principal, action, !)
         when { principal.foo == resource.bar};
 
-        permit(principal, action, +);
+        permit (principal, action, +);
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 3);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: expected `)`
+      ╭▸ test:1:9
+      │
+    1 │ permit (principal, action, !)
+      ╰╴        ━━━━━━━━━ expected `)`
+    error: expected `)`
+      ╭▸ test:4:9
+      │
+    4 │ permit (principal, action, +);
+      ╰╴        ━━━━━━━━━ expected `)`
+    error: missing policy effect
+      ╭▸ test:4:28
+      │
+    4 │ permit (principal, action, +);
+      ╰╴                           ━━━ expected `permit` or `forbid`
+    ");
+}
+
+#[test]
+fn error_recovery_3() {
+    let source = source! {r"
+        permit (principal, action, !)
+        when { principal.foo == resource.bar}
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -348,51 +443,26 @@ fn error_recovery_2() {
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
-      ╭▸ test:1:27
+      ╭▸ test:1:9
       │
-    1 │ permit(principal, action, !)
-      ╰╴                          ━ expected `)`
-    error: expected `)`
-      ╭▸ test:4:27
+    1 │ permit (principal, action, !)
+      ╰╴        ━━━━━━━━━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:28
       │
-    4 │ permit(principal, action, +);
-      ╰╴                          ━ expected `)`
+    1 │   permit (principal, action, !)
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    2 │ ┃ when { principal.foo == resource.bar}
+      ╰╴┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
-fn error_recovery_3() {
-    let source = source! {r"
-        permit(principal, action, !)
-        when { principal.foo == resource.bar}
-    "};
-
-    let mut diagnostics = Diagnostics::new();
-
-    let tree = PolicyParser::new(source, &mut diagnostics).parse();
-    let root = tree.root().unwrap();
-
-    let cst = Policies::cast(root).unwrap();
-    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:27
-      │
-    1 │ permit(principal, action, !)
-      ╰╴                          ━ expected `)`
-    ");
-}
-
-#[test]
-#[ignore = "TODO: implement in lowerer"]
 fn extended_has_21() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has a.1
+            principal has a.1
         };
     "};
 
@@ -403,22 +473,33 @@ fn extended_has_21() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `}`
+      ╭▸ test:3:5
+      │
+    3 │     principal has a.1
+      ╰╴    ━━━━━━━━━ expected `}`
+    error: missing expression
       ╭▸ test:3:19
       │
-    3 │   principal has a.1
-      ╰╴                  ━ expected `}`
+    3 │     principal has a.1
+      ╰╴                  ━━ expected an attribute name
+    error: missing policy effect
+      ╭▸ test:3:21
+      │
+    3 │       principal has a.1
+      │ ┏━━━━━━━━━━━━━━━━━━━━━┛
+    4 │ ┃ };
+      ╰╴┗━━━┛ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn invalid_token_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { ~ };
     "};
 
@@ -429,22 +510,13 @@ fn invalid_token_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: unrecognized character
-      ╭▸ test:2:8
-      │
-    2 │ when { ~ };
-      ╰╴       ━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn invalid_token_2() {
     let source = source! {"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { \u{1F680} };
     "};
 
@@ -455,22 +527,13 @@ fn invalid_token_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: unrecognized character
-      ╭▸ test:2:8
-      │
-    2 │ when { 🚀 };
-      ╰╴       ━━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn unclosed_strings_1() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal.foo = "bar
         };
@@ -483,9 +546,14 @@ fn unclosed_strings_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 3);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
+    error: expected `}`
+      ╭▸ test:3:5
+      │
+    3 │     principal.foo = "bar
+      ╰╴    ━━━━━━━━━ expected `}`
     error: invalid operator `=`
       ╭▸ test:3:19
       │
@@ -496,26 +564,13 @@ fn unclosed_strings_1() {
       ╭╴
     3 │     principal.foo == "bar
       ╰╴                   +
-    error: unterminated string literal
-      ╭▸ test:3:21
-      │
-    3 │       principal.foo = "bar
-      │ ┏━━━━━━━━━━━━━━━━━━━━━┛
-    4 │ ┃ };
-      ╰╴┗━━━┛ missing closing `"`
-    error: expected `}`
-      ╭▸ test:4:4
-      │
-    4 │ };
-      ╰╴  ━ expected `}`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn unclosed_strings_2() {
     let source = source! {r#"
-        permit(principal, action, resource == Photo::"mine.jpg);
+        permit (principal, action, resource == Photo::"mine.jpg);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -525,27 +580,31 @@ fn unclosed_strings_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
-      ╭▸ test:1:46
+      ╭▸ test:1:9
       │
-    1 │ permit(principal, action, resource == Photo::"mine.jpg);
-      ╰╴                                             ━━━━━━━━━━━ expected `)`
-    error: unterminated string literal
-      ╭▸ test:1:46
+    1 │ permit (principal, action, resource == Photo::"mine.jpg);
+      ╰╴        ━━━━━━━━━ expected `)`
+    error: missing expression
+      ╭▸ test:1:40
       │
-    1 │ permit(principal, action, resource == Photo::"mine.jpg);
-      ╰╴                                             ━━━━━━━━━━━ missing closing `"`
+    1 │ permit (principal, action, resource == Photo::"mine.jpg);
+      ╰╴                                       ━━━━━━━ expected an entity reference or slot
+    error: missing policy effect
+      ╭▸ test:1:47
+      │
+    1 │ permit (principal, action, resource == Photo::"mine.jpg);
+      ╰╴                                              ━━━━━━━━━━━ expected `permit` or `forbid`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn unclosed_strings_3() {
     let source = source! {r#"
-        @id("0)permit(principal, action, resource);
+        @id("0)permit (principal, action, resource);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -555,28 +614,32 @@ fn unclosed_strings_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
       ╭▸ test:1:5
       │
-    1 │ @id("0)permit(principal, action, resource);
-      ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `)`
-    error: unterminated string literal
+    1 │ @id("0)permit (principal, action, resource);
+      ╰╴    ━ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ @id("0)permit (principal, action, resource);
+      ╰╴━━━━ expected `permit` or `forbid`
+    error: missing policy effect
       ╭▸ test:1:5
       │
-    1 │ @id("0)permit(principal, action, resource);
-      ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ missing closing `"`
+    1 │ @id("0)permit (principal, action, resource);
+      ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn unclosed_strings_4() {
     let source = source! {r#"
         @id("0)
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal.foo = "bar"
         };
@@ -589,29 +652,40 @@ fn unclosed_strings_4() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
+      ╭▸ test:1:5
+      │
+    1 │   @id("0)
+      │ ┏━━━━━┛
+    2 │ ┃ permit (principal, action, resource)
+    3 │ ┃ when {
+    4 │ ┃     principal.foo = "bar"
+      ╰╴┗━━━━━━━━━━━━━━━━━━━━━┛ expected `)`
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ ┏ @id("0)
+    2 │ ┃ permit (principal, action, resource)
+    3 │ ┃ when {
+    4 │ ┃     principal.foo = "bar"
+      ╰╴┗━━━━━━━━━━━━━━━━━━━━━┛ expected `permit` or `forbid`
+    error: missing policy effect
       ╭▸ test:4:22
       │
-    4 │     principal.foo = "bar"
-      ╰╴                     ━━━ expected `)`
-    error: unterminated string literal
-      ╭▸ test:4:25
-      │
     4 │       principal.foo = "bar"
-      │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━┛
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
     5 │ ┃ };
-      ╰╴┗━━━┛ missing closing `"`
+      ╰╴┗━━━┛ expected `permit` or `forbid`
     "#);
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn single_quote_string_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal.foo = 'bar'
         };
@@ -624,9 +698,14 @@ fn single_quote_string_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 4);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: expected `}`
+      ╭▸ test:3:5
+      │
+    3 │     principal.foo = 'bar'
+      ╰╴    ━━━━━━━━━ expected `}`
     error: invalid operator `=`
       ╭▸ test:3:19
       │
@@ -637,29 +716,20 @@ fn single_quote_string_1() {
       ╭╴
     3 │     principal.foo == 'bar'
       ╰╴                   +
-    error: unrecognized character
-      ╭▸ test:3:21
-      │
-    3 │     principal.foo = 'bar'
-      ╰╴                    ━ not valid in Cedar
-    error: expected `}`
+    error: missing policy effect
       ╭▸ test:3:22
       │
-    3 │     principal.foo = 'bar'
-      ╰╴                     ━━━ expected `}`
-    error: unrecognized character
-      ╭▸ test:3:25
-      │
-    3 │     principal.foo = 'bar'
-      ╰╴                        ━ not valid in Cedar
+    3 │       principal.foo = 'bar'
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+    4 │ ┃ };
+      ╰╴┗━━━┛ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn single_quote_string_2() {
     let source = source! {r"
-        permit(principal, action, resource == Photo::'mine.jpg');
+        permit (principal, action, resource == Photo::'mine.jpg');
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -673,28 +743,27 @@ fn single_quote_string_2() {
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
-      ╭▸ test:1:46
+      ╭▸ test:1:9
       │
-    1 │ permit(principal, action, resource == Photo::'mine.jpg');
-      ╰╴                                             ━ expected `)`
-    error: unrecognized character
-      ╭▸ test:1:46
+    1 │ permit (principal, action, resource == Photo::'mine.jpg');
+      ╰╴        ━━━━━━━━━ expected `)`
+    error: missing expression
+      ╭▸ test:1:40
       │
-    1 │ permit(principal, action, resource == Photo::'mine.jpg');
-      ╰╴                                             ━ not valid in Cedar
-    error: unrecognized character
-      ╭▸ test:1:55
+    1 │ permit (principal, action, resource == Photo::'mine.jpg');
+      ╰╴                                       ━━━━━━━ expected an entity reference or slot
+    error: missing policy effect
+      ╭▸ test:1:47
       │
-    1 │ permit(principal, action, resource == Photo::'mine.jpg');
-      ╰╴                                                      ━ not valid in Cedar
+    1 │ permit (principal, action, resource == Photo::'mine.jpg');
+      ╰╴                                              ━━━━━━━━━━━━ expected `permit` or `forbid`
     ");
 }
 
 #[test]
-#[ignore = "TODO: implement in lowerer"]
 fn single_quote_string_3() {
     let source = source! {r"
-        @id('0')permit(principal, action, resource);
+        @id('0')permit (principal, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -704,23 +773,18 @@ fn single_quote_string_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 3);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
       ╭▸ test:1:5
       │
-    1 │ @id('0')permit(principal, action, resource);
+    1 │ @id('0')permit (principal, action, resource);
       ╰╴    ━ expected `)`
-    error: unrecognized character
-      ╭▸ test:1:5
+    error: missing policy effect
+      ╭▸ test:1:1
       │
-    1 │ @id('0')permit(principal, action, resource);
-      ╰╴    ━ not valid in Cedar
-    error: unrecognized character
-      ╭▸ test:1:7
-      │
-    1 │ @id('0')permit(principal, action, resource);
-      ╰╴      ━ not valid in Cedar
+    1 │ @id('0')permit (principal, action, resource);
+      ╰╴━━━━ expected `permit` or `forbid`
     ");
 }

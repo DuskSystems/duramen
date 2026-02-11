@@ -2,7 +2,7 @@ use alloc::format;
 use alloc::string::String;
 use core::ops::Range;
 
-use duramen_diagnostic::Diagnostic;
+use duramen_diagnostic::{Diagnostic, Suggestion};
 
 pub enum LowerError {
     MissingEffect {
@@ -62,6 +62,14 @@ pub enum LowerError {
     },
     MissingTypeExpression {
         span: Range<usize>,
+    },
+
+    InvalidEquals {
+        span: Range<usize>,
+    },
+    ExpectedToken {
+        span: Range<usize>,
+        expected: &'static str,
     },
 }
 
@@ -138,6 +146,19 @@ impl From<LowerError> for Diagnostic {
                 .with_label(span, "expected a record type or type reference"),
             LowerError::MissingTypeExpression { span } => {
                 Self::error("missing type expression").with_label(span, "expected a type")
+            }
+
+            LowerError::InvalidEquals { span } => {
+                let suggestion =
+                    Suggestion::fix(span.clone(), "==").with_message("use `==` for equality");
+
+                Self::error("invalid operator `=`")
+                    .with_label(span, "not a valid operator")
+                    .with_suggestion(suggestion)
+            }
+            LowerError::ExpectedToken { span, expected } => {
+                Self::error(format!("expected {expected}"))
+                    .with_label(span, format!("expected {expected}"))
             }
         }
     }
