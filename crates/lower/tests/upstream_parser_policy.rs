@@ -281,7 +281,7 @@ fn policy_annotations_bad_val_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: expected `)`
@@ -294,6 +294,13 @@ fn policy_annotations_bad_val_1() {
       │
     1 │ @bad_annotation("bad", "annotation")
       ╰╴━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
+    error: unexpected token
+      ╭▸ test:1:22
+      │
+    1 │   @bad_annotation("bad", "annotation")
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+    2 │ ┃ permit (principal, action, resource);
+      ╰╴┗━┛ unexpected token
     "#);
 }
 
@@ -311,7 +318,7 @@ fn policy_annotations_bad_val_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
@@ -324,6 +331,13 @@ fn policy_annotations_bad_val_3() {
       │
     1 │ @bad_annotation(bad_annotation)
       ╰╴━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
+    error: unexpected token
+      ╭▸ test:1:17
+      │
+    1 │   @bad_annotation(bad_annotation)
+      │ ┏━━━━━━━━━━━━━━━━━┛
+    2 │ ┃ permit (principal, action, resource);
+      ╰╴┗━┛ unexpected token
     ");
 }
 
@@ -377,7 +391,7 @@ fn error_recovery_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
@@ -385,6 +399,15 @@ fn error_recovery_1() {
       │
     1 │ permit (principal, action, !)
       ╰╴        ━━━━━━━━━ expected `)`
+    error: unexpected token
+      ╭▸ test:1:28
+      │
+    1 │   permit (principal, action, !)
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    2 │ ┃ when { principal.foo == resource.bar};
+    3 │ ┃
+    4 │ ┃ permit (principal, action, resource);
+      ╰╴┗━┛ unexpected token
     ");
 }
 
@@ -404,7 +427,7 @@ fn error_recovery_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 3);
+    assert_eq!(diagnostics.len(), 4);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
@@ -412,6 +435,15 @@ fn error_recovery_2() {
       │
     1 │ permit (principal, action, !)
       ╰╴        ━━━━━━━━━ expected `)`
+    error: unexpected token
+      ╭▸ test:1:28
+      │
+    1 │   permit (principal, action, !)
+      │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    2 │ ┃ when { principal.foo == resource.bar};
+    3 │ ┃
+    4 │ ┃ permit (principal, action, +);
+      ╰╴┗━┛ unexpected token
     error: expected `)`
       ╭▸ test:4:9
       │
@@ -510,7 +542,15 @@ fn invalid_token_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 0);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: unexpected token
+      ╭▸ test:2:8
+      │
+    2 │ when { ~ };
+      ╰╴       ━━ unexpected token
+    ");
 }
 
 #[test]
@@ -527,7 +567,15 @@ fn invalid_token_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 0);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: unexpected token
+      ╭▸ test:2:8
+      │
+    2 │ when { 🚀 };
+      ╰╴       ━━━ unexpected token
+    ");
 }
 
 #[test]
@@ -773,7 +821,7 @@ fn single_quote_string_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 2);
+    assert_eq!(diagnostics.len(), 3);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
     error: expected `)`
@@ -786,6 +834,11 @@ fn single_quote_string_3() {
       │
     1 │ @id('0')permit (principal, action, resource);
       ╰╴━━━━ expected `permit` or `forbid`
+    error: unexpected token
+      ╭▸ test:1:5
+      │
+    1 │ @id('0')permit (principal, action, resource);
+      ╰╴    ━━━━ unexpected token
     ");
 }
 
@@ -849,7 +902,15 @@ fn ident4_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 0);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: expected `then`
+      ╭▸ test:2:17
+      │
+    2 │ when { if(true) };
+      ╰╴                ━ expected `then`
+    ");
 }
 
 #[test]
@@ -870,9 +931,16 @@ fn comments_policy_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: unexpected token
+      ╭▸ test:1:1
+      │
+    1 │ ┏ /* multi-line
+    2 │ ┃ comment */
+    3 │ ┃ permit (principal, action, resource)
+      ╰╴┗━┛ unexpected token
     error: unknown variable `one`
       ╭▸ test:5:5
       │
@@ -897,7 +965,7 @@ fn policy_annotations_bad_id_1() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: missing policy effect
@@ -905,6 +973,13 @@ fn policy_annotations_bad_id_1() {
       │
     1 │ @bad-annotation("bad")
       ╰╴━━━━ expected `permit` or `forbid`
+    error: unexpected token
+      ╭▸ test:1:5
+      │
+    1 │   @bad-annotation("bad")
+      │ ┏━━━━━┛
+    2 │ ┃ permit (principal, action, resource);
+      ╰╴┗━┛ unexpected token
     "#);
 }
 
@@ -922,7 +997,7 @@ fn policy_annotations_bad_id_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: missing policy effect
@@ -930,6 +1005,13 @@ fn policy_annotations_bad_id_2() {
       │
     1 │ @hi mom("this should be invalid")
       ╰╴━━━━ expected `permit` or `forbid`
+    error: unexpected token
+      ╭▸ test:1:5
+      │
+    1 │   @hi mom("this should be invalid")
+      │ ┏━━━━━┛
+    2 │ ┃ permit (principal, action, resource);
+      ╰╴┗━┛ unexpected token
     "#);
 }
 
@@ -947,7 +1029,7 @@ fn policy_annotations_bad_id_3() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics.len(), 2);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
     error: missing policy effect
@@ -955,6 +1037,13 @@ fn policy_annotations_bad_id_3() {
       │
     1 │ @hi+mom("this should be invalid")
       ╰╴━━━ expected `permit` or `forbid`
+    error: unexpected token
+      ╭▸ test:1:4
+      │
+    1 │   @hi+mom("this should be invalid")
+      │ ┏━━━━┛
+    2 │ ┃ permit (principal, action, resource);
+      ╰╴┗━┛ unexpected token
     "#);
 }
 
@@ -972,7 +1061,15 @@ fn policy_annotations_bad_val_2() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 0);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: expected a string literal
+      ╭▸ test:1:17
+      │
+    1 │ @bad_annotation()
+      ╰╴                ━ expected a string literal
+    ");
 }
 
 #[test]
@@ -1030,9 +1127,19 @@ fn policies6() {
 
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
-    assert_eq!(diagnostics.len(), 5);
+    assert_eq!(diagnostics.len(), 7);
 
     assert_diagnostics_snapshot!(source, &diagnostics, @r#"
+    error: unexpected token
+      ╭▸ test:1:1
+      │
+    1 │ ┏ 3(principal: p, action: a, resource: r)
+    2 │ ┃ when { w }
+    3 │ ┃ unless { u }
+    4 │ ┃ advice { "doit" };
+    5 │ ┃
+    6 │ ┃ permit (principal: p, action: a, resource: r)
+      ╰╴┗━┛ unexpected token
     error: unknown variable `w `
       ╭▸ test:7:8
       │
@@ -1047,6 +1154,13 @@ fn policies6() {
       │          ━━ not a valid variable
       ╰╴
     note: `principal`, `action`, `resource`, and `context` are the only variables
+    error: unexpected token
+       ╭▸ test:9:1
+       │
+     9 │ ┏ advice { "doit" };
+    10 │ ┃
+    11 │ ┃ permit (principal: p, action: a, resource: r)
+       ╰╴┗━┛ unexpected token
     error: unknown variable `w `
        ╭▸ test:12:8
        │

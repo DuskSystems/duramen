@@ -141,6 +141,26 @@ impl<'a, 'src> LowerContext<'a, 'src> {
                         continue;
                     }
                 }
+            } else if node.child(Syntax::OpenParenthesis).is_some()
+                && node.child(Syntax::CloseParenthesis).is_some()
+            {
+                let span = node
+                    .after(Syntax::OpenParenthesis)
+                    .find(|child| !child.kind().is_trivial())
+                    .map_or_else(
+                        || {
+                            let end = node.range().end;
+                            end..end
+                        },
+                        |child| child.first().range(),
+                    );
+
+                self.diagnostic(LowerError::ExpectedToken {
+                    span,
+                    expected: "a string literal",
+                });
+
+                continue;
             } else {
                 ast::AnnotationValue::Empty
             };
