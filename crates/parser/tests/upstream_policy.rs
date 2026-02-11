@@ -82,6 +82,8 @@ fn expr6() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn expr_overflow_1() {
     let source = source! {r"
@@ -95,6 +97,8 @@ fn expr_overflow_1() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn expr_overflow_2() {
     let source = source! {r"
@@ -157,7 +161,6 @@ fn variable4() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn variable6() {
@@ -262,7 +265,6 @@ fn member6() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn member7() {
@@ -310,7 +312,6 @@ fn member9() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn ident3_1() {
@@ -343,7 +344,6 @@ fn ident3_2() {
 // fn ident3_3() {}
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn ident3_4() {
@@ -359,7 +359,6 @@ fn ident3_4() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn ident3_5() {
@@ -387,6 +386,8 @@ fn ident4_1() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn ident4_2() {
     let source = source! {r"
@@ -696,6 +697,8 @@ fn comments_policy_1() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn comments_policy_2() {
     let source = source! {r"
@@ -714,7 +717,6 @@ fn comments_policy_2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn comments_policy_3() {
@@ -769,7 +771,6 @@ fn no_comments_policy2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn no_comments_policy4() {
@@ -819,7 +820,6 @@ fn policies1() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policies2() {
@@ -908,6 +908,8 @@ fn policies5() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policies6() {
     let source = source! {r#"
@@ -969,6 +971,8 @@ fn policy_annotations_no_value_ok() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_id_1() {
     let source = source! {r#"
@@ -982,6 +986,8 @@ fn policy_annotations_bad_id_1() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_id_2() {
     let source = source! {r#"
@@ -995,6 +1001,8 @@ fn policy_annotations_bad_id_2() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_id_3() {
     let source = source! {r#"
@@ -1009,7 +1017,6 @@ fn policy_annotations_bad_id_3() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_val_1() {
@@ -1024,6 +1031,8 @@ fn policy_annotations_bad_val_1() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_val_2() {
     let source = source! {r"
@@ -1038,7 +1047,6 @@ fn policy_annotations_bad_val_2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotations_bad_val_3() {
@@ -1054,7 +1062,6 @@ fn policy_annotations_bad_val_3() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn policy_annotation_bad_position() {
@@ -1069,7 +1076,6 @@ fn policy_annotation_bad_position() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn error_recovery_1() {
@@ -1087,7 +1093,6 @@ fn error_recovery_1() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn error_recovery_2() {
@@ -1105,7 +1110,6 @@ fn error_recovery_2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn error_recovery_3() {
@@ -1405,6 +1409,8 @@ fn extended_has_19() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn extended_has_20() {
     let source = source! {r"
@@ -1421,7 +1427,6 @@ fn extended_has_20() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn extended_has_21() {
@@ -1502,7 +1507,6 @@ fn trailing_comma_5() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn invalid_token_1() {
@@ -1518,7 +1522,6 @@ fn invalid_token_1() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn invalid_token_2() {
@@ -1534,7 +1537,6 @@ fn invalid_token_2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_1() {
@@ -1552,7 +1554,6 @@ fn unclosed_strings_1() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_2() {
@@ -1567,7 +1568,6 @@ fn unclosed_strings_2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_3() {
@@ -1582,7 +1582,6 @@ fn unclosed_strings_3() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn unclosed_strings_4() {
@@ -1601,7 +1600,6 @@ fn unclosed_strings_4() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn single_quote_string_1() {
@@ -1619,7 +1617,6 @@ fn single_quote_string_1() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn single_quote_string_2() {
@@ -1634,7 +1631,6 @@ fn single_quote_string_2() {
 }
 
 // UPSTREAM
-// Handled by lowerer.
 // See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
 fn single_quote_string_3() {
