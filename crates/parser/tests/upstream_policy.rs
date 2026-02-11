@@ -2,7 +2,7 @@
 
 use duramen_diagnostic::Diagnostics;
 use duramen_parser::PolicyParser;
-use duramen_test::{assert_diagnostics_snapshot, source};
+use duramen_test::source;
 
 #[test]
 fn expr1() {
@@ -156,8 +156,10 @@ fn variable4() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn variable6() {
     let source = source! {r"
         permit(var : in 6, action, resource);
@@ -166,15 +168,7 @@ fn variable6() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:17
-      │
-    1 │ permit(var : in 6, action, resource);
-      ╰╴                ━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -267,8 +261,10 @@ fn member6() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn member7() {
     let source = source! {r#"
         permit(principal, action, resource)
@@ -280,15 +276,7 @@ fn member7() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: expected `}`
-      ╭▸ test:3:8
-      │
-    3 │     one{num:true,trivia:"first!"}
-      ╰╴       ━ expected `}`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -321,8 +309,10 @@ fn member9() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn ident3_1() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -332,15 +322,7 @@ fn ident3_1() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `}`
-      ╭▸ test:2:12
-      │
-    2 │ when { if };
-      ╰╴           ━ expected `}`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -360,8 +342,10 @@ fn ident3_2() {
 // #[test]
 // fn ident3_3() {}
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn ident3_4() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -371,19 +355,13 @@ fn ident3_4() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `}`
-      ╭▸ test:2:24
-      │
-    2 │ when { if::then::else };
-      ╰╴                       ━ expected `}`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn ident3_5() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -393,15 +371,7 @@ fn ident3_5() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `}`
-      ╭▸ test:2:12
-      │
-    2 │ when { if::true::then::false::else::true };
-      ╰╴           ━━━━ expected `}`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -743,8 +713,10 @@ fn comments_policy_2() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn comments_policy_3() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -755,15 +727,7 @@ fn comments_policy_3() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `}`
-      ╭▸ test:2:13
-      │
-    2 │ when { 1 /* multi-line
-      ╰╴            ━━━━━ expected `}`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -804,8 +768,10 @@ fn no_comments_policy2() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn no_comments_policy4() {
     let source = source! {r#"
         permit(principal,action,resource,context)
@@ -817,15 +783,7 @@ fn no_comments_policy4() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:34
-      │
-    1 │ permit(principal,action,resource,context)
-      ╰╴                                 ━━━━━━━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -860,8 +818,10 @@ fn policies1() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn policies2() {
     let source = source! {r#"
         permit(
@@ -875,15 +835,7 @@ fn policies2() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:5:5
-      │
-    5 │     context:Group
-      ╰╴    ━━━━━━━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -1056,8 +1008,10 @@ fn policy_annotations_bad_id_3() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn policy_annotations_bad_val_1() {
     let source = source! {r#"
         @bad_annotation("bad","annotation")
@@ -1067,15 +1021,7 @@ fn policy_annotations_bad_val_1() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: expected `)`
-      ╭▸ test:1:22
-      │
-    1 │ @bad_annotation("bad","annotation")
-      ╰╴                     ━ expected `)`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -1091,8 +1037,10 @@ fn policy_annotations_bad_val_2() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn policy_annotations_bad_val_3() {
     let source = source! {r"
         @bad_annotation(bad_annotation)
@@ -1102,19 +1050,13 @@ fn policy_annotations_bad_val_3() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:17
-      │
-    1 │ @bad_annotation(bad_annotation)
-      ╰╴                ━━━━━━━━━━━━━━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn policy_annotation_bad_position() {
     let source = source! {r#"
         permit (@comment("your name here") principal, action, resource);
@@ -1123,19 +1065,13 @@ fn policy_annotation_bad_position() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: expected `)`
-      ╭▸ test:1:9
-      │
-    1 │ permit (@comment("your name here") principal, action, resource);
-      ╰╴        ━ expected `)`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn error_recovery_1() {
     let source = source! {r"
         permit(principal, action, !)
@@ -1147,19 +1083,13 @@ fn error_recovery_1() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:27
-      │
-    1 │ permit(principal, action, !)
-      ╰╴                          ━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn error_recovery_2() {
     let source = source! {r"
         permit(principal, action, !)
@@ -1171,24 +1101,13 @@ fn error_recovery_2() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 2);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:27
-      │
-    1 │ permit(principal, action, !)
-      ╰╴                          ━ expected `)`
-    error: expected `)`
-      ╭▸ test:4:27
-      │
-    4 │ permit(principal, action, +);
-      ╰╴                          ━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn error_recovery_3() {
     let source = source! {r"
         permit(principal, action, !)
@@ -1198,15 +1117,7 @@ fn error_recovery_3() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:27
-      │
-    1 │ permit(principal, action, !)
-      ╰╴                          ━ expected `)`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -1509,8 +1420,10 @@ fn extended_has_20() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn extended_has_21() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -1522,15 +1435,7 @@ fn extended_has_21() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `}`
-      ╭▸ test:3:19
-      │
-    3 │   principal has a.1
-      ╰╴                  ━ expected `}`
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
 #[test]
@@ -1596,8 +1501,10 @@ fn trailing_comma_5() {
     assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn invalid_token_1() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -1607,19 +1514,13 @@ fn invalid_token_1() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: unrecognized character
-      ╭▸ test:2:8
-      │
-    2 │ when { ~ };
-      ╰╴       ━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn invalid_token_2() {
     let source = source! {"
         permit(principal, action, resource)
@@ -1629,19 +1530,13 @@ fn invalid_token_2() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 1);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: unrecognized character
-      ╭▸ test:2:8
-      │
-    2 │ when { 🚀 };
-      ╰╴       ━━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn unclosed_strings_1() {
     let source = source! {r#"
         permit(principal, action, resource)
@@ -1653,36 +1548,13 @@ fn unclosed_strings_1() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 3);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: invalid operator `=`
-      ╭▸ test:3:19
-      │
-    3 │     principal.foo = "bar
-      │                   ━ not a valid operator
-      ╰╴
-    help: use `==` for equality
-      ╭╴
-    3 │     principal.foo == "bar
-      ╰╴                   +
-    error: unterminated string literal
-      ╭▸ test:3:21
-      │
-    3 │       principal.foo = "bar
-      │ ┏━━━━━━━━━━━━━━━━━━━━━┛
-    4 │ ┃ };
-      ╰╴┗━━━┛ missing closing `"`
-    error: expected `}`
-      ╭▸ test:4:4
-      │
-    4 │ };
-      ╰╴  ━ expected `}`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn unclosed_strings_2() {
     let source = source! {r#"
         permit(principal, action, resource == Photo::"mine.jpg);
@@ -1691,24 +1563,13 @@ fn unclosed_strings_2() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 2);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: expected `)`
-      ╭▸ test:1:46
-      │
-    1 │ permit(principal, action, resource == Photo::"mine.jpg);
-      ╰╴                                             ━━━━━━━━━━━ expected `)`
-    error: unterminated string literal
-      ╭▸ test:1:46
-      │
-    1 │ permit(principal, action, resource == Photo::"mine.jpg);
-      ╰╴                                             ━━━━━━━━━━━ missing closing `"`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn unclosed_strings_3() {
     let source = source! {r#"
         @id("0)permit(principal, action, resource);
@@ -1717,24 +1578,13 @@ fn unclosed_strings_3() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 2);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: expected `)`
-      ╭▸ test:1:5
-      │
-    1 │ @id("0)permit(principal, action, resource);
-      ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `)`
-    error: unterminated string literal
-      ╭▸ test:1:5
-      │
-    1 │ @id("0)permit(principal, action, resource);
-      ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ missing closing `"`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn unclosed_strings_4() {
     let source = source! {r#"
         @id("0)
@@ -1747,26 +1597,13 @@ fn unclosed_strings_4() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 2);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
-    error: expected `)`
-      ╭▸ test:4:22
-      │
-    4 │     principal.foo = "bar"
-      ╰╴                     ━━━ expected `)`
-    error: unterminated string literal
-      ╭▸ test:4:25
-      │
-    4 │       principal.foo = "bar"
-      │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━┛
-    5 │ ┃ };
-      ╰╴┗━━━┛ missing closing `"`
-    "#);
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn single_quote_string_1() {
     let source = source! {r"
         permit(principal, action, resource)
@@ -1778,39 +1615,13 @@ fn single_quote_string_1() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 4);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: invalid operator `=`
-      ╭▸ test:3:19
-      │
-    3 │     principal.foo = 'bar'
-      │                   ━ not a valid operator
-      ╰╴
-    help: use `==` for equality
-      ╭╴
-    3 │     principal.foo == 'bar'
-      ╰╴                   +
-    error: unrecognized character
-      ╭▸ test:3:21
-      │
-    3 │     principal.foo = 'bar'
-      ╰╴                    ━ not valid in Cedar
-    error: expected `}`
-      ╭▸ test:3:22
-      │
-    3 │     principal.foo = 'bar'
-      ╰╴                     ━━━ expected `}`
-    error: unrecognized character
-      ╭▸ test:3:25
-      │
-    3 │     principal.foo = 'bar'
-      ╰╴                        ━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn single_quote_string_2() {
     let source = source! {r"
         permit(principal, action, resource == Photo::'mine.jpg');
@@ -1819,29 +1630,13 @@ fn single_quote_string_2() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 3);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:46
-      │
-    1 │ permit(principal, action, resource == Photo::'mine.jpg');
-      ╰╴                                             ━ expected `)`
-    error: unrecognized character
-      ╭▸ test:1:46
-      │
-    1 │ permit(principal, action, resource == Photo::'mine.jpg');
-      ╰╴                                             ━ not valid in Cedar
-    error: unrecognized character
-      ╭▸ test:1:55
-      │
-    1 │ permit(principal, action, resource == Photo::'mine.jpg');
-      ╰╴                                                      ━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
 
+// UPSTREAM
+// Handled by lowerer.
+// See: crates/lower/tests/upstream_parser_policy.rs
 #[test]
-#[ignore = "TODO: move to lowerer"]
 fn single_quote_string_3() {
     let source = source! {r"
         @id('0')permit(principal, action, resource);
@@ -1850,23 +1645,5 @@ fn single_quote_string_3() {
     let mut diagnostics = Diagnostics::new();
 
     let _tree = PolicyParser::new(source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 3);
-
-    assert_diagnostics_snapshot!(source, &diagnostics, @"
-    error: expected `)`
-      ╭▸ test:1:5
-      │
-    1 │ @id('0')permit(principal, action, resource);
-      ╰╴    ━ expected `)`
-    error: unrecognized character
-      ╭▸ test:1:5
-      │
-    1 │ @id('0')permit(principal, action, resource);
-      ╰╴    ━ not valid in Cedar
-    error: unrecognized character
-      ╭▸ test:1:7
-      │
-    1 │ @id('0')permit(principal, action, resource);
-      ╰╴      ━ not valid in Cedar
-    ");
+    assert_eq!(diagnostics.len(), 0);
 }
