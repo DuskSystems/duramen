@@ -426,13 +426,13 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
 
         for variant_node in enum_type.variants() {
             let raw = self.ctx.text(variant_node);
-            let start = variant_node.range().start;
+            let offset = variant_node.range().start;
 
-            match Escaper::new(raw, start).unescape_str() {
+            match Escaper::new(raw).unescape_str() {
                 Ok(unescaped) => variants.push(unescaped),
                 Err(errors) => {
                     for error in errors {
-                        self.ctx.diagnostic(error);
+                        self.ctx.diagnostic(error.offset(offset));
                     }
                 }
             }

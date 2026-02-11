@@ -538,16 +538,16 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         let pattern = pattern.syntax();
 
         let raw = self.ctx.text(pattern);
-        let start = pattern.range().start;
+        let offset = pattern.range().start;
 
-        match Escaper::new(raw, start).unescape_pattern() {
+        match Escaper::new(raw).unescape_pattern() {
             Ok(elements) => {
                 let pattern = ast::Pattern::new(elements);
                 Some(ast::Expression::like(left, pattern))
             }
             Err(errors) => {
                 for error in errors {
-                    self.ctx.diagnostic(error);
+                    self.ctx.diagnostic(error.offset(offset));
                 }
 
                 None

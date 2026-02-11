@@ -11,13 +11,12 @@ use crate::error::EscapeError;
 /// Handles unescaping of string and pattern literals.
 pub struct Escaper<'a> {
     raw: &'a str,
-    start: usize,
 }
 
 impl<'a> Escaper<'a> {
     #[must_use]
-    pub const fn new(raw: &'a str, start: usize) -> Self {
-        Self { raw, start }
+    pub const fn new(raw: &'a str) -> Self {
+        Self { raw }
     }
 
     /// Strips quotes and unescapes a string literal.
@@ -27,7 +26,7 @@ impl<'a> Escaper<'a> {
     /// Returns an error for invalid escape sequences.
     pub fn unescape_str(&self) -> Result<Cow<'a, str>, Vec<EscapeError>> {
         let inner = Self::strip_quotes(self.raw);
-        let start = self.start + 1;
+        let start = 1;
 
         let bytes = inner.as_bytes();
 
@@ -87,7 +86,7 @@ impl<'a> Escaper<'a> {
     /// Returns an error for invalid escape sequences.
     pub fn unescape_pattern(&self) -> Result<Vec<PatternElement<'a>>, Vec<EscapeError>> {
         let inner = Self::strip_quotes(self.raw);
-        let start = self.start + 1;
+        let start = 1;
 
         let bytes = inner.as_bytes();
 
