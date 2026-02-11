@@ -42,6 +42,27 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
 
     /// Lowers a single policy.
     fn lower_policy(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
+        let node = policy.syntax();
+        if node.child(Syntax::OpenParenthesis).is_some()
+            && node.child(Syntax::CloseParenthesis).is_none()
+        {
+            let span = node
+                .after(Syntax::OpenParenthesis)
+                .find(|child| !child.kind().is_trivial())
+                .map_or_else(
+                    || {
+                        let end = node.range().end;
+                        end..end
+                    },
+                    |child| child.first().range(),
+                );
+
+            self.ctx.diagnostic(LowerError::ExpectedToken {
+                span,
+                expected: "`)`",
+            });
+        }
+
         let annotations = self.ctx.lower_annotations(policy.annotations())?;
 
         let effect = policy.effect().map(|effect| match effect {
@@ -326,6 +347,25 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         &mut self,
         condition: &cst::Condition<'src>,
     ) -> Option<ast::Condition<'src>> {
+        let node = condition.syntax();
+        if node.child(Syntax::OpenBrace).is_some() && node.child(Syntax::CloseBrace).is_none() {
+            let span = node
+                .after(Syntax::OpenBrace)
+                .find(|child| !child.kind().is_trivial())
+                .map_or_else(
+                    || {
+                        let end = node.range().end;
+                        end..end
+                    },
+                    |child| child.first().range(),
+                );
+
+            self.ctx.diagnostic(LowerError::ExpectedToken {
+                span,
+                expected: "`}`",
+            });
+        }
+
         let kind = condition.kind().map(|kind| match kind {
             cst::ConditionKind::When => ast::ConditionKind::When,
             cst::ConditionKind::Unless => ast::ConditionKind::Unless,
@@ -413,13 +453,24 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         &mut self,
         expression: &cst::RelationExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
+        let Some(operator) = expression.operator() else {
+            if let Some(token) = expression.operator_token()
+                && token.kind() == Syntax::Assign
+            {
+                self.ctx.diagnostic(LowerError::InvalidEquals {
+                    span: token.range(),
+                });
+            }
+
+            return None;
+        };
+
         let left = expression.left()?;
         let left = self.lower_expression(&left)?;
 
         let right = expression.right()?;
         let right = self.lower_expression(&right)?;
 
-        let operator = expression.operator()?;
         let operator = match operator {
             cst::RelationOperator::Less => ast::BinaryOperator::Less,
             cst::RelationOperator::LessEqual => ast::BinaryOperator::LessEqual,

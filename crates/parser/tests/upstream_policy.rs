@@ -7,7 +7,7 @@ use duramen_test::source;
 #[test]
 fn expr1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { 1 };
     "};
 
@@ -20,7 +20,7 @@ fn expr1() {
 #[test]
 fn expr2() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { "string" };
     "#};
 
@@ -33,7 +33,7 @@ fn expr2() {
 #[test]
 fn expr3() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { "string".foo == !7 };
     "#};
 
@@ -46,7 +46,7 @@ fn expr3() {
 #[test]
 fn expr4() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { 5 < 3 || -7 == 2 && 3 >= 6 };
     "};
 
@@ -59,7 +59,7 @@ fn expr4() {
 #[test]
 fn expr5() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if 7 then 6 > 5 else !5 || "thursday" };
     "#};
 
@@ -72,7 +72,7 @@ fn expr5() {
 #[test]
 fn expr6() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if 7 then 6 > 5 else !5 || "thursday" && ((8) >= "fish") };
     "#};
 
@@ -85,7 +85,7 @@ fn expr6() {
 #[test]
 fn expr_overflow_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { principal == -5555555555555555555555 };
     "};
 
@@ -98,7 +98,7 @@ fn expr_overflow_1() {
 #[test]
 fn expr_overflow_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { principal == 5555555555555555555555 };
     "};
 
@@ -111,7 +111,7 @@ fn expr_overflow_2() {
 #[test]
 fn variable1() {
     let source = source! {r"
-        permit(principal, action, var:h in 1);
+        permit (principal, action, var: h in 1);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -123,7 +123,7 @@ fn variable1() {
 #[test]
 fn variable2() {
     let source = source! {r"
-        permit(principal, action, more in 2);
+        permit (principal, action, more in 2);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -135,7 +135,7 @@ fn variable2() {
 #[test]
 fn variable3() {
     let source = source! {r"
-        permit(principal, action:a_name, resource);
+        permit (principal, action: a_name, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -147,7 +147,7 @@ fn variable3() {
 #[test]
 fn variable4() {
     let source = source! {r"
-        permit(principalorsomeotherident, action, resource);
+        permit (principalorsomeotherident, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -162,7 +162,7 @@ fn variable4() {
 #[test]
 fn variable6() {
     let source = source! {r"
-        permit(var : in 6, action, resource);
+        permit (var : in 6, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -174,7 +174,7 @@ fn variable6() {
 #[test]
 fn member1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             2._field // oh, look, comments!
         };
@@ -189,7 +189,7 @@ fn member1() {
 #[test]
 fn member2() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             "first".some_ident()
         };
@@ -204,9 +204,9 @@ fn member2() {
 #[test]
 fn member3() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-            [2,3,4].foo[2]
+            [2, 3, 4].foo[2]
         };
     "};
 
@@ -219,7 +219,7 @@ fn member3() {
 #[test]
 fn member4() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             {3<-4:"what?","ok then":-5>4}
         };
@@ -234,9 +234,9 @@ fn member4() {
 #[test]
 fn member5() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-            [3<4,"ok then",17,("none")]
+            [3 < 4, "ok then", 17, ("none")]
         };
     "#};
 
@@ -249,7 +249,7 @@ fn member5() {
 #[test]
 fn member6() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             one.two
         };
@@ -267,9 +267,9 @@ fn member6() {
 #[test]
 fn member7() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-            one{num:true,trivia:"first!"}
+            one{num: true, trivia: "first!"}
         };
     "#};
 
@@ -282,9 +282,9 @@ fn member7() {
 #[test]
 fn member8() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-            {2:true,4:me}.with["pizza"]
+            {2: true, 4: me}.with["pizza"]
         };
     "#};
 
@@ -297,9 +297,9 @@ fn member8() {
 #[test]
 fn member9() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-            AllRects({two:2,four:3+5/5})
+            AllRects({two: 2, four: 3 + 5 / 5})
         };
     "};
 
@@ -315,7 +315,7 @@ fn member9() {
 #[test]
 fn ident3_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if };
     "};
 
@@ -328,7 +328,7 @@ fn ident3_1() {
 #[test]
 fn ident3_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { foo };
     "};
 
@@ -348,7 +348,7 @@ fn ident3_2() {
 #[test]
 fn ident3_4() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if::then::else };
     "};
 
@@ -364,7 +364,7 @@ fn ident3_4() {
 #[test]
 fn ident3_5() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if::true::then::false::else::true };
     "};
 
@@ -377,7 +377,7 @@ fn ident3_5() {
 #[test]
 fn ident4_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { true(true) };
     "};
 
@@ -390,7 +390,7 @@ fn ident4_1() {
 #[test]
 fn ident4_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { if(true) };
     "};
 
@@ -403,7 +403,7 @@ fn ident4_2() {
 #[test]
 fn ident5_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { {true : false} };
     "};
 
@@ -416,7 +416,7 @@ fn ident5_1() {
 #[test]
 fn ident5_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { { if : true } };
     "};
 
@@ -429,7 +429,7 @@ fn ident5_2() {
 #[test]
 fn ident6_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { {true : false} has false };
     "};
 
@@ -442,7 +442,7 @@ fn ident6_1() {
 #[test]
 fn ident6_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { { if : true } has if };
     "};
 
@@ -455,7 +455,7 @@ fn ident6_2() {
 #[test]
 fn comments_has() {
     let source = source! {r"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when { principal //comment p
         has //comment has
         age //comment
@@ -471,7 +471,7 @@ fn comments_has() {
 #[test]
 fn comments_like() {
     let source = source! {r"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when { principal //comment p
         like //comment like
 
@@ -488,7 +488,7 @@ fn comments_like() {
 #[test]
 fn comments_and() {
     let source = source! {r#"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when { 1 //comment p
         &&  //comment &&
             //comment &&
@@ -505,7 +505,7 @@ fn comments_and() {
 #[test]
 fn comments_or() {
     let source = source! {r#"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when { 1 //comment 1
               //  comment 1
         ||  //comment ||
@@ -524,7 +524,7 @@ fn comments_or() {
 #[test]
 fn comments_add() {
     let source = source! {r"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when { 1 //comment 1
                 //comment 1_2
         + //comment +
@@ -543,7 +543,7 @@ fn comments_add() {
 #[test]
 fn comments_paren() {
     let source = source! {r"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when {
         ( //comment 1
             ( //comment 2
@@ -562,7 +562,7 @@ fn comments_paren() {
 #[test]
 fn comments_set() {
     let source = source! {r#"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when {
         [ // comment 1
         "hello" //comment 2
@@ -593,7 +593,7 @@ fn comments_set() {
 #[test]
 fn comments_if() {
     let source = source! {r#"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when {
         ( //comment open outer
         ( //comment open inner
@@ -619,7 +619,7 @@ fn comments_if() {
 #[test]
 fn comments_member_access() {
     let source = source! {r"
-        permit(principal, action,resource)
+        permit (principal, action,resource)
         when { principal. //comment .
         age // comment age
         };
@@ -634,7 +634,7 @@ fn comments_member_access() {
 #[test]
 fn comments_principal() {
     let source = source! {r#"
-        permit(principal //comment 1
+        permit (principal //comment 1
          ==
           User::"alice" //comment 3
           ,  //comment 4
@@ -654,7 +654,7 @@ fn comments_annotation() {
         // comment policy 2
         @anno("good annotation")  // comments after annotation
         // comments after annotation 2
-        permit(principal //comment 1
+        permit (principal //comment 1
          ==
           User::"alice" //comment 3
           ,  //comment 4
@@ -672,7 +672,7 @@ fn comments_policy_1() {
     let source = source! {r#"
         //comment policy 1
         //comment policy 2
-        permit( //comment 3
+        permit ( //comment 3
            // comment 4
         principal //comment principal
         == //comment == 1
@@ -701,7 +701,7 @@ fn comments_policy_2() {
     let source = source! {r"
         /* multi-line
         comment */
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             one.two
         };
@@ -719,7 +719,7 @@ fn comments_policy_2() {
 #[test]
 fn comments_policy_3() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { 1 /* multi-line
         comment */d };
     "};
@@ -733,7 +733,7 @@ fn comments_policy_3() {
 #[test]
 fn no_comments_policy() {
     let source = source! {r#"
-        permit(
+        permit (
         principal
         ==
         User::"alice"
@@ -774,9 +774,9 @@ fn no_comments_policy2() {
 #[test]
 fn no_comments_policy4() {
     let source = source! {r#"
-        permit(principal,action,resource,context)
+        permit (principal, action, resource, context)
         when {
-            context.contains(3,"four",five(6,7))
+            context.contains(3, "four", five(6, 7))
         };
     "#};
 
@@ -806,7 +806,7 @@ fn no_comments_policy5() {
 #[test]
 fn policies1() {
     let source = source! {r#"
-        permit(principal:p,action:a,resource:r)
+        permit (principal: p, action: a, resource: r)
         when { w }
         unless { u }
         advice { "doit" };
@@ -824,11 +824,11 @@ fn policies1() {
 #[test]
 fn policies2() {
     let source = source! {r#"
-        permit(
+        permit (
             principal in Group::"jane_friends",  // Policy c1
             action in [PhotoOp::"view", PhotoOp::"comment"],
             resource in Album::"jane_trips",
-            context:Group
+            context: Group
         );
     "#};
 
@@ -841,7 +841,7 @@ fn policies2() {
 #[test]
 fn policies3() {
     let source = source! {r#"
-        forbid(principal, action, resource)           // Policy c2
+        forbid (principal, action, resource)           // Policy c2
         when   { "private" in resource.tags }  // resource.tags is a set of strings
         unless { resource in user.account };
     "#};
@@ -855,7 +855,7 @@ fn policies3() {
 #[test]
 fn policies3p() {
     let source = source! {r#"
-        forbid(principality, action, resource)           // Policy c2
+        forbid (principality, action, resource)           // Policy c2
         when   { "private" in resource.tags }  // resource.tags is a set of strings
         unless { resource in user.account };
     "#};
@@ -869,16 +869,16 @@ fn policies3p() {
 #[test]
 fn policies4() {
     let source = source! {r#"
-        permit(principal:p,action:a,resource:r)
+        permit (principal: p, action: a, resource: r)
         when { w }
         unless { u }
         advice { "doit" };
 
-        permit(principal in Group::"jane_friends",  // Policy c1
+        permit (principal in Group::"jane_friends",  // Policy c1
         action in [PhotoOp::"view", PhotoOp::"comment"],
         resource in Album::"jane_trips");
 
-        forbid(principal, action, resource)           // Policy c2
+        forbid (principal, action, resource)           // Policy c2
         when   { "private" in resource.tags }  // resource.tags is a set of strings
         unless { resource in user.account };
     "#};
@@ -911,17 +911,17 @@ fn policies5() {
 #[test]
 fn policies6() {
     let source = source! {r#"
-        3(principal:p,action:a,resource:r)
+        3(principal: p, action: a, resource: r)
         when { w }
         unless { u }
         advice { "doit" };
 
-        permit(principal:p,action:a,resource:r)
+        permit (principal: p, action: a, resource: r)
         when { w }
         unless { u }
         advice { "doit" };
 
-        permit(principal:p,action:a,resource:r)
+        permit (principal: p, action: a, resource: r)
         when { w }
         unless { u }
         advice { "doit" };
@@ -986,7 +986,7 @@ fn policy_annotations_bad_id_1() {
 fn policy_annotations_bad_id_2() {
     let source = source! {r#"
         @hi mom("this should be invalid")
-        permit(principal, action, resource);
+        permit (principal, action, resource);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -999,7 +999,7 @@ fn policy_annotations_bad_id_2() {
 fn policy_annotations_bad_id_3() {
     let source = source! {r#"
         @hi+mom("this should be invalid")
-        permit(principal, action, resource);
+        permit (principal, action, resource);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -1014,7 +1014,7 @@ fn policy_annotations_bad_id_3() {
 #[test]
 fn policy_annotations_bad_val_1() {
     let source = source! {r#"
-        @bad_annotation("bad","annotation")
+        @bad_annotation("bad", "annotation")
         permit (principal, action, resource);
     "#};
 
@@ -1074,10 +1074,10 @@ fn policy_annotation_bad_position() {
 #[test]
 fn error_recovery_1() {
     let source = source! {r"
-        permit(principal, action, !)
+        permit (principal, action, !)
         when { principal.foo == resource.bar};
 
-        permit(principal, action, resource);
+        permit (principal, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -1092,10 +1092,10 @@ fn error_recovery_1() {
 #[test]
 fn error_recovery_2() {
     let source = source! {r"
-        permit(principal, action, !)
+        permit (principal, action, !)
         when { principal.foo == resource.bar};
 
-        permit(principal, action, +);
+        permit (principal, action, +);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -1110,7 +1110,7 @@ fn error_recovery_2() {
 #[test]
 fn error_recovery_3() {
     let source = source! {r"
-        permit(principal, action, !)
+        permit (principal, action, !)
         when { principal.foo == resource.bar}
     "};
 
@@ -1123,9 +1123,9 @@ fn error_recovery_3() {
 #[test]
 fn extended_has_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has a.b
+            principal has a.b
         };
     "};
 
@@ -1138,9 +1138,9 @@ fn extended_has_1() {
 #[test]
 fn extended_has_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has a.if
+            principal has a.if
         };
     "};
 
@@ -1153,9 +1153,9 @@ fn extended_has_2() {
 #[test]
 fn extended_has_3() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has if.a
+            principal has if.a
         };
     "};
 
@@ -1168,9 +1168,9 @@ fn extended_has_3() {
 #[test]
 fn extended_has_4() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has if.if
+            principal has if.if
         };
     "};
 
@@ -1183,9 +1183,9 @@ fn extended_has_4() {
 #[test]
 fn extended_has_5() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has true.if
+            principal has true.if
         };
     "};
 
@@ -1198,9 +1198,9 @@ fn extended_has_5() {
 #[test]
 fn extended_has_6() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has if.true
+            principal has if.true
         };
     "};
 
@@ -1213,9 +1213,9 @@ fn extended_has_6() {
 #[test]
 fn extended_has_7() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has if.then.else.in.like.has.is.__cedar
+            principal has if.then.else.in.like.has.is.__cedar
         };
     "};
 
@@ -1228,9 +1228,9 @@ fn extended_has_7() {
 #[test]
 fn extended_has_8() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has 1+1
+            principal has 1+1
         };
     "};
 
@@ -1243,7 +1243,7 @@ fn extended_has_8() {
 #[test]
 fn extended_has_9() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has a - 1
         };
@@ -1258,7 +1258,7 @@ fn extended_has_9() {
 #[test]
 fn extended_has_10() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has a*3 + 1
         };
@@ -1273,7 +1273,7 @@ fn extended_has_10() {
 #[test]
 fn extended_has_11() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has 3*a
         };
@@ -1288,7 +1288,7 @@ fn extended_has_11() {
 #[test]
 fn extended_has_12() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has -a.b
         };
@@ -1303,7 +1303,7 @@ fn extended_has_12() {
 #[test]
 fn extended_has_13() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has !a.b
         };
@@ -1318,7 +1318,7 @@ fn extended_has_13() {
 #[test]
 fn extended_has_14() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has a::b.c
         };
@@ -1333,7 +1333,7 @@ fn extended_has_14() {
 #[test]
 fn extended_has_15() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has A::""
         };
@@ -1348,7 +1348,7 @@ fn extended_has_15() {
 #[test]
 fn extended_has_16() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has A::"".a
         };
@@ -1363,7 +1363,7 @@ fn extended_has_16() {
 #[test]
 fn extended_has_17() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has ?principal
         };
@@ -1378,7 +1378,7 @@ fn extended_has_17() {
 #[test]
 fn extended_has_18() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has ?principal.a
         };
@@ -1393,7 +1393,7 @@ fn extended_has_18() {
 #[test]
 fn extended_has_19() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal has (b).a
         };
@@ -1408,9 +1408,9 @@ fn extended_has_19() {
 #[test]
 fn extended_has_20() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has a.(b)
+            principal has a.(b)
         };
     "};
 
@@ -1426,9 +1426,9 @@ fn extended_has_20() {
 #[test]
 fn extended_has_21() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
-          principal has a.1
+            principal has a.1
         };
     "};
 
@@ -1441,7 +1441,7 @@ fn extended_has_21() {
 #[test]
 fn trailing_comma_1() {
     let source = source! {r"
-        permit(principal, action, resource,);
+        permit (principal, action, resource,);
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -1453,7 +1453,7 @@ fn trailing_comma_1() {
 #[test]
 fn trailing_comma_2() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { foo(a, b, c,) };
     "};
 
@@ -1466,7 +1466,7 @@ fn trailing_comma_2() {
 #[test]
 fn trailing_comma_3() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { [A, B, C,] };
     "};
 
@@ -1479,7 +1479,7 @@ fn trailing_comma_3() {
 #[test]
 fn trailing_comma_4() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { { A: B, C: D, } };
     "};
 
@@ -1492,7 +1492,7 @@ fn trailing_comma_4() {
 #[test]
 fn trailing_comma_5() {
     let source = source! {r#"
-        permit(principal == Principal::{uid: "123", role: "admin",}, action, resource);
+        permit (principal == Principal::{uid: "123", role: "admin",}, action, resource);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -1507,7 +1507,7 @@ fn trailing_comma_5() {
 #[test]
 fn invalid_token_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { ~ };
     "};
 
@@ -1523,7 +1523,7 @@ fn invalid_token_1() {
 #[test]
 fn invalid_token_2() {
     let source = source! {"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when { \u{1F680} };
     "};
 
@@ -1539,7 +1539,7 @@ fn invalid_token_2() {
 #[test]
 fn unclosed_strings_1() {
     let source = source! {r#"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal.foo = "bar
         };
@@ -1557,7 +1557,7 @@ fn unclosed_strings_1() {
 #[test]
 fn unclosed_strings_2() {
     let source = source! {r#"
-        permit(principal, action, resource == Photo::"mine.jpg);
+        permit (principal, action, resource == Photo::"mine.jpg);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -1572,7 +1572,7 @@ fn unclosed_strings_2() {
 #[test]
 fn unclosed_strings_3() {
     let source = source! {r#"
-        @id("0)permit(principal, action, resource);
+        @id("0)permit (principal, action, resource);
     "#};
 
     let mut diagnostics = Diagnostics::new();
@@ -1588,7 +1588,7 @@ fn unclosed_strings_3() {
 fn unclosed_strings_4() {
     let source = source! {r#"
         @id("0)
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal.foo = "bar"
         };
@@ -1606,7 +1606,7 @@ fn unclosed_strings_4() {
 #[test]
 fn single_quote_string_1() {
     let source = source! {r"
-        permit(principal, action, resource)
+        permit (principal, action, resource)
         when {
             principal.foo = 'bar'
         };
@@ -1624,7 +1624,7 @@ fn single_quote_string_1() {
 #[test]
 fn single_quote_string_2() {
     let source = source! {r"
-        permit(principal, action, resource == Photo::'mine.jpg');
+        permit (principal, action, resource == Photo::'mine.jpg');
     "};
 
     let mut diagnostics = Diagnostics::new();
@@ -1639,7 +1639,7 @@ fn single_quote_string_2() {
 #[test]
 fn single_quote_string_3() {
     let source = source! {r"
-        @id('0')permit(principal, action, resource);
+        @id('0')permit (principal, action, resource);
     "};
 
     let mut diagnostics = Diagnostics::new();
