@@ -43,6 +43,19 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     /// Lowers a single policy.
     fn lower_policy(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
         let node = policy.syntax();
+
+        if let Some(effect_token) = policy.effect_token() {
+            let effect_start = effect_token.range().start;
+
+            for child in node.children() {
+                if child.kind() == Syntax::Error && child.range().start < effect_start {
+                    self.ctx.diagnostic(LowerError::InvalidToken {
+                        span: child.range(),
+                    });
+                }
+            }
+        }
+
         if node.child(Syntax::OpenParenthesis).is_some()
             && node.child(Syntax::CloseParenthesis).is_none()
         {
@@ -371,8 +384,17 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             cst::ConditionKind::Unless => ast::ConditionKind::Unless,
         })?;
 
-        let body = condition.body()?;
-        let body = self.lower_expression(&body)?;
+        let body = condition.body();
+
+        if body.is_none()
+            && let Some(error_node) = node.children().find(|child| child.kind() == Syntax::Error)
+        {
+            self.ctx.diagnostic(LowerError::InvalidToken {
+                span: error_node.range(),
+            });
+        }
+
+        let body = self.lower_expression(&body?)?;
 
         Some(ast::Condition::new(kind, body))
     }
@@ -413,7 +435,29 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     /// Lowers an if expression.
     fn lower_if(&mut self, expression: &cst::IfExpression<'src>) -> Option<ast::Expression<'src>> {
         let test = expression.test()?;
+
+        if expression.then_token().is_none() {
+            let end = expression.range().end;
+            self.ctx.diagnostic(LowerError::ExpectedToken {
+                span: end..end,
+                expected: "`then`",
+            });
+
+            return None;
+        }
+
         let consequent = expression.consequent()?;
+
+        if expression.else_token().is_none() {
+            let end = expression.range().end;
+            self.ctx.diagnostic(LowerError::ExpectedToken {
+                span: end..end,
+                expected: "`else`",
+            });
+
+            return None;
+        }
+
         let alternate = expression.alternate()?;
 
         let test = self.lower_expression(&test)?;
