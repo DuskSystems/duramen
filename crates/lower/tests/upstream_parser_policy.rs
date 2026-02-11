@@ -788,3 +788,283 @@ fn single_quote_string_3() {
       ╰╴━━━━ expected `permit` or `forbid`
     ");
 }
+
+#[test]
+fn expr_overflow_1() {
+    let source = source! {r"
+        permit (principal, action, resource)
+        when { principal == -5555555555555555555555 };
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: integer literal `-5555555555555555555555` is out of range
+      ╭▸ test
+      │
+    ");
+}
+
+#[test]
+fn expr_overflow_2() {
+    let source = source! {r"
+        permit (principal, action, resource)
+        when { principal == 5555555555555555555555 };
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: integer literal `5555555555555555555555` is out of range
+      ╭▸ test
+      │
+    ");
+}
+
+#[test]
+fn ident4_2() {
+    let source = source! {r"
+        permit (principal, action, resource)
+        when { if(true) };
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 0);
+}
+
+#[test]
+fn comments_policy_2() {
+    let source = source! {r"
+        /* multi-line
+        comment */
+        permit (principal, action, resource)
+        when {
+            one.two
+        };
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: unknown variable `one`
+      ╭▸ test:5:5
+      │
+    5 │     one.two
+      │     ━━━ not a valid variable
+      ╰╴
+    note: `principal`, `action`, `resource`, and `context` are the only variables
+    ");
+}
+
+#[test]
+fn policy_annotations_bad_id_1() {
+    let source = source! {r#"
+        @bad-annotation("bad")
+        permit (principal, action, resource);
+    "#};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ @bad-annotation("bad")
+      ╰╴━━━━ expected `permit` or `forbid`
+    "#);
+}
+
+#[test]
+fn policy_annotations_bad_id_2() {
+    let source = source! {r#"
+        @hi mom("this should be invalid")
+        permit (principal, action, resource);
+    "#};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ @hi mom("this should be invalid")
+      ╰╴━━━━ expected `permit` or `forbid`
+    "#);
+}
+
+#[test]
+fn policy_annotations_bad_id_3() {
+    let source = source! {r#"
+        @hi+mom("this should be invalid")
+        permit (principal, action, resource);
+    "#};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
+    error: missing policy effect
+      ╭▸ test:1:1
+      │
+    1 │ @hi+mom("this should be invalid")
+      ╰╴━━━ expected `permit` or `forbid`
+    "#);
+}
+
+#[test]
+fn policy_annotations_bad_val_2() {
+    let source = source! {r"
+        @bad_annotation()
+        permit (principal, action, resource);
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 0);
+}
+
+#[test]
+fn extended_has_20() {
+    let source = source! {r"
+        permit (principal, action, resource)
+        when {
+            principal has a.(b)
+        };
+    "};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 1);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @"
+    error: missing expression
+      ╭▸ test:3:19
+      │
+    3 │       principal has a.(b)
+      │ ┏━━━━━━━━━━━━━━━━━━━┛
+    4 │ ┃ };
+      ╰╴┗━┛ expected an attribute name
+    ");
+}
+
+#[test]
+fn policies6() {
+    let source = source! {r#"
+        3(principal: p, action: a, resource: r)
+        when { w }
+        unless { u }
+        advice { "doit" };
+
+        permit (principal: p, action: a, resource: r)
+        when { w }
+        unless { u }
+        advice { "doit" };
+
+        permit (principal: p, action: a, resource: r)
+        when { w }
+        unless { u }
+        advice { "doit" };
+    "#};
+
+    let mut diagnostics = Diagnostics::new();
+
+    let tree = PolicyParser::new(source, &mut diagnostics).parse();
+    let root = tree.root().unwrap();
+
+    let cst = Policies::cast(root).unwrap();
+    let _ast = PolicyLowerer::new(source, &mut diagnostics).lower(cst);
+    assert_eq!(diagnostics.len(), 5);
+
+    assert_diagnostics_snapshot!(source, &diagnostics, @r#"
+    error: unknown variable `w `
+      ╭▸ test:7:8
+      │
+    7 │ when { w }
+      │        ━━ not a valid variable
+      ╰╴
+    note: `principal`, `action`, `resource`, and `context` are the only variables
+    error: unknown variable `u `
+      ╭▸ test:8:10
+      │
+    8 │ unless { u }
+      │          ━━ not a valid variable
+      ╰╴
+    note: `principal`, `action`, `resource`, and `context` are the only variables
+    error: unknown variable `w `
+       ╭▸ test:12:8
+       │
+    12 │ when { w }
+       │        ━━ not a valid variable
+       ╰╴
+    note: `principal`, `action`, `resource`, and `context` are the only variables
+    error: unknown variable `u `
+       ╭▸ test:13:10
+       │
+    13 │ unless { u }
+       │          ━━ not a valid variable
+       ╰╴
+    note: `principal`, `action`, `resource`, and `context` are the only variables
+    error: missing policy effect
+       ╭▸ test:14:1
+       │
+    14 │ advice { "doit" };
+       ╰╴━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
+    "#);
+}
