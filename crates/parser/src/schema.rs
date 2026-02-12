@@ -5,14 +5,14 @@ use duramen_syntax::{Syntax, Tree};
 use crate::common::Parser;
 
 /// Parses Cedar schema source text into a concrete syntax tree.
-pub struct SchemaParser<'a> {
-    parser: Parser<'a>,
+pub struct SchemaParser<'src, 'diag> {
+    parser: Parser<'src, 'diag>,
 }
 
-impl<'a> SchemaParser<'a> {
+impl<'src, 'diag> SchemaParser<'src, 'diag> {
     /// Creates a new schema parser.
     #[must_use]
-    pub const fn new(source: &'a str, diagnostics: &'a mut Diagnostics) -> Self {
+    pub const fn new(source: &'src str, diagnostics: &'diag mut Diagnostics) -> Self {
         Self {
             parser: Parser::new(source, diagnostics),
         }
@@ -20,9 +20,9 @@ impl<'a> SchemaParser<'a> {
 
     /// Parses the source text and returns the concrete syntax tree.
     #[must_use]
-    pub fn parse(mut self) -> Tree {
+    pub fn parse(mut self) -> Tree<'src> {
         self.schema();
-        self.parser.builder.build()
+        self.parser.builder.build(self.parser.source)
     }
 
     /// Parses a schema file.

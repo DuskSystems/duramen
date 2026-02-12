@@ -33,11 +33,11 @@ fn lower_policy(bencher: Bencher<'_, '_>) {
         .collect();
 
     bencher.counter(ItemsCount::new(sources.len())).bench(|| {
-        for (source, tree) in sources.iter().zip(&trees) {
+        for tree in &trees {
             let mut diagnostics = Diagnostics::new();
             let root = tree.root().unwrap();
             let cst = Policies::cast(root).unwrap();
-            black_box(PolicyLowerer::new(source, &mut diagnostics).lower(cst));
+            black_box(PolicyLowerer::new(&mut diagnostics).lower(cst));
         }
     });
 }
@@ -58,11 +58,11 @@ fn lower_schema(bencher: Bencher<'_, '_>) {
         .collect();
 
     bencher.counter(ItemsCount::new(sources.len())).bench(|| {
-        for (source, tree) in sources.iter().zip(&trees) {
+        for tree in &trees {
             let mut diagnostics = Diagnostics::new();
             let root = tree.root().unwrap();
             let cst = Schema::cast(root).unwrap();
-            black_box(SchemaLowerer::new(source, &mut diagnostics).lower(cst));
+            black_box(SchemaLowerer::new(&mut diagnostics).lower(cst));
         }
     });
 }

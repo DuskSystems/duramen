@@ -12,22 +12,22 @@ use crate::LowerContext;
 use crate::error::LowerError;
 
 /// Schema lowerer for CST-to-AST transformation.
-pub struct SchemaLowerer<'a, 'src> {
-    ctx: LowerContext<'a, 'src>,
+pub struct SchemaLowerer<'a> {
+    ctx: LowerContext<'a>,
 }
 
-impl<'a, 'src> SchemaLowerer<'a, 'src> {
+impl<'a> SchemaLowerer<'a> {
     /// Creates a new schema lowerer.
     #[must_use]
-    pub const fn new(source: &'src str, diagnostics: &'a mut Diagnostics) -> Self {
+    pub const fn new(diagnostics: &'a mut Diagnostics) -> Self {
         Self {
-            ctx: LowerContext::new(source, diagnostics),
+            ctx: LowerContext::new(diagnostics),
         }
     }
 
     /// Lowers a CST schema node to an AST.
     #[must_use]
-    pub fn lower(mut self, schema: cst::Schema<'src>) -> ast::Schema<'src> {
+    pub fn lower(mut self, schema: cst::Schema<'_>) -> ast::Schema<'_> {
         let mut namespaces = Vec::new();
         let mut top_declarations = Vec::new();
 
@@ -77,7 +77,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers a namespace declaration.
-    fn lower_namespace(
+    fn lower_namespace<'src>(
         &mut self,
         namespace: &cst::Namespace<'src>,
     ) -> Option<ast::Namespace<'src>> {
@@ -130,7 +130,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers an entity declaration.
-    fn lower_entity_declaration(
+    fn lower_entity_declaration<'src>(
         &mut self,
         entity: &cst::EntityDeclaration<'src>,
     ) -> Option<ast::EntityDeclaration<'src>> {
@@ -200,7 +200,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers an action declaration.
-    fn lower_action_declaration(
+    fn lower_action_declaration<'src>(
         &mut self,
         action: &cst::ActionDeclaration<'src>,
     ) -> Option<ast::ActionDeclaration<'src>> {
@@ -208,7 +208,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
 
         let mut names: Vec<Cow<'src, str>> = Vec::new();
         for name in action.names() {
-            let text = name.basename(self.ctx.source)?;
+            let text = name.basename()?;
             names.push(Cow::Borrowed(text));
         }
 
@@ -238,7 +238,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers action parents.
-    fn lower_action_parents(
+    fn lower_action_parents<'src>(
         &mut self,
         parents: &cst::ActionParents<'src>,
     ) -> Vec<ast::ActionReference<'src>> {
@@ -257,7 +257,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
 
         // Action parents can also appear as bare names without entity reference syntax
         for name in parents.names() {
-            let Some(text) = name.basename(self.ctx.source) else {
+            let Some(text) = name.basename() else {
                 continue;
             };
 
@@ -269,9 +269,9 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers an applies-to clause.
-    fn lower_applies_to(
+    fn lower_applies_to<'src>(
         &mut self,
-        applies_to: &cst::AppliesTo<'_>,
+        applies_to: &cst::AppliesTo<'src>,
     ) -> Option<ast::AppliesTo<'src>> {
         let principals = applies_to.principals().map_or_else(Vec::new, |principals| {
             self.lower_name_list(principals.types(), principals.name())
@@ -295,9 +295,9 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers a context type.
-    fn lower_context_type(
+    fn lower_context_type<'src>(
         &mut self,
-        context: &cst::ContextType<'_>,
+        context: &cst::ContextType<'src>,
     ) -> Option<ast::ContextType<'src>> {
         let definition = context.definition()?;
 
@@ -323,7 +323,7 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers a type declaration.
-    fn lower_type_declaration(
+    fn lower_type_declaration<'src>(
         &mut self,
         type_declaration: &cst::TypeDeclaration<'src>,
     ) -> Option<ast::TypeDeclaration<'src>> {
@@ -352,9 +352,9 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers a type expression.
-    fn lower_type_expression(
+    fn lower_type_expression<'src>(
         &mut self,
-        type_expr: &cst::TypeExpression<'_>,
+        type_expr: &cst::TypeExpression<'src>,
     ) -> Option<ast::TypeExpression<'src>> {
         match type_expr {
             cst::TypeExpression::Set(set_type) => {
@@ -385,7 +385,10 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers a record type from attribute declarations.
-    fn lower_record_type(&mut self, record: &cst::RecordType<'_>) -> Option<ast::RecordType<'src>> {
+    fn lower_record_type<'src>(
+        &mut self,
+        record: &cst::RecordType<'src>,
+    ) -> Option<ast::RecordType<'src>> {
         let attributes = self.lower_schema_attributes(record.attributes());
 
         match ast::RecordType::new(attributes) {
@@ -398,10 +401,10 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Collects names from a type list or single name.
-    fn lower_name_list(
+    fn lower_name_list<'src>(
         &mut self,
-        types: Option<cst::Types<'_>>,
-        single: Option<cst::Name<'_>>,
+        types: Option<cst::Types<'src>>,
+        single: Option<cst::Name<'src>>,
     ) -> Vec<ast::Name<'src>> {
         let mut result = Vec::new();
 
@@ -421,11 +424,14 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers an enum type.
-    fn lower_enum_type(&mut self, enum_type: &cst::EnumType<'_>) -> Option<ast::EnumType<'src>> {
+    fn lower_enum_type<'src>(
+        &mut self,
+        enum_type: &cst::EnumType<'src>,
+    ) -> Option<ast::EnumType<'src>> {
         let mut variants = Vec::new();
 
         for variant_node in enum_type.variants() {
-            let raw = self.ctx.text(variant_node);
+            let raw = variant_node.text();
             let offset = variant_node.range().start;
 
             match Escaper::new(raw).unescape_str() {
@@ -448,9 +454,9 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
     }
 
     /// Lowers schema attribute declarations.
-    fn lower_schema_attributes<'cst>(
+    fn lower_schema_attributes<'src>(
         &mut self,
-        attributes: impl Iterator<Item = cst::AttributeDeclaration<'cst>>,
+        attributes: impl Iterator<Item = cst::AttributeDeclaration<'src>>,
     ) -> Vec<(Cow<'src, str>, ast::AttributeDeclaration<'src>)> {
         let mut result = Vec::new();
 
@@ -459,15 +465,13 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
                 continue;
             };
 
-            let name_text = self.ctx.text(name_node);
-
             let key = if name_node.kind() == Syntax::String {
                 match self.ctx.lower_string(name_node) {
                     Some(unescaped) => unescaped,
                     None => continue,
                 }
             } else {
-                Cow::Borrowed(name_text)
+                Cow::Borrowed(name_node.text())
             };
 
             let Some(annotations) = self.ctx.lower_annotations(attribute.annotations()) else {

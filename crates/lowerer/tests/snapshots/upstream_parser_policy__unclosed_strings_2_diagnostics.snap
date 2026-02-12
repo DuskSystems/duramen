@@ -1,0 +1,19 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `)`
+  ╭▸ unclosed_strings_2:1:9
+  │
+1 │ permit (principal, action, resource == Photo::"mine.jpg);
+  ╰╴        ━━━━━━━━━ expected `)`
+error: missing expression
+  ╭▸ unclosed_strings_2:1:40
+  │
+1 │ permit (principal, action, resource == Photo::"mine.jpg);
+  ╰╴                                       ━━━━━━━ expected an entity reference or slot
+error: missing policy effect
+  ╭▸ unclosed_strings_2:1:47
+  │
+1 │ permit (principal, action, resource == Photo::"mine.jpg);
+  ╰╴                                              ━━━━━━━━━━━ expected `permit` or `forbid`

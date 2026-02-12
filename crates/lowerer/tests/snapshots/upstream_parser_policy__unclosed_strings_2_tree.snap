@@ -1,0 +1,28 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+Policies [0, 58)
+├─Policy [0, 46)
+│ ├─PermitKeyword "permit" [0, 6)
+│ ├─Whitespace " " [6, 7)
+│ ├─OpenParenthesis "(" [7, 8)
+│ ├─VariableDefinition [8, 17)
+│ │ └─PrincipalKeyword "principal" [8, 17)
+│ ├─Comma "," [17, 18)
+│ ├─Whitespace " " [18, 19)
+│ ├─VariableDefinition [19, 25)
+│ │ └─ActionKeyword "action" [19, 25)
+│ ├─Comma "," [25, 26)
+│ ├─Whitespace " " [26, 27)
+│ └─VariableDefinition [27, 46)
+│   ├─ResourceKeyword "resource" [27, 35)
+│   ├─Whitespace " " [35, 36)
+│   ├─Equal "==" [36, 38)
+│   ├─Whitespace " " [38, 39)
+│   └─Name [39, 46)
+│     ├─Identifier "Photo" [39, 44)
+│     └─PathSeparator "::" [44, 46)
+└─Policy [46, 58)
+  └─Error [46, 58)
+    └─Error "\"mine.jpg);\n" [46, 58)

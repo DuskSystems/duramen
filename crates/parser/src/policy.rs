@@ -12,14 +12,14 @@ struct InfixOperator {
 }
 
 /// Parses Cedar policy source text into a concrete syntax tree.
-pub struct PolicyParser<'a> {
-    parser: Parser<'a>,
+pub struct PolicyParser<'src, 'diag> {
+    parser: Parser<'src, 'diag>,
 }
 
-impl<'a> PolicyParser<'a> {
+impl<'src, 'diag> PolicyParser<'src, 'diag> {
     /// Creates a new policy parser.
     #[must_use]
-    pub const fn new(source: &'a str, diagnostics: &'a mut Diagnostics) -> Self {
+    pub const fn new(source: &'src str, diagnostics: &'diag mut Diagnostics) -> Self {
         Self {
             parser: Parser::new(source, diagnostics),
         }
@@ -27,9 +27,9 @@ impl<'a> PolicyParser<'a> {
 
     /// Parses the source text and returns the concrete syntax tree.
     #[must_use]
-    pub fn parse(mut self) -> Tree {
+    pub fn parse(mut self) -> Tree<'src> {
         self.policies();
-        self.parser.builder.build()
+        self.parser.builder.build(self.parser.source)
     }
 
     /// Parses a sequence of policies.
