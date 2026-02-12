@@ -112,18 +112,28 @@ macro_rules! fixtures {
     };
 }
 
+/// Asserts a snapshot with a name derived from the fixture.
+#[macro_export]
+macro_rules! assert_fixture_snapshot {
+    ($name:literal, $fixture:expr, $value:expr) => {{
+        let name = ::std::format!("{}_{}", $fixture.name, $name);
+        let value = ::std::string::ToString::to_string(&$value);
+        $crate::insta::assert_snapshot!(name, value)
+    }};
+}
+
 /// Asserts a diagnostics snapshot.
 #[macro_export]
 macro_rules! assert_diagnostics_snapshot {
-    ($name:expr, $source:expr, $diagnostics:expr) => {{
+    ($name:literal, $fixture:expr, $diagnostics:expr) => {{
         let rendered = $diagnostics
             .iter()
-            .map(|diagnostic| diagnostic.render("test", $source))
+            .map(|diagnostic| diagnostic.render($fixture.name, $fixture.source))
             .collect::<Vec<_>>()
             .join("\n");
 
         let value = $crate::anstream::adapter::strip_str(&rendered).to_string();
-        $crate::insta::assert_snapshot!($name.to_string(), value)
+        $crate::assert_fixture_snapshot!($name, $fixture, value)
     }};
 }
 

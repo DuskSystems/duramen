@@ -1,0 +1,21 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `)`
+  ╭▸ policy_annotations_bad_val_1:1:17
+  │
+1 │ @bad_annotation("bad", "annotation")
+  ╰╴                ━━━━━ expected `)`
+error: missing policy effect
+  ╭▸ policy_annotations_bad_val_1:1:1
+  │
+1 │ @bad_annotation("bad", "annotation")
+  ╰╴━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
+error: unexpected token
+  ╭▸ policy_annotations_bad_val_1:1:22
+  │
+1 │   @bad_annotation("bad", "annotation")
+  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+2 │ ┃ permit (principal, action, resource);
+  ╰╴┗━┛ unexpected token

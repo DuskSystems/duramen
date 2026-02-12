@@ -1,0 +1,28 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `)`
+  ╭▸ unclosed_strings_4:1:5
+  │
+1 │   @id("0)
+  │ ┏━━━━━┛
+2 │ ┃ permit (principal, action, resource)
+3 │ ┃ when {
+4 │ ┃     principal.foo = "bar"
+  ╰╴┗━━━━━━━━━━━━━━━━━━━━━┛ expected `)`
+error: missing policy effect
+  ╭▸ unclosed_strings_4:1:1
+  │
+1 │ ┏ @id("0)
+2 │ ┃ permit (principal, action, resource)
+3 │ ┃ when {
+4 │ ┃     principal.foo = "bar"
+  ╰╴┗━━━━━━━━━━━━━━━━━━━━━┛ expected `permit` or `forbid`
+error: missing policy effect
+  ╭▸ unclosed_strings_4:4:22
+  │
+4 │       principal.foo = "bar"
+  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+5 │ ┃ };
+  ╰╴┗━━━┛ expected `permit` or `forbid`

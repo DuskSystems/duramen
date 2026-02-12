@@ -1,9 +1,0 @@
----
-source: crates/lowerer/tests/upstream_parser_policy.rs
-expression: value
----
-error: expected `}`
-  ╭▸ test:2:8
-  │
-2 │ when { if::then::else };
-  ╰╴       ━━ expected `}`

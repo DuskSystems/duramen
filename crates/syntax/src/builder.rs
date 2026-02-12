@@ -179,10 +179,11 @@ impl Builder {
 
     /// Constructs the tree.
     #[must_use]
-    pub fn build(self) -> Tree {
+    pub fn build(self, source: &str) -> Tree<'_> {
         Tree {
             nodes: self.nodes,
             root: self.root,
+            source,
         }
     }
 }

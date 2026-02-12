@@ -1,0 +1,15 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `)`
+  ╭▸ policies2:2:5
+  │
+2 │     principal in Group::"jane_friends",  // Policy c1
+  ╰╴    ━━━━━━━━━ expected `)`
+error: missing policy effect
+  ╭▸ policies2:5:5
+  │
+5 │ ┏     context:Group
+6 │ ┃ );
+  ╰╴┗━━━┛ expected `permit` or `forbid`

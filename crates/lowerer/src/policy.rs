@@ -13,22 +13,22 @@ use crate::error::LowerError;
 use crate::{EXTENSION_FUNCTIONS, LowerContext};
 
 /// Policy lowerer for CST-to-AST transformation.
-pub struct PolicyLowerer<'a, 'src> {
-    ctx: LowerContext<'a, 'src>,
+pub struct PolicyLowerer<'a> {
+    ctx: LowerContext<'a>,
 }
 
-impl<'a, 'src> PolicyLowerer<'a, 'src> {
+impl<'a> PolicyLowerer<'a> {
     /// Creates a new policy lowerer.
     #[must_use]
-    pub const fn new(source: &'src str, diagnostics: &'a mut Diagnostics) -> Self {
+    pub const fn new(diagnostics: &'a mut Diagnostics) -> Self {
         Self {
-            ctx: LowerContext::new(source, diagnostics),
+            ctx: LowerContext::new(diagnostics),
         }
     }
 
     /// Lowers a CST policies node to an AST.
     #[must_use]
-    pub fn lower(mut self, policies: cst::Policies<'src>) -> ast::Policies<'src> {
+    pub fn lower(mut self, policies: cst::Policies<'_>) -> ast::Policies<'_> {
         let mut result = Vec::new();
 
         for policy in policies.policies() {
@@ -41,7 +41,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a single policy.
-    fn lower_policy(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
+    fn lower_policy<'src>(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
         let node = policy.syntax();
 
         if let Some(effect_token) = policy.effect_token() {
@@ -160,9 +160,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a principal or resource scope constraint.
-    fn lower_scope_constraint(
+    fn lower_scope_constraint<'src>(
         &mut self,
-        variable_definition: &cst::VariableDefinition<'_>,
+        variable_definition: &cst::VariableDefinition<'src>,
         variable_name: &str,
     ) -> Option<ast::ScopeConstraint<'src>> {
         let has_type_test = variable_definition.is_token().is_some();
@@ -209,9 +209,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Extracts an entity reference or slot from a variable definition's expression.
-    fn lower_entity_or_slot_expression(
+    fn lower_entity_or_slot_expression<'src>(
         &mut self,
-        variable_definition: &cst::VariableDefinition<'_>,
+        variable_definition: &cst::VariableDefinition<'src>,
     ) -> Option<ast::EntityOrSlot<'src>> {
         if let Some(slot) = variable_definition.slot() {
             return self.lower_slot_to_entity_or_slot(&slot);
@@ -222,12 +222,12 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a slot to `EntityOrSlot`.
-    fn lower_slot_to_entity_or_slot(
+    fn lower_slot_to_entity_or_slot<'src>(
         &mut self,
-        slot: &cst::Slot<'_>,
+        slot: &cst::Slot<'src>,
     ) -> Option<ast::EntityOrSlot<'src>> {
         let node = slot.name()?;
-        let text = self.ctx.text(node);
+        let text = node.text();
 
         match ast::SlotKind::new(text) {
             Ok(_) => Some(ast::EntityOrSlot::Slot),
@@ -239,9 +239,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an expression to `EntityOrSlot`.
-    fn lower_entity_or_slot(
+    fn lower_entity_or_slot<'src>(
         &mut self,
-        expression: &cst::Expression<'_>,
+        expression: &cst::Expression<'src>,
     ) -> Option<ast::EntityOrSlot<'src>> {
         match expression {
             cst::Expression::Slot(slot) => self.lower_slot_to_entity_or_slot(slot),
@@ -261,9 +261,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an action scope constraint.
-    fn lower_action_constraint(
+    fn lower_action_constraint<'src>(
         &mut self,
-        variable_definition: &cst::VariableDefinition<'_>,
+        variable_definition: &cst::VariableDefinition<'src>,
     ) -> Option<ast::ActionConstraint<'src>> {
         let Some(operator_token) = variable_definition.operator_token() else {
             return Some(ast::ActionConstraint::Any);
@@ -288,9 +288,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers `action in ...` constraint.
-    fn lower_action_in_constraint(
+    fn lower_action_in_constraint<'src>(
         &mut self,
-        variable_definition: &cst::VariableDefinition<'_>,
+        variable_definition: &cst::VariableDefinition<'src>,
     ) -> Option<ast::ActionConstraint<'src>> {
         let expression = variable_definition.expression()?;
 
@@ -325,9 +325,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an expression to an action entity reference.
-    fn lower_action_entity_reference(
+    fn lower_action_entity_reference<'src>(
         &mut self,
-        expression: &cst::Expression<'_>,
+        expression: &cst::Expression<'src>,
     ) -> Option<ast::EntityReference<'src>> {
         if let cst::Expression::EntityReference(entity_reference) = expression {
             self.lower_entity_reference(entity_reference)
@@ -342,9 +342,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an entity reference.
-    fn lower_entity_reference(
+    fn lower_entity_reference<'src>(
         &mut self,
-        entity_reference: &cst::EntityReference<'_>,
+        entity_reference: &cst::EntityReference<'src>,
     ) -> Option<ast::EntityReference<'src>> {
         let kind_name = entity_reference.kind()?;
         let kind = self.ctx.lower_name(&kind_name)?;
@@ -356,7 +356,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a condition.
-    fn lower_condition(
+    fn lower_condition<'src>(
         &mut self,
         condition: &cst::Condition<'src>,
     ) -> Option<ast::Condition<'src>> {
@@ -400,7 +400,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an expression.
-    fn lower_expression(
+    fn lower_expression<'src>(
         &mut self,
         expression: &cst::Expression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -433,7 +433,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an if expression.
-    fn lower_if(&mut self, expression: &cst::IfExpression<'src>) -> Option<ast::Expression<'src>> {
+    fn lower_if<'src>(
+        &mut self,
+        expression: &cst::IfExpression<'src>,
+    ) -> Option<ast::Expression<'src>> {
         let test = expression.test()?;
 
         if expression.then_token().is_none() {
@@ -468,7 +471,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an or expression.
-    fn lower_or(&mut self, expression: &cst::OrExpression<'src>) -> Option<ast::Expression<'src>> {
+    fn lower_or<'src>(
+        &mut self,
+        expression: &cst::OrExpression<'src>,
+    ) -> Option<ast::Expression<'src>> {
         let left = expression.left()?;
         let left = self.lower_expression(&left)?;
 
@@ -479,7 +485,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an and expression.
-    fn lower_and(
+    fn lower_and<'src>(
         &mut self,
         expression: &cst::AndExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -493,7 +499,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a relation expression.
-    fn lower_relation(
+    fn lower_relation<'src>(
         &mut self,
         expression: &cst::RelationExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -529,7 +535,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a sum expression.
-    fn lower_sum(
+    fn lower_sum<'src>(
         &mut self,
         expression: &cst::SumExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -549,7 +555,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a product expression.
-    fn lower_product(
+    fn lower_product<'src>(
         &mut self,
         expression: &cst::ProductExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -579,7 +585,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a has expression.
-    fn lower_has(
+    fn lower_has<'src>(
         &mut self,
         expression: &cst::HasExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -593,7 +599,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Extracts an attribute name from either an identifier or a string literal.
-    fn extract_attribute_name(
+    fn extract_attribute_name<'src>(
         &mut self,
         expression: &cst::Expression<'src>,
     ) -> Option<Cow<'src, str>> {
@@ -603,11 +609,11 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                 if token.kind() == Syntax::String {
                     self.ctx.lower_string(token)
                 } else {
-                    Some(Cow::Borrowed(self.ctx.text(token)))
+                    Some(Cow::Borrowed(token.text()))
                 }
             }
             cst::Expression::Name(name) => {
-                let text = name.basename(self.ctx.source)?;
+                let text = name.basename()?;
                 Some(Cow::Borrowed(text))
             }
             _ => {
@@ -622,7 +628,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a like expression.
-    fn lower_like(
+    fn lower_like<'src>(
         &mut self,
         expression: &cst::LikeExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -632,7 +638,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         let pattern = expression.pattern()?;
         let pattern = pattern.syntax();
 
-        let raw = self.ctx.text(pattern);
+        let raw = pattern.text();
         let offset = pattern.range().start;
 
         match Escaper::new(raw).unescape_pattern() {
@@ -651,7 +657,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers an is expression.
-    fn lower_is(&mut self, expression: &cst::IsExpression<'src>) -> Option<ast::Expression<'src>> {
+    fn lower_is<'src>(
+        &mut self,
+        expression: &cst::IsExpression<'src>,
+    ) -> Option<ast::Expression<'src>> {
         let left = expression.expression()?;
         let left = self.lower_expression(&left)?;
 
@@ -667,7 +676,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a unary expression.
-    fn lower_unary(
+    fn lower_unary<'src>(
         &mut self,
         expression: &cst::UnaryExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -690,7 +699,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             && literal.kind() == Some(cst::LiteralKind::Integer)
             && let Some(token) = literal.token()
         {
-            let text = self.ctx.text(token);
+            let text = token.text();
 
             let mut negated = String::from("-");
             negated.push_str(text);
@@ -720,7 +729,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a member expression (base + chain of accesses).
-    fn lower_member(
+    fn lower_member<'src>(
         &mut self,
         expression: &cst::MemberExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
@@ -750,7 +759,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a single member access.
-    fn lower_member_access(
+    fn lower_member_access<'src>(
         &mut self,
         base: ast::Expression<'src>,
         access: &cst::MemberAccess<'src>,
@@ -758,7 +767,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         match access {
             cst::MemberAccess::Field(field) => {
                 let name_node = field.name()?;
-                let name_text = self.ctx.text(name_node);
+                let name_text = name_node.text();
 
                 Some(ast::Expression::get_attribute(
                     base,
@@ -799,13 +808,13 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a method call.
-    fn lower_method_call(
+    fn lower_method_call<'src>(
         &mut self,
         receiver: ast::Expression<'src>,
         call: &cst::Call<'src>,
     ) -> Option<ast::Expression<'src>> {
         let name_node = call.name()?;
-        let method_name = self.ctx.text(name_node);
+        let method_name = name_node.text();
 
         let arguments: Vec<_> = call.arguments().map_or_else(Vec::new, |argument_list| {
             argument_list.expressions().collect()
@@ -908,18 +917,17 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a direct function call (no dot, no receiver).
-    fn lower_function_call(
+    fn lower_function_call<'src>(
         &mut self,
         name: &cst::Name<'src>,
         call: &cst::Call<'src>,
     ) -> Option<ast::Expression<'src>> {
-        let text = name.basename(self.ctx.source)?;
+        let text = name.basename()?;
 
         if name.is_qualified() || !EXTENSION_FUNCTIONS.contains(&text) {
-            let full_text = &self.ctx.source[name.range()];
             self.ctx.diagnostic(LowerError::UnknownFunction {
                 span: name.range(),
-                name: String::from(full_text),
+                name: String::from(name.text()),
             });
 
             return None;
@@ -938,18 +946,21 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a literal expression.
-    fn lower_literal(&mut self, literal: &cst::Literal<'src>) -> Option<ast::Expression<'src>> {
+    fn lower_literal<'src>(
+        &mut self,
+        literal: &cst::Literal<'src>,
+    ) -> Option<ast::Expression<'src>> {
         let kind = literal.kind()?;
         let token = literal.token()?;
 
         match kind {
             cst::LiteralKind::Bool => {
-                let text = self.ctx.text(token);
+                let text = token.text();
                 let value = text == "true";
                 Some(ast::Expression::bool(value))
             }
             cst::LiteralKind::Integer => {
-                let text = self.ctx.text(token);
+                let text = token.text();
                 match ast::IntegerLiteral::new(text) {
                     Ok(literal) => Some(ast::Expression::integer(literal)),
                     Err(error) => {
@@ -966,9 +977,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a slot expression.
-    fn lower_slot(&mut self, slot: &cst::Slot<'_>) -> Option<ast::Expression<'src>> {
+    fn lower_slot<'src>(&mut self, slot: &cst::Slot<'src>) -> Option<ast::Expression<'src>> {
         let node = slot.name()?;
-        let text = self.ctx.text(node);
+        let text = node.text();
 
         match ast::SlotKind::new(text) {
             Ok(kind) => Some(ast::Expression::slot(kind)),
@@ -980,7 +991,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a list expression.
-    fn lower_list(&mut self, list: &cst::List<'src>) -> ast::Expression<'src> {
+    fn lower_list<'src>(&mut self, list: &cst::List<'src>) -> ast::Expression<'src> {
         let mut elements = Vec::new();
 
         if let Some(arguments) = list.arguments() {
@@ -995,7 +1006,7 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a record expression.
-    fn lower_record(&mut self, record: &cst::Record<'src>) -> Option<ast::Expression<'src>> {
+    fn lower_record<'src>(&mut self, record: &cst::Record<'src>) -> Option<ast::Expression<'src>> {
         let mut entries = Vec::new();
 
         for entry in record.entries() {
@@ -1003,14 +1014,13 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                 continue;
             };
 
-            let key_text = self.ctx.text(key_node);
             let key = if key_node.kind() == Syntax::String {
                 match self.ctx.lower_string(key_node) {
                     Some(unescaped) => unescaped,
                     None => continue,
                 }
             } else {
-                Cow::Borrowed(key_text)
+                Cow::Borrowed(key_node.text())
             };
 
             let Some(value) = entry.value() else {
@@ -1036,9 +1046,12 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     }
 
     /// Lowers a bare name in expression context.
-    fn lower_name_expression(&mut self, name: &cst::Name<'_>) -> Option<ast::Expression<'src>> {
+    fn lower_name_expression<'src>(
+        &mut self,
+        name: &cst::Name<'src>,
+    ) -> Option<ast::Expression<'src>> {
         if !name.is_qualified() {
-            let text = name.basename(self.ctx.source)?;
+            let text = name.basename()?;
 
             match text {
                 "principal" => return Some(ast::Expression::variable(ast::Variable::Principal)),
@@ -1049,10 +1062,9 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             }
         }
 
-        let text = &self.ctx.source[name.range()];
         self.ctx.diagnostic(LowerError::UnknownVariable {
             span: name.range(),
-            name: String::from(text),
+            name: String::from(name.text()),
         });
 
         None

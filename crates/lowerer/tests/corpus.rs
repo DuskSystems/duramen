@@ -15,7 +15,7 @@ fn lower_policy(corpus: &TestContext<'_>) {
     let root = tree.root().unwrap();
 
     let cst = Policies::cast(root).unwrap();
-    let _ast = PolicyLowerer::new(corpus.source, &mut diagnostics).lower(cst);
+    let _ast = PolicyLowerer::new(&mut diagnostics).lower(cst);
 }
 
 fn lower_schema(corpus: &TestContext<'_>) {
@@ -25,5 +25,5 @@ fn lower_schema(corpus: &TestContext<'_>) {
     let root = tree.root().unwrap();
 
     let cst = Schema::cast(root).unwrap();
-    let _ast = SchemaLowerer::new(corpus.source, &mut diagnostics).lower(cst);
+    let _ast = SchemaLowerer::new(&mut diagnostics).lower(cst);
 }

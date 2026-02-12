@@ -37,8 +37,8 @@ impl<'a> Name<'a> {
 
     /// Returns the text of the last identifier segment.
     #[must_use]
-    pub fn basename(&self, source: &'a str) -> Option<&'a str> {
-        self.segments().last().map(|node| &source[node.range()])
+    pub fn basename(&self) -> Option<&'a str> {
+        self.segments().last().map(|node| node.text())
     }
 
     /// Returns whether the name has more than one segment.

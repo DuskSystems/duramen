@@ -8,7 +8,7 @@ fn parse_policy(corpus: &TestContext<'_>) {
     let mut diagnostics = Diagnostics::new();
 
     let tree = PolicyParser::new(corpus.source, &mut diagnostics).parse();
-    let roundtrip = tree.print(corpus.source);
+    let roundtrip = tree.to_string();
     assert_eq!(roundtrip, corpus.source, "Roundtrip failed");
 }
 
@@ -16,6 +16,6 @@ fn parse_schema(corpus: &TestContext<'_>) {
     let mut diagnostics = Diagnostics::new();
 
     let tree = SchemaParser::new(corpus.source, &mut diagnostics).parse();
-    let roundtrip = tree.print(corpus.source);
+    let roundtrip = tree.to_string();
     assert_eq!(roundtrip, corpus.source, "Roundtrip failed");
 }

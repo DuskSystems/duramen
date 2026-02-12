@@ -25,18 +25,14 @@ mod schema;
 pub use schema::SchemaLowerer;
 
 /// Shared context for lowering CST to AST.
-struct LowerContext<'a, 'src> {
-    source: &'src str,
+struct LowerContext<'a> {
     diagnostics: &'a mut Diagnostics,
 }
 
-impl<'a, 'src> LowerContext<'a, 'src> {
+impl<'a> LowerContext<'a> {
     /// Creates a new lower context.
-    const fn new(source: &'src str, diagnostics: &'a mut Diagnostics) -> Self {
-        Self {
-            source,
-            diagnostics,
-        }
+    const fn new(diagnostics: &'a mut Diagnostics) -> Self {
+        Self { diagnostics }
     }
 
     /// Emits a diagnostic error.
@@ -44,27 +40,19 @@ impl<'a, 'src> LowerContext<'a, 'src> {
         self.diagnostics.push(diagnostic);
     }
 
-    /// Returns the source text for a node.
-    fn text(&self, node: Node<'_>) -> &'src str {
-        let range = node.range();
-        &self.source[range]
-    }
-
     /// Lowers a name.
-    fn lower_name(&mut self, name: &cst::Name<'_>) -> Option<ast::Name<'src>> {
+    fn lower_name<'src>(&mut self, name: &cst::Name<'src>) -> Option<ast::Name<'src>> {
         let segments: Vec<_> = name.segments().collect();
         if segments.is_empty() {
             return None;
         }
 
         let last = segments.len() - 1;
-        let basename_text = self.text(segments[last]);
-        let basename = self.make_identifier(basename_text)?;
+        let basename = self.make_identifier(segments[last].text())?;
 
         let mut path = Vec::with_capacity(last);
         for &segment in &segments[..last] {
-            let text = self.text(segment);
-            if let Some(identifier) = self.make_identifier(text) {
+            if let Some(identifier) = self.make_identifier(segment.text()) {
                 path.push(identifier);
             }
         }
@@ -73,13 +61,13 @@ impl<'a, 'src> LowerContext<'a, 'src> {
     }
 
     /// Lowers a name to an identifier (unqualified only).
-    fn lower_identifier(&mut self, name: &cst::Name<'src>) -> Option<ast::Identifier<'src>> {
-        let basename_text = name.basename(self.source)?;
+    fn lower_identifier<'src>(&mut self, name: &cst::Name<'src>) -> Option<ast::Identifier<'src>> {
+        let basename_text = name.basename()?;
         self.make_identifier(basename_text)
     }
 
     /// Creates an AST identifier, emitting a diagnostic on failure.
-    fn make_identifier(&mut self, text: &'src str) -> Option<ast::Identifier<'src>> {
+    fn make_identifier<'src>(&mut self, text: &'src str) -> Option<ast::Identifier<'src>> {
         match ast::Identifier::new(text) {
             Ok(identifier) => Some(identifier),
             Err(error) => {
@@ -90,9 +78,9 @@ impl<'a, 'src> LowerContext<'a, 'src> {
     }
 
     /// Lowers annotations.
-    fn lower_annotations<'cst>(
+    fn lower_annotations<'src>(
         &mut self,
-        annotations: impl Iterator<Item = cst::Annotation<'cst>>,
+        annotations: impl Iterator<Item = cst::Annotation<'src>>,
     ) -> Option<ast::Annotations<'src>> {
         let mut entries = Vec::new();
 
@@ -122,14 +110,12 @@ impl<'a, 'src> LowerContext<'a, 'src> {
                 continue;
             };
 
-            let name_text = self.text(name_node);
-
-            let Some(identifier) = self.make_identifier(name_text) else {
+            let Some(identifier) = self.make_identifier(name_node.text()) else {
                 continue;
             };
 
             let value = if let Some(value_node) = annotation.value() {
-                let raw = self.text(value_node);
+                let raw = value_node.text();
                 let offset = value_node.range().start;
 
                 match Escaper::new(raw).unescape_str() {
@@ -178,8 +164,8 @@ impl<'a, 'src> LowerContext<'a, 'src> {
     }
 
     /// Extracts a string literal's content (unescaped) from a CST string token.
-    fn lower_string(&mut self, node: Node<'_>) -> Option<Cow<'src, str>> {
-        let raw = self.text(node);
+    fn lower_string<'src>(&mut self, node: Node<'src>) -> Option<Cow<'src, str>> {
+        let raw = node.text();
         let offset = node.range().start;
 
         match Escaper::new(raw).unescape_str() {

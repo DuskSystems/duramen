@@ -1,5 +1,6 @@
 use alloc::string::String;
 use alloc::vec::Vec;
+use core::fmt;
 use core::ops::Range;
 
 use crate::syntax::Syntax;
@@ -32,16 +33,27 @@ impl NodeData {
 
 /// Concrete syntax tree.
 #[derive(Clone, Debug)]
-pub struct Tree {
+pub struct Tree<'src> {
     pub(crate) nodes: Vec<NodeData>,
     pub(crate) root: Option<usize>,
+    pub(crate) source: &'src str,
 }
 
-impl Tree {
+impl<'src> Tree<'src> {
     /// Creates a new tree.
     #[must_use]
-    pub const fn new(nodes: Vec<NodeData>, root: Option<usize>) -> Self {
-        Self { nodes, root }
+    pub const fn new(nodes: Vec<NodeData>, root: Option<usize>, source: &'src str) -> Self {
+        Self {
+            nodes,
+            root,
+            source,
+        }
+    }
+
+    /// Returns the source text.
+    #[must_use]
+    pub const fn source(&self) -> &'src str {
+        self.source
     }
 
     /// Returns the root node, if present.
@@ -49,6 +61,7 @@ impl Tree {
     pub fn root(&self) -> Option<Node<'_>> {
         Some(Node {
             tree: &self.nodes,
+            source: self.source,
             index: self.root?,
         })
     }
@@ -58,6 +71,7 @@ impl Tree {
     pub fn children(&self) -> Children<'_> {
         Children {
             tree: &self.nodes,
+            source: self.source,
             current: self.root,
         }
     }
@@ -73,19 +87,17 @@ impl Tree {
     pub const fn is_empty(&self) -> bool {
         self.nodes.is_empty()
     }
+}
 
-    /// Reconstructs the source text from the CST.
-    #[must_use]
-    pub fn print(&self, source: &str) -> String {
-        let mut output = String::new();
-
+impl fmt::Display for Tree<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for node in self.children() {
-            if let Some(text) = source.get(node.range()) {
-                output.push_str(text);
+            if let Some(text) = self.source.get(node.range()) {
+                f.write_str(text)?;
             }
         }
 
-        output
+        Ok(())
     }
 }
 
@@ -93,6 +105,7 @@ impl Tree {
 #[derive(Clone, Copy, Debug)]
 pub struct Node<'a> {
     tree: &'a [NodeData],
+    source: &'a str,
     index: usize,
 }
 
@@ -111,12 +124,19 @@ impl<'a> Node<'a> {
         data.start..data.end
     }
 
+    /// Returns the source text covered by this node.
+    #[must_use]
+    pub fn text(&self) -> &'a str {
+        &self.source[self.range()]
+    }
+
     /// Returns an iterator over this node's children.
     #[must_use]
     pub const fn children(&self) -> Children<'a> {
         let node = &self.tree[self.index];
         Children {
             tree: self.tree,
+            source: self.source,
             current: node.first,
         }
     }
@@ -150,6 +170,7 @@ impl<'a> Node<'a> {
     pub fn next(&self) -> Option<Self> {
         Some(Node {
             tree: self.tree,
+            source: self.source,
             index: self.tree[self.index].next?,
         })
     }
@@ -167,6 +188,7 @@ impl<'a> Node<'a> {
             if idx == self.index {
                 return prev.map(|index| Node {
                     tree: self.tree,
+                    source: self.source,
                     index,
                 });
             }
@@ -185,6 +207,7 @@ impl<'a> Node<'a> {
 
         Some(Node {
             tree: self.tree,
+            source: self.source,
             index: data.parent?,
         })
     }
@@ -194,6 +217,7 @@ impl<'a> Node<'a> {
     pub fn ancestors(&self) -> Ancestors<'a> {
         Ancestors {
             tree: self.tree,
+            source: self.source,
             current: self.tree[self.index].parent,
         }
     }
@@ -231,6 +255,7 @@ impl<'a> Node<'a> {
     pub const fn descendants(&self) -> Descendants<'a> {
         Descendants {
             tree: self.tree,
+            source: self.source,
             current: Some(self.index),
             root: self.index,
         }
@@ -241,6 +266,7 @@ impl<'a> Node<'a> {
     pub const fn preorder(&self) -> Preorder<'a> {
         Preorder {
             tree: self.tree,
+            source: self.source,
             current: Some(self.index),
             root: self.index,
             entering: true,
@@ -274,10 +300,66 @@ impl<'a> Node<'a> {
     }
 }
 
+impl fmt::Display for Node<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn write_node(
+            f: &mut fmt::Formatter<'_>,
+            node: Node<'_>,
+            prefix: &mut String,
+            last: bool,
+        ) -> fmt::Result {
+            let connector = if last { "└─" } else { "├─" };
+            let range = node.range();
+
+            write!(f, "{prefix}{connector}{:?} ", node.kind())?;
+
+            let mut children = node.children().peekable();
+            if children.peek().is_none() {
+                writeln!(f, "{:?} [{}, {})", node.text(), range.start, range.end)?;
+            } else {
+                writeln!(f, "[{}, {})", range.start, range.end)?;
+
+                let len = prefix.len();
+
+                let connector = if last { "  " } else { "│ " };
+                prefix.push_str(connector);
+
+                while let Some(child) = children.next() {
+                    let last = children.peek().is_none();
+                    write_node(f, child, prefix, last)?;
+                }
+
+                prefix.truncate(len);
+            }
+
+            Ok(())
+        }
+
+        let range = self.range();
+        let mut children = self.children().peekable();
+
+        write!(f, "{:?} ", self.kind())?;
+        if children.peek().is_none() {
+            writeln!(f, "{:?} [{}, {})", self.text(), range.start, range.end)?;
+        } else {
+            writeln!(f, "[{}, {})", range.start, range.end)?;
+
+            let mut prefix = String::new();
+            while let Some(child) = children.next() {
+                let last = children.peek().is_none();
+                write_node(f, child, &mut prefix, last)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /// Iterator over child nodes.
 #[derive(Clone, Debug)]
 pub struct Children<'a> {
     tree: &'a [NodeData],
+    source: &'a str,
     current: Option<usize>,
 }
 
@@ -291,6 +373,7 @@ impl<'a> Iterator for Children<'a> {
 
         Some(Node {
             tree: self.tree,
+            source: self.source,
             index,
         })
     }
@@ -300,6 +383,7 @@ impl<'a> Iterator for Children<'a> {
 #[derive(Clone, Debug)]
 pub struct Ancestors<'a> {
     tree: &'a [NodeData],
+    source: &'a str,
     current: Option<usize>,
 }
 
@@ -313,6 +397,7 @@ impl<'a> Iterator for Ancestors<'a> {
 
         Some(Node {
             tree: self.tree,
+            source: self.source,
             index,
         })
     }
@@ -322,6 +407,7 @@ impl<'a> Iterator for Ancestors<'a> {
 #[derive(Clone, Debug)]
 pub struct Descendants<'a> {
     tree: &'a [NodeData],
+    source: &'a str,
     current: Option<usize>,
     root: usize,
 }
@@ -354,6 +440,7 @@ impl<'a> Iterator for Descendants<'a> {
 
         Some(Node {
             tree: self.tree,
+            source: self.source,
             index,
         })
     }
@@ -370,6 +457,7 @@ pub enum WalkEvent<'a> {
 #[derive(Clone, Debug)]
 pub struct Preorder<'a> {
     tree: &'a [NodeData],
+    source: &'a str,
     current: Option<usize>,
     root: usize,
     entering: bool,
@@ -383,6 +471,7 @@ impl<'a> Iterator for Preorder<'a> {
         let data = &self.tree[index];
         let node = Node {
             tree: self.tree,
+            source: self.source,
             index,
         };
 

@@ -27,7 +27,7 @@ pub trait CstNode<'a>: Sized + 'a {
         self.syntax().range()
     }
 
-    fn text(&self, source: &'a str) -> &'a str {
-        &source[self.range()]
+    fn text(&self) -> &'a str {
+        self.syntax().text()
     }
 }

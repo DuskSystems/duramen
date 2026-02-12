@@ -1,0 +1,19 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `)`
+  ╭▸ policy_annotation_bad_position:1:9
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴        ━ expected `)`
+error: missing policy effect
+  ╭▸ policy_annotation_bad_position:1:9
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴        ━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
+error: missing policy effect
+  ╭▸ policy_annotation_bad_position:1:36
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴                                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`
