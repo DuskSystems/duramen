@@ -1,0 +1,23 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `}`
+  ╭▸ test:2:8
+  │
+2 │ when { 1 /* multi-line
+  ╰╴       ━ expected `}`
+error: division and remainder are not supported
+  ╭▸ test:2:8
+  │
+2 │ when { 1 /* multi-line
+  │        ━━━━━ not supported
+  ╰╴
+note: only `*` with an integer literal is allowed
+error: missing policy effect
+  ╭▸ test:2:13
+  │
+2 │   when { 1 /* multi-line
+  │ ┏━━━━━━━━━━━━━┛
+3 │ ┃ comment */d };
+  ╰╴┗━━━━━━━━━━━━━━━┛ expected `permit` or `forbid`

@@ -1,0 +1,14 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `)`
+  ╭▸ test:1:9
+  │
+1 │ permit (var : in 6, action, resource);
+  ╰╴        ━━━ expected `)`
+error: missing policy effect
+  ╭▸ test:1:18
+  │
+1 │ permit (var : in 6, action, resource);
+  ╰╴                 ━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`

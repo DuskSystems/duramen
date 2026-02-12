@@ -1,0 +1,14 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `}`
+  ╭▸ test:2:8
+  │
+2 │ when { if::true::then::false::else::true };
+  ╰╴       ━━ expected `}`
+error: missing policy effect
+  ╭▸ test:2:12
+  │
+2 │ when { if::true::then::false::else::true };
+  ╰╴           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`

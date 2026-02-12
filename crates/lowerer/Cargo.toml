@@ -43,6 +43,10 @@ divan = { workspace = true }
 name = "corpus"
 harness = false
 
+[[test]]
+name = "upstream_parser_policy"
+harness = false
+
 [[bench]]
 name = "corpus"
 harness = false

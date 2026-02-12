@@ -1,5 +1,9 @@
 # https://doc.rust-lang.org/cargo/reference/config.html
 
+# NOTE: https://github.com/rust-lang/cargo/issues/3946#issuecomment-973132993
+[env]
+CARGO_WORKSPACE_DIR = { value = "", relative = true }
+
 # https://doc.rust-lang.org/cargo/reference/profiles.html#dev
 [profile.dev.package]
 insta.opt-level = 3

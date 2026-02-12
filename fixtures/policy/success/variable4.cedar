@@ -1,0 +1,1 @@
+permit (principalorsomeotherident, action, resource);
