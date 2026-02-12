@@ -21,7 +21,6 @@ duramen-diagnostic = { workspace = true }
 # Testing
 anstream = { workspace = true }
 datatest-stable = { workspace = true }
-indoc = { workspace = true }
 insta = { workspace = true }
 rand = { workspace = true, features = ["small_rng"] }
 similar-asserts = { workspace = true }

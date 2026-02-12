@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: missing expression
+  ╭▸ test:3:19
+  │
+3 │       principal has a.(b)
+  │ ┏━━━━━━━━━━━━━━━━━━━┛
+4 │ ┃ };
+  ╰╴┗━┛ expected an attribute name

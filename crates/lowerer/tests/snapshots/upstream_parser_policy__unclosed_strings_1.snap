@@ -1,0 +1,19 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `}`
+  ╭▸ test:3:5
+  │
+3 │     principal.foo = "bar
+  ╰╴    ━━━━━━━━━ expected `}`
+error: invalid operator `=`
+  ╭▸ test:3:19
+  │
+3 │     principal.foo = "bar
+  │                   ━ not a valid operator
+  ╰╴
+help: use `==` for equality
+  ╭╴
+3 │     principal.foo == "bar
+  ╰╴                   +

@@ -1,0 +1,8 @@
+permit (
+    principal == User::"alice",
+    action in PhotoflashRole::"viewer",
+    resource in Account::"jane"
+)
+advice {
+    "{\"type\":\"PhotoFilterInstruction\", \"anonymize\":true}"
+};

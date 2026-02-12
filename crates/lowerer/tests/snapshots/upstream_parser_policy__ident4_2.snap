@@ -1,0 +1,9 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `then`
+  ╭▸ test:2:17
+  │
+2 │ when { if(true) };
+  ╰╴                ━ expected `then`

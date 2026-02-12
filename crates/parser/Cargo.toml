@@ -18,14 +18,12 @@ workspace = true
 [features]
 default = ["std"]
 std = [
-  "duramen-cst/std",
   "duramen-diagnostic/std",
   "duramen-lexer/std",
   "duramen-syntax/std",
 ]
 
 [dependencies]
-duramen-cst = { workspace = true }
 duramen-diagnostic = { workspace = true }
 duramen-lexer = { workspace = true }
 duramen-syntax = { workspace = true }
@@ -38,6 +36,10 @@ divan = { workspace = true }
 
 [[test]]
 name = "corpus"
+harness = false
+
+[[test]]
+name = "upstream_policy"
 harness = false
 
 [[bench]]
