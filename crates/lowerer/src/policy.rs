@@ -1,15 +1,14 @@
 use alloc::borrow::Cow;
 use alloc::string::String;
-use alloc::vec;
 use alloc::vec::Vec;
+use alloc::{format, vec};
 
 use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics, Suggestion};
 use duramen_escape::Escaper;
 use duramen_syntax::Syntax;
 
-use crate::error::LowerError;
 use crate::{EXTENSION_FUNCTIONS, LowerContext};
 
 /// Policy lowerer for CST-to-AST transformation.
@@ -48,32 +47,81 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             let effect_start = effect_token.range().start;
 
             for child in node.children() {
-                if child.kind() == Syntax::Error && child.range().start < effect_start {
-                    self.ctx.diagnostic(LowerError::InvalidToken {
-                        span: child.range(),
-                    });
+                if child.kind().is_error() && child.range().start < effect_start {
+                    if let Some(diagnostic) = LowerContext::recognize_error(child) {
+                        self.ctx.diagnostic(diagnostic);
+                    } else {
+                        let span = child
+                            .children()
+                            .find(|c| !c.kind().is_trivial())
+                            .map_or_else(|| child.range(), |first| first.range());
+
+                        let text = &self.ctx.source[span.clone()];
+                        self.ctx.diagnostic(
+                            Diagnostic::error(format!("unexpected `{text}`"))
+                                .with_label(span, "expected `permit`, `forbid`, or `@`"),
+                        );
+                    }
+
+                    return None;
                 }
             }
         }
 
-        if node.child(Syntax::OpenParenthesis).is_some()
-            && node.child(Syntax::CloseParenthesis).is_none()
-        {
-            let span = node
-                .after(Syntax::OpenParenthesis)
-                .find(|child| !child.kind().is_trivial())
-                .map_or_else(
-                    || {
-                        let end = node.range().end;
-                        end..end
-                    },
-                    |child| child.first().range(),
-                );
+        let mut scope_has_errors = false;
 
-            self.ctx.diagnostic(LowerError::ExpectedToken {
-                span,
-                expected: "`)`",
-            });
+        if let Some(scope) = policy.scope() {
+            let node = scope.syntax();
+
+            if node.child(Syntax::OpenParenthesis).is_some()
+                && node.child(Syntax::CloseParenthesis).is_none()
+            {
+                if let Some(diagnostic) = node
+                    .descendants()
+                    .filter(|child| child.kind().is_error())
+                    .find_map(LowerContext::recognize_error)
+                {
+                    self.ctx.diagnostic(diagnostic);
+                    return None;
+                }
+
+                let span = node
+                    .after(Syntax::OpenParenthesis)
+                    .find(|child| !child.kind().is_trivial())
+                    .map_or_else(
+                        || {
+                            let end = node.range().end;
+                            end..end
+                        },
+                        |child| child.first().range(),
+                    );
+
+                self.ctx
+                    .diagnostic(Diagnostic::error("expected `)`").with_label(span, "expected `)`"));
+
+                return None;
+            }
+
+            for child in node
+                .after(Syntax::OpenParenthesis)
+                .take_while(|child| child.kind() != Syntax::CloseParenthesis)
+            {
+                if child.kind().is_error() {
+                    scope_has_errors = true;
+
+                    if let Some(diagnostic) = LowerContext::recognize_error(child) {
+                        self.ctx.diagnostic(diagnostic);
+                    } else {
+                        self.ctx.diagnostic(
+                            Diagnostic::error("expected scope variable")
+                                .with_label(child.range(), "not valid in scope")
+                                .with_note(
+                                    "`principal`, `action`, and `resource` are the only scope variables",
+                                ),
+                        );
+                    }
+                }
+            }
         }
 
         let annotations = self.ctx.lower_annotations(policy.annotations())?;
@@ -84,9 +132,32 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         });
 
         let Some(effect) = effect else {
-            self.ctx.diagnostic(LowerError::MissingEffect {
-                span: policy.range(),
-            });
+            for child in node.children() {
+                if child.kind().is_error() {
+                    if let Some(diagnostic) = LowerContext::recognize_error(child) {
+                        self.ctx.diagnostic(diagnostic);
+                        return None;
+                    }
+
+                    let span = child
+                        .children()
+                        .find(|c| !c.kind().is_trivial())
+                        .map_or_else(|| child.range(), |first| first.range());
+
+                    let text = &self.ctx.source[span.clone()];
+                    self.ctx.diagnostic(
+                        Diagnostic::error(format!("unexpected `{text}`"))
+                            .with_label(span, "expected `permit`, `forbid`, or `@`"),
+                    );
+
+                    return None;
+                }
+            }
+
+            self.ctx.diagnostic(
+                Diagnostic::error("missing effect")
+                    .with_label(policy.range(), "expected `permit`, `forbid`, or `@`"),
+            );
 
             return None;
         };
@@ -95,10 +166,28 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         let mut action = None;
         let mut resource = None;
 
-        for variable_definition in policy.variable_definitions() {
+        let variable_definitions = policy
+            .scope()
+            .into_iter()
+            .flat_map(|scope| scope.variable_definitions());
+
+        for variable_definition in variable_definitions {
             let Some(variable) = variable_definition.variable() else {
+                if let Some(token) = variable_definition.variable_token() {
+                    let text = &self.ctx.source[token.range()];
+                    self.ctx.diagnostic(
+                        Diagnostic::error(format!("unknown scope variable `{text}`"))
+                            .with_label(token.range(), "not a valid scope variable")
+                            .with_note(
+                                "`principal`, `action`, and `resource` are the only scope variables",
+                            ),
+                    );
+                }
+
                 continue;
             };
+
+            let checkpoint = self.ctx.diagnostics.len();
 
             match variable {
                 cst::Variable::Principal => {
@@ -117,9 +206,36 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                     );
                 }
                 cst::Variable::Context => {
-                    self.ctx.diagnostic(LowerError::ContextInScope {
-                        span: variable_definition.range(),
-                    });
+                    self.ctx.diagnostic(
+                        Diagnostic::error("`context` is not a scope variable")
+                            .with_label(variable_definition.range(), "not valid in scope")
+                            .with_note(
+                                "`context` can only be used in conditions, not in the scope",
+                            ),
+                    );
+                }
+            }
+
+            // When the scope has error nodes, variable definitions adjacent to those
+            // errors may be incomplete (e.g. `Photo::` without a string because a
+            // single-quoted string was recovered into an error node). Suppress the
+            // cascading diagnostic and treat the variable as unspecified.
+            if scope_has_errors {
+                let failed = match variable {
+                    cst::Variable::Principal => matches!(principal, Some(None)),
+                    cst::Variable::Action => matches!(action, Some(None)),
+                    cst::Variable::Resource => matches!(resource, Some(None)),
+                    cst::Variable::Context => false,
+                };
+
+                if failed {
+                    self.ctx.diagnostics.truncate(checkpoint);
+                    match variable {
+                        cst::Variable::Principal => principal = None,
+                        cst::Variable::Action => action = None,
+                        cst::Variable::Resource => resource = None,
+                        cst::Variable::Context => {}
+                    }
                 }
             }
         }
@@ -149,6 +265,39 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             }
         }
 
+        // Report trailing error nodes (e.g. `advice { ... }` after conditions).
+        for child in node.children() {
+            if child.kind().is_error() {
+                if let Some(diagnostic) = LowerContext::recognize_error(child) {
+                    self.ctx.diagnostic(diagnostic);
+                } else if let Some(first) = child.children().find(|c| !c.kind().is_trivial())
+                    && first.kind().is_identifier()
+                {
+                    let text = &self.ctx.source[first.range()];
+                    self.ctx.diagnostic(
+                        Diagnostic::error(format!("invalid policy condition `{text}`"))
+                            .with_label(first.range(), "not a valid condition")
+                            .with_help("condition must be either `when` or `unless`"),
+                    );
+                } else {
+                    let span = child
+                        .children()
+                        .filter(|c| !c.kind().is_trivial())
+                        .last()
+                        .map_or_else(
+                            || child.range(),
+                            |last| child.range().start..last.range().end,
+                        );
+
+                    let text = &self.ctx.source[span.clone()];
+                    self.ctx.diagnostic(
+                        Diagnostic::error(format!("unexpected `{text}`"))
+                            .with_label(span, "not valid in a policy"),
+                    );
+                }
+            }
+        }
+
         Some(ast::Policy::new(
             annotations,
             effect,
@@ -168,6 +317,16 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         let has_type_test = variable_definition.is_token().is_some();
         let has_membership = variable_definition.in_token().is_some();
         let has_operator = variable_definition.operator_token().is_some();
+
+        if let Some(colon) = variable_definition.colon() {
+            self.ctx.diagnostic(
+                Diagnostic::error("type constraints using `:` are not supported")
+                    .with_label(colon.range(), "not a valid scope operator")
+                    .with_help("use `is` for type constraints"),
+            );
+
+            return Some(ast::ScopeConstraint::Any);
+        }
 
         if !has_type_test && !has_membership && !has_operator {
             return Some(ast::ScopeConstraint::Any);
@@ -198,10 +357,16 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                 Some(ast::ScopeConstraint::In(entity_or_slot))
             }
             _ => {
-                self.ctx.diagnostic(LowerError::InvalidScopeOperator {
-                    span: operator_token.range(),
-                    variable: String::from(variable_name),
-                });
+                let label = if variable_name == "action" {
+                    "expected `==` or `in`"
+                } else {
+                    "expected `==`, `in`, `is`, or `is ... in`"
+                };
+
+                self.ctx.diagnostic(
+                    Diagnostic::error(format!("invalid scope operator for `{variable_name}`"))
+                        .with_label(operator_token.range(), label),
+                );
 
                 None
             }
@@ -250,10 +415,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                 Some(ast::EntityOrSlot::Entity(reference))
             }
             _ => {
-                self.ctx.diagnostic(LowerError::MissingExpression {
-                    span: expression.range(),
-                    expected: "expected an entity reference or slot",
-                });
+                self.ctx.diagnostic(
+                    Diagnostic::error("missing expression")
+                        .with_label(expression.range(), "expected an entity reference or slot"),
+                );
 
                 None
             }
@@ -265,6 +430,26 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         &mut self,
         variable_definition: &cst::VariableDefinition<'_>,
     ) -> Option<ast::ActionConstraint<'src>> {
+        if let Some(is_token) = variable_definition.is_token() {
+            self.ctx.diagnostic(
+                Diagnostic::error("`is` cannot appear in the `action` scope")
+                    .with_label(is_token.range(), "not valid for `action`")
+                    .with_help("try moving `action is ..` into a `when` condition"),
+            );
+
+            return Some(ast::ActionConstraint::Any);
+        }
+
+        if let Some(colon) = variable_definition.colon() {
+            self.ctx.diagnostic(
+                Diagnostic::error("type constraints using `:` are not supported")
+                    .with_label(colon.range(), "not a valid scope operator")
+                    .with_help("use `is` for type constraints"),
+            );
+
+            return Some(ast::ActionConstraint::Any);
+        }
+
         let Some(operator_token) = variable_definition.operator_token() else {
             return Some(ast::ActionConstraint::Any);
         };
@@ -277,10 +462,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             }
             Syntax::InKeyword => self.lower_action_in_constraint(variable_definition),
             _ => {
-                self.ctx.diagnostic(LowerError::InvalidScopeOperator {
-                    span: operator_token.range(),
-                    variable: String::from("action"),
-                });
+                self.ctx.diagnostic(
+                    Diagnostic::error("invalid scope operator for `action`")
+                        .with_label(operator_token.range(), "expected `==` or `in`"),
+                );
 
                 None
             }
@@ -332,10 +517,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         if let cst::Expression::EntityReference(entity_reference) = expression {
             self.lower_entity_reference(entity_reference)
         } else {
-            self.ctx.diagnostic(LowerError::MissingExpression {
-                span: expression.range(),
-                expected: "expected an entity reference",
-            });
+            self.ctx.diagnostic(
+                Diagnostic::error("missing expression")
+                    .with_label(expression.range(), "expected an entity reference"),
+            );
 
             None
         }
@@ -362,6 +547,15 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
     ) -> Option<ast::Condition<'src>> {
         let node = condition.syntax();
         if node.child(Syntax::OpenBrace).is_some() && node.child(Syntax::CloseBrace).is_none() {
+            if let Some(diagnostic) = node
+                .descendants()
+                .filter(|child| child.kind().is_error())
+                .find_map(LowerContext::recognize_error)
+            {
+                self.ctx.diagnostic(diagnostic);
+                return None;
+            }
+
             let span = node
                 .after(Syntax::OpenBrace)
                 .find(|child| !child.kind().is_trivial())
@@ -373,10 +567,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                     |child| child.first().range(),
                 );
 
-            self.ctx.diagnostic(LowerError::ExpectedToken {
-                span,
-                expected: "`}`",
-            });
+            self.ctx
+                .diagnostic(Diagnostic::error("expected `}`").with_label(span, "expected `}`"));
+
+            return None;
         }
 
         let kind = condition.kind().map(|kind| match kind {
@@ -386,15 +580,33 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
 
         let body = condition.body();
 
-        if body.is_none()
-            && let Some(error_node) = node.children().find(|child| child.kind() == Syntax::Error)
-        {
-            self.ctx.diagnostic(LowerError::InvalidToken {
-                span: error_node.range(),
-            });
+        if body.is_none() {
+            self.ctx.emit_error(node, "condition");
+            return None;
         }
 
         let body = self.lower_expression(&body?)?;
+
+        // Check for error nodes between { and } (e.g. block comments, leftover tokens)
+        if node.child(Syntax::OpenBrace).is_some()
+            && node.child(Syntax::CloseBrace).is_some()
+            && let Some(error_node) = node
+                .after(Syntax::OpenBrace)
+                .take_while(|child| child.kind() != Syntax::CloseBrace)
+                .find(|child| child.kind().is_error())
+        {
+            if let Some(diagnostic) = LowerContext::recognize_error(error_node) {
+                self.ctx.diagnostic(diagnostic);
+            } else {
+                let text = self.ctx.source[error_node.range()].trim_end();
+                self.ctx.diagnostic(
+                    Diagnostic::error(format!("unexpected token `{text}`"))
+                        .with_label(error_node.range(), "not valid in condition"),
+                );
+            }
+
+            return None;
+        }
 
         Some(ast::Condition::new(kind, body))
     }
@@ -434,30 +646,57 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
 
     /// Lowers an if expression.
     fn lower_if(&mut self, expression: &cst::IfExpression<'src>) -> Option<ast::Expression<'src>> {
-        let test = expression.test()?;
+        let has_test = expression.test().is_some();
+
+        if !has_test {
+            let node = expression.syntax();
+            let start = expression
+                .if_token()
+                .map_or_else(|| node.range().start, |token| token.range().start);
+            let end = node.range().start + node.text().trim_end().len();
+
+            self.ctx.diagnostic(
+                Diagnostic::error("invalid `if` expression")
+                    .with_label(start..end, "expected `if <expr> then <expr> else <expr>`"),
+            );
+
+            return None;
+        }
 
         if expression.then_token().is_none() {
-            let end = expression.range().end;
-            self.ctx.diagnostic(LowerError::ExpectedToken {
-                span: end..end,
-                expected: "`then`",
-            });
+            let node = expression.syntax();
+            let end = node.range().start + node.text().trim_end().len();
+
+            self.ctx.diagnostic(
+                Diagnostic::error("incomplete `if` expression")
+                    .with_label(node.range().start..end, "expected `then`"),
+            );
 
             return None;
         }
 
+        let has_consequent = expression.consequent().is_some();
+        let has_else = expression.else_token().is_some();
+        let has_alternate = expression.alternate().is_some();
+
+        if !has_consequent || !has_else || !has_alternate {
+            let missing = match (has_consequent, has_else, has_alternate) {
+                (false, _, _) => "expected expression after `then`",
+                (true, false, _) => "expected `else`",
+                (true, true, false) => "expected expression after `else`",
+                _ => "incomplete `if` expression",
+            };
+
+            let end = expression.range().end;
+            self.ctx.diagnostic(
+                Diagnostic::error("incomplete `if` expression").with_label(end..end, missing),
+            );
+
+            return None;
+        }
+
+        let test = expression.test()?;
         let consequent = expression.consequent()?;
-
-        if expression.else_token().is_none() {
-            let end = expression.range().end;
-            self.ctx.diagnostic(LowerError::ExpectedToken {
-                span: end..end,
-                expected: "`else`",
-            });
-
-            return None;
-        }
-
         let alternate = expression.alternate()?;
 
         let test = self.lower_expression(&test)?;
@@ -497,13 +736,28 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         &mut self,
         expression: &cst::RelationExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
+        if let Some(diagnostic) = expression
+            .syntax()
+            .descendants()
+            .filter(|child| child.kind().is_error())
+            .find_map(LowerContext::recognize_error)
+        {
+            self.ctx.diagnostic(diagnostic);
+            return None;
+        }
+
         let Some(operator) = expression.operator() else {
             if let Some(token) = expression.operator_token()
                 && token.kind() == Syntax::Assign
             {
-                self.ctx.diagnostic(LowerError::InvalidEquals {
-                    span: token.range(),
-                });
+                let suggestion =
+                    Suggestion::fix(token.range(), "==").with_message("use `==` for equality");
+
+                self.ctx.diagnostic(
+                    Diagnostic::error("invalid operator `=`")
+                        .with_label(token.range(), "not a valid operator")
+                        .with_suggestion(suggestion),
+                );
             }
 
             return None;
@@ -569,9 +823,11 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                 ))
             }
             cst::ProductOperator::Divide | cst::ProductOperator::Modulo => {
-                self.ctx.diagnostic(LowerError::UnsupportedDivision {
-                    span: expression.range(),
-                });
+                self.ctx.diagnostic(
+                    Diagnostic::error("division and remainder are not supported")
+                        .with_label(expression.range(), "not supported")
+                        .with_note("only `*` with an integer literal is allowed"),
+                );
 
                 None
             }
@@ -610,11 +866,38 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                 let text = name.basename(self.ctx.source)?;
                 Some(Cow::Borrowed(text))
             }
+            cst::Expression::Member(member) => {
+                let span = member.accesses().next().map_or_else(
+                    || expression.range(),
+                    |access| {
+                        let node = access.syntax();
+                        let start = node
+                            .children()
+                            .find(|child| child.kind() != Syntax::Dot && !child.kind().is_trivial())
+                            .map_or_else(|| node.range().start, |first| first.range().start);
+
+                        let end = node
+                            .children()
+                            .filter(|child| !child.kind().is_trivial())
+                            .last()
+                            .map_or_else(|| node.range().end, |last| last.range().end);
+
+                        start..end
+                    },
+                );
+
+                self.ctx.diagnostic(
+                    Diagnostic::error("expected an attribute name")
+                        .with_label(span, "unexpected field access"),
+                );
+
+                None
+            }
             _ => {
-                self.ctx.diagnostic(LowerError::MissingExpression {
-                    span: expression.range(),
-                    expected: "expected an attribute name",
-                });
+                self.ctx.diagnostic(
+                    Diagnostic::error("missing expression")
+                        .with_label(expression.range(), "expected an attribute name"),
+                );
 
                 None
             }
@@ -675,10 +958,10 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
 
         let operator_count = expression.operator_tokens().count();
         if operator_count > 4 {
-            self.ctx.diagnostic(LowerError::UnaryOpLimit {
-                span: expression.range(),
-                count: operator_count,
-            });
+            self.ctx.diagnostic(
+                Diagnostic::error(format!("found {operator_count} chained unary operators"))
+                    .with_label(expression.range(), "at most 4 allowed"),
+            );
 
             return None;
         }
@@ -695,12 +978,17 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             let mut negated = String::from("-");
             negated.push_str(text);
 
-            return match ast::IntegerLiteral::new(&negated) {
-                Ok(literal) => Some(ast::Expression::integer(literal)),
-                Err(error) => {
-                    self.ctx.diagnostic(error);
-                    None
-                }
+            return if let Ok(literal) = ast::IntegerLiteral::new(&negated) {
+                Some(ast::Expression::integer(literal))
+            } else {
+                self.ctx.diagnostic(
+                    Diagnostic::error(format!("integer literal `{negated}` is out of range"))
+                        .with_label(
+                            expression.range().start..token.range().end,
+                            "out of range for a 64-bit integer",
+                        ),
+                );
+                None
             };
         }
 
@@ -767,9 +1055,11 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             }
             cst::MemberAccess::Call(call) => self.lower_method_call(base, call),
             cst::MemberAccess::Index(index) => {
-                self.ctx.diagnostic(LowerError::UnsupportedIndex {
-                    span: index.range(),
-                });
+                self.ctx.diagnostic(
+                    Diagnostic::error("indexing is not supported")
+                        .with_label(index.range(), "not supported")
+                        .with_help("use `has` and `.` instead"),
+                );
 
                 None
             }
@@ -784,16 +1074,27 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
         arguments: &[cst::Expression<'_>],
         expected: usize,
     ) -> bool {
-        if arguments.len() == expected {
+        let found = arguments.len();
+        if found == expected {
             return true;
         }
 
-        self.ctx.diagnostic(LowerError::WrongArgumentCount {
-            span: call.range(),
-            function: String::from(function),
-            expected,
-            found: arguments.len(),
-        });
+        let span = call
+            .arguments()
+            .map_or_else(|| call.range(), |args| args.range());
+
+        let expected_suffix = if expected == 1 { "" } else { "s" };
+        let found_suffix = if found == 1 { "" } else { "s" };
+
+        self.ctx.diagnostic(
+            Diagnostic::error(format!(
+                "`{function}` expects {expected} argument{expected_suffix}, found {found}"
+            ))
+            .with_label(
+                span,
+                format!("expected {expected} argument{expected_suffix}, found {found} argument{found_suffix}"),
+            ),
+        );
 
         false
     }
@@ -896,11 +1197,18 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
                         all_arguments,
                     ))
                 } else {
-                    self.ctx.diagnostic(LowerError::UnknownMethod {
-                        span: name_node.range(),
-                        name: String::from(method_name),
-                    });
+                    let mut diagnostic =
+                        Diagnostic::error(format!("unknown method `{method_name}`"))
+                            .with_label(name_node.range(), "unknown method");
 
+                    if let Some(suggestion) =
+                        duramen_diagnostic::suggest(method_name, ALL_METHOD_CANDIDATES)
+                    {
+                        diagnostic = diagnostic
+                            .with_help(format!("a similar method exists: `{suggestion}`"));
+                    }
+
+                    self.ctx.diagnostic(diagnostic);
                     None
                 }
             }
@@ -917,11 +1225,17 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
 
         if name.is_qualified() || !EXTENSION_FUNCTIONS.contains(&text) {
             let full_text = &self.ctx.source[name.range()];
-            self.ctx.diagnostic(LowerError::UnknownFunction {
-                span: name.range(),
-                name: String::from(full_text),
-            });
 
+            let mut diagnostic =
+                Diagnostic::error(format!("`{full_text}` is not a known function"))
+                    .with_label(name.range(), "unknown function");
+
+            if let Some(suggestion) = duramen_diagnostic::suggest(text, EXTENSION_FUNCTIONS) {
+                diagnostic =
+                    diagnostic.with_help(format!("a similar function exists: `{suggestion}`"));
+            }
+
+            self.ctx.diagnostic(diagnostic);
             return None;
         }
 
@@ -950,12 +1264,14 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             }
             cst::LiteralKind::Integer => {
                 let text = self.ctx.text(token);
-                match ast::IntegerLiteral::new(text) {
-                    Ok(literal) => Some(ast::Expression::integer(literal)),
-                    Err(error) => {
-                        self.ctx.diagnostic(error);
-                        None
-                    }
+                if let Ok(literal) = ast::IntegerLiteral::new(text) {
+                    Some(ast::Expression::integer(literal))
+                } else {
+                    self.ctx.diagnostic(
+                        Diagnostic::error(format!("integer literal `{text}` is out of range"))
+                            .with_label(token.range(), "out of range for a 64-bit integer"),
+                    );
+                    None
                 }
             }
             cst::LiteralKind::String => {
@@ -1049,12 +1365,66 @@ impl<'a, 'src> PolicyLowerer<'a, 'src> {
             }
         }
 
-        let text = &self.ctx.source[name.range()];
-        self.ctx.diagnostic(LowerError::UnknownVariable {
-            span: name.range(),
-            name: String::from(text),
-        });
+        let first_start = name
+            .segments()
+            .next()
+            .map_or_else(|| name.range().start, |segment| segment.range().start);
+        let last_end = name
+            .segments()
+            .last()
+            .map_or_else(|| name.range().end, |segment| segment.range().end);
+        let span = first_start..last_end;
+        let text = &self.ctx.source[span.clone()];
 
+        let mut diagnostic = Diagnostic::error(format!("unknown variable `{text}`"))
+            .with_label(span, "not a valid variable");
+
+        if let Some(suggestion) = duramen_diagnostic::suggest(text, KNOWN_VARIABLES) {
+            diagnostic = diagnostic.with_help(format!("a similar variable exists: `{suggestion}`"));
+        } else {
+            diagnostic = diagnostic.with_note(
+                "`principal`, `action`, `resource`, and `context` are the only variables",
+            );
+        }
+
+        self.ctx.diagnostic(diagnostic);
         None
     }
 }
+
+/// All method candidates for suggestions (built-in methods + extension functions).
+const ALL_METHOD_CANDIDATES: &[&str] = &[
+    "contains",
+    "containsAll",
+    "containsAny",
+    "isEmpty",
+    "getTag",
+    "hasTag",
+    "ip",
+    "decimal",
+    "datetime",
+    "duration",
+    "date",
+    "time",
+    "offset",
+    "toDate",
+    "toTime",
+    "toDuration",
+    "toMilliseconds",
+    "toSeconds",
+    "toMinutes",
+    "toHours",
+    "toDays",
+    "isIpv4",
+    "isIpv6",
+    "isLoopback",
+    "isMulticast",
+    "isInRange",
+    "lessThan",
+    "lessThanOrEqual",
+    "greaterThan",
+    "greaterThanOrEqual",
+];
+
+/// Known variable names.
+const KNOWN_VARIABLES: &[&str] = &["principal", "action", "resource", "context"];

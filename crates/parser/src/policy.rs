@@ -12,14 +12,14 @@ struct InfixOperator {
 }
 
 /// Parses Cedar policy source text into a concrete syntax tree.
-pub struct PolicyParser<'a> {
-    parser: Parser<'a>,
+pub struct PolicyParser<'src, 'diag> {
+    parser: Parser<'src, 'diag>,
 }
 
-impl<'a> PolicyParser<'a> {
+impl<'src, 'diag> PolicyParser<'src, 'diag> {
     /// Creates a new policy parser.
     #[must_use]
-    pub const fn new(source: &'a str, diagnostics: &'a mut Diagnostics) -> Self {
+    pub const fn new(source: &'src str, diagnostics: &'diag mut Diagnostics) -> Self {
         Self {
             parser: Parser::new(source, diagnostics),
         }
@@ -27,9 +27,9 @@ impl<'a> PolicyParser<'a> {
 
     /// Parses the source text and returns the concrete syntax tree.
     #[must_use]
-    pub fn parse(mut self) -> Tree {
+    pub fn parse(mut self) -> Tree<'src> {
         self.policies();
-        self.parser.builder.build()
+        self.parser.builder.build(self.parser.source)
     }
 
     /// Parses a sequence of policies.
@@ -95,18 +95,22 @@ impl<'a> PolicyParser<'a> {
             self.parser.next();
         }
 
+        let checkpoint = self.parser.builder.checkpoint();
+
         if self.parser.eat(TokenKind::OpenParenthesis) {
-            self.variable_declaration();
+            self.scope_element();
             if self.parser.eat(TokenKind::Comma) {
-                self.variable_declaration();
+                self.scope_element();
             }
 
             if self.parser.eat(TokenKind::Comma) {
-                self.variable_declaration();
+                self.scope_element();
             }
 
             self.parser.eat(TokenKind::Comma);
-            self.parser.eat(TokenKind::CloseParenthesis);
+            self.parser.recover_to_close(TokenKind::CloseParenthesis);
+
+            self.parser.builder.commit(&checkpoint, Syntax::Scope);
         }
 
         while self
@@ -119,6 +123,28 @@ impl<'a> PolicyParser<'a> {
         }
 
         self.parser.eat(TokenKind::Semicolon);
+
+        if !self.parser.at(&[
+            TokenKind::Eof,
+            TokenKind::At,
+            TokenKind::PermitKeyword,
+            TokenKind::ForbidKeyword,
+        ]) {
+            let err = self.parser.builder.open(Syntax::Error);
+            while !self.parser.at(&[
+                TokenKind::Eof,
+                TokenKind::At,
+                TokenKind::PermitKeyword,
+                TokenKind::ForbidKeyword,
+            ]) {
+                self.parser.advance_push();
+                self.parser.next();
+                self.parser.advance_pop();
+            }
+
+            self.parser.builder.close(&err);
+        }
+
         self.parser.builder.close(&branch);
     }
 
@@ -137,7 +163,7 @@ impl<'a> PolicyParser<'a> {
             return;
         }
 
-        if self.parser.kind().is_identifier() {
+        if self.parser.kind().is_variable() {
             self.parser.next();
         }
 
@@ -158,6 +184,19 @@ impl<'a> PolicyParser<'a> {
         }
 
         self.parser.builder.close(&branch);
+    }
+
+    /// Parses a single scope element with recovery.
+    ///
+    /// Attempts a variable declaration if the current token can start one,
+    /// then recovers any leftover tokens to the next comma or close-paren.
+    fn scope_element(&mut self) {
+        if self.parser.kind().is_variable() || self.parser.at(&[TokenKind::QuestionMark]) {
+            self.variable_declaration();
+        }
+
+        self.parser
+            .recover_to(&[TokenKind::Comma, TokenKind::CloseParenthesis]);
     }
 
     /// Parses a template slot.
@@ -190,7 +229,7 @@ impl<'a> PolicyParser<'a> {
                 self.expression();
             }
 
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.recover_to_close(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -211,12 +250,15 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::IfKeyword]) {
             self.parser.next();
             self.expression();
+
             if self.parser.eat(TokenKind::ThenKeyword) {
                 self.expression();
-            }
 
-            if self.parser.eat(TokenKind::ElseKeyword) {
-                self.expression();
+                if self.parser.eat(TokenKind::ElseKeyword) {
+                    self.expression();
+                }
+            } else {
+                self.recover_if();
             }
 
             self.parser
@@ -227,6 +269,40 @@ impl<'a> PolicyParser<'a> {
         }
 
         self.parser.depth_pop();
+    }
+
+    /// Recovers from a malformed `if` expression by consuming remaining tokens.
+    ///
+    /// Called when the test expression was parsed but `then` was not found.
+    /// Wraps all remaining tokens until the next closing delimiter or EOF
+    /// into a single Error node so the `IfExpression` covers the full extent
+    /// of the user's attempt.
+    fn recover_if(&mut self) {
+        if self.parser.at(&[
+            TokenKind::Eof,
+            TokenKind::CloseBrace,
+            TokenKind::CloseParenthesis,
+            TokenKind::CloseBracket,
+            TokenKind::Semicolon,
+        ]) {
+            return;
+        }
+
+        let err = self.parser.builder.open(Syntax::Error);
+
+        while !self.parser.at(&[
+            TokenKind::Eof,
+            TokenKind::CloseBrace,
+            TokenKind::CloseParenthesis,
+            TokenKind::CloseBracket,
+            TokenKind::Semicolon,
+        ]) {
+            self.parser.advance_push();
+            self.parser.next();
+            self.parser.advance_pop();
+        }
+
+        self.parser.builder.close(&err);
     }
 
     /// Returns the binding power and syntax node kind for the current infix operator.
@@ -365,10 +441,10 @@ impl<'a> PolicyParser<'a> {
                     if self.parser.at(&[TokenKind::OpenParenthesis]) {
                         self.parser.next();
                         if !self.parser.at(&[TokenKind::CloseParenthesis]) {
-                            self.argument_list();
+                            self.argument_list(TokenKind::CloseParenthesis);
                         }
 
-                        self.parser.eat(TokenKind::CloseParenthesis);
+                        self.parser.recover_to_close(TokenKind::CloseParenthesis);
                         self.parser.builder.commit(&inner, Syntax::Call);
                     } else {
                         self.parser.builder.commit(&inner, Syntax::Field);
@@ -379,10 +455,10 @@ impl<'a> PolicyParser<'a> {
 
                     self.parser.next();
                     if !self.parser.at(&[TokenKind::CloseParenthesis]) {
-                        self.argument_list();
+                        self.argument_list(TokenKind::CloseParenthesis);
                     }
 
-                    self.parser.eat(TokenKind::CloseParenthesis);
+                    self.parser.recover_to_close(TokenKind::CloseParenthesis);
                     self.parser.builder.commit(&inner, Syntax::Call);
                 }
                 _ => {
@@ -390,7 +466,7 @@ impl<'a> PolicyParser<'a> {
 
                     self.parser.next();
                     self.expression();
-                    self.parser.eat(TokenKind::CloseBracket);
+                    self.parser.recover_to_close(TokenKind::CloseBracket);
 
                     self.parser.builder.commit(&inner, Syntax::Index);
                 }
@@ -429,7 +505,7 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::OpenParenthesis]) {
             self.parser.next();
             self.expression();
-            self.parser.eat(TokenKind::CloseParenthesis);
+            self.parser.recover_to_close(TokenKind::CloseParenthesis);
             self.parser
                 .builder
                 .commit(&checkpoint, Syntax::Parenthesized);
@@ -440,10 +516,10 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::OpenBracket]) {
             self.parser.next();
             if !self.parser.at(&[TokenKind::CloseBracket]) {
-                self.argument_list();
+                self.argument_list(TokenKind::CloseBracket);
             }
 
-            self.parser.eat(TokenKind::CloseBracket);
+            self.parser.recover_to_close(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Syntax::List);
 
             return;
@@ -452,7 +528,7 @@ impl<'a> PolicyParser<'a> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.record_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.recover_to_close(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Syntax::Record);
 
             return;
@@ -463,7 +539,12 @@ impl<'a> PolicyParser<'a> {
             return;
         }
 
-        if !self.parser.at(&[TokenKind::Eof]) {
+        if !self.parser.at(&[
+            TokenKind::Eof,
+            TokenKind::CloseBrace,
+            TokenKind::CloseParenthesis,
+            TokenKind::CloseBracket,
+        ]) {
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
@@ -485,22 +566,8 @@ impl<'a> PolicyParser<'a> {
             }
         }
 
-        if !self
-            .parser
-            .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-        {
-            let err = self.parser.builder.open(Syntax::Error);
-            while !self
-                .parser
-                .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-            {
-                self.parser.advance_push();
-                self.parser.next();
-                self.parser.advance_pop();
-            }
-
-            self.parser.builder.close(&err);
-        }
+        self.parser
+            .recover_to(&[TokenKind::Comma, TokenKind::CloseBrace]);
 
         self.parser.builder.close(&branch);
     }
@@ -527,22 +594,21 @@ impl<'a> PolicyParser<'a> {
     /// ```cedar
     /// ip("192.168.0.1"), ip("10.0.0.0/8")
     /// ```
-    fn argument_list(&mut self) {
+    fn argument_list(&mut self, close: TokenKind) {
         let branch = self.parser.builder.open(Syntax::Arguments);
         self.expression();
+        self.parser.recover_to(&[TokenKind::Comma, close]);
 
         while self.parser.at(&[TokenKind::Comma]) {
             self.parser.advance_push();
             self.parser.next();
-            if self
-                .parser
-                .at(&[TokenKind::CloseParenthesis, TokenKind::CloseBracket])
-            {
+            if self.parser.at(&[close]) {
                 self.parser.advance_pop();
                 break;
             }
 
             self.expression();
+            self.parser.recover_to(&[TokenKind::Comma, close]);
             self.parser.advance_pop();
         }
 
@@ -581,7 +647,7 @@ impl<'a> PolicyParser<'a> {
                     if self.parser.at(&[TokenKind::OpenBrace]) {
                         self.parser.next();
                         self.record_entries();
-                        self.parser.eat(TokenKind::CloseBrace);
+                        self.parser.recover_to_close(TokenKind::CloseBrace);
                         self.parser.advance_pop();
                         self.parser
                             .builder

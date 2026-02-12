@@ -1,0 +1,51 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: unexpected `3`
+  ╭▸ test:1:1
+  │
+1 │ 3(principal: p, action: a, resource: r)
+  ╰╴━ expected `permit`, `forbid`, or `@`
+error: type constraints using `:` are not supported
+   ╭▸ test:11:18
+   │
+11 │ permit (principal: p, action: a, resource: r)
+   │                  ━ not a valid scope operator
+   ╰╴
+help: use `is` for type constraints
+error: type constraints using `:` are not supported
+   ╭▸ test:11:29
+   │
+11 │ permit (principal: p, action: a, resource: r)
+   │                             ━ not a valid scope operator
+   ╰╴
+help: use `is` for type constraints
+error: type constraints using `:` are not supported
+   ╭▸ test:11:42
+   │
+11 │ permit (principal: p, action: a, resource: r)
+   │                                          ━ not a valid scope operator
+   ╰╴
+help: use `is` for type constraints
+error: unknown variable `w`
+   ╭▸ test:12:8
+   │
+12 │ when { w }
+   │        ━ not a valid variable
+   ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables
+error: unknown variable `u`
+   ╭▸ test:13:10
+   │
+13 │ unless { u }
+   │          ━ not a valid variable
+   ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables
+error: invalid policy condition `advice`
+   ╭▸ test:14:1
+   │
+14 │ advice { "doit" };
+   │ ━━━━━━ not a valid condition
+   ╰╴
+help: condition must be either `when` or `unless`

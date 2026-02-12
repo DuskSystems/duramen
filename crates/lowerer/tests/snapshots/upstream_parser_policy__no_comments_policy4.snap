@@ -1,0 +1,65 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: root
+---
+policies 0..100
+╰─ policy 0..100
+   ├─ permit 0..6
+   ├─ whitespace 6..7
+   ├─ scope 7..46
+   │  ├─ ( 7..8
+   │  ├─ variable definition 8..17
+   │  │  ╰─ principal 8..17
+   │  ├─ , 17..18
+   │  ├─ whitespace 18..19
+   │  ├─ variable definition 19..25
+   │  │  ╰─ action 19..25
+   │  ├─ , 25..26
+   │  ├─ whitespace 26..27
+   │  ├─ variable definition 27..35
+   │  │  ╰─ resource 27..35
+   │  ├─ , 35..36
+   │  ├─ whitespace 36..37
+   │  ├─ error 37..44
+   │  │  ╰─ context 37..44
+   │  ├─ ) 44..45
+   │  ╰─ whitespace 45..46
+   ├─ condition 46..98
+   │  ├─ when 46..50
+   │  ├─ whitespace 50..51
+   │  ├─ { 51..52
+   │  ├─ whitespace 52..57
+   │  ├─ member expression 57..97
+   │  │  ├─ name 57..64
+   │  │  │  ╰─ context 57..64
+   │  │  ╰─ method call 64..97
+   │  │     ├─ . 64..65
+   │  │     ├─ identifier 65..73
+   │  │     ├─ ( 73..74
+   │  │     ├─ arguments 74..95
+   │  │     │  ├─ literal 74..75
+   │  │     │  │  ╰─ integer 74..75
+   │  │     │  ├─ , 75..76
+   │  │     │  ├─ whitespace 76..77
+   │  │     │  ├─ literal 77..83
+   │  │     │  │  ╰─ string 77..83
+   │  │     │  ├─ , 83..84
+   │  │     │  ├─ whitespace 84..85
+   │  │     │  ╰─ member expression 85..95
+   │  │     │     ├─ name 85..89
+   │  │     │     │  ╰─ identifier 85..89
+   │  │     │     ╰─ method call 89..95
+   │  │     │        ├─ ( 89..90
+   │  │     │        ├─ arguments 90..94
+   │  │     │        │  ├─ literal 90..91
+   │  │     │        │  │  ╰─ integer 90..91
+   │  │     │        │  ├─ , 91..92
+   │  │     │        │  ├─ whitespace 92..93
+   │  │     │        │  ╰─ literal 93..94
+   │  │     │        │     ╰─ integer 93..94
+   │  │     │        ╰─ ) 94..95
+   │  │     ├─ ) 95..96
+   │  │     ╰─ whitespace 96..97
+   │  ╰─ } 97..98
+   ├─ ; 98..99
+   ╰─ whitespace 99..100

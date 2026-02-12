@@ -25,3 +25,10 @@ annotate-snippets = { workspace = true }
 
 [dev-dependencies]
 duramen-test = { workspace = true }
+
+# Benchmarking
+divan = { workspace = true }
+
+[[bench]]
+name = "suggest"
+harness = false

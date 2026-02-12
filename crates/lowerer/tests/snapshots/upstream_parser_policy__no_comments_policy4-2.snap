@@ -1,0 +1,16 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: `context` is not a scope variable
+  ╭▸ test:1:38
+  │
+1 │ permit (principal, action, resource, context)
+  │                                      ━━━━━━━ not valid in scope
+  ╰╴
+note: `context` can only be used in conditions, not in the scope
+error: `contains` expects 1 argument, found 3
+  ╭▸ test:3:22
+  │
+3 │     context.contains(3, "four", five(6, 7))
+  ╰╴                     ━━━━━━━━━━━━━━━━━━━━━ expected 1 argument, found 3 arguments

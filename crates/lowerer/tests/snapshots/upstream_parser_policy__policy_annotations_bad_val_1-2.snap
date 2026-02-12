@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: annotations accept only a single string value
+  ╭▸ test:1:17
+  │
+1 │ @bad_annotation("bad", "annotation")
+  │                 ━━━━━━━━━━━━━━━━━━━ unexpected extra content
+  ╰╴
+note: use `@name("value")` with a single string

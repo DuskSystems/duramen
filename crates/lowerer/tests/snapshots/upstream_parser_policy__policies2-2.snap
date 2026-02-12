@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: `context` is not a scope variable
+  ╭▸ test:5:5
+  │
+5 │     context:Group
+  │     ━━━━━━━ not valid in scope
+  ╰╴
+note: `context` can only be used in conditions, not in the scope

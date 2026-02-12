@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: annotations are not valid in the scope
+  ╭▸ test:1:9
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ not valid in scope
+  ╰╴
+help: move annotations before the effect

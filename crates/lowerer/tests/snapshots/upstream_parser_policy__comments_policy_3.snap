@@ -1,0 +1,37 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: root
+---
+policies 0..75
+╰─ policy 0..75
+   ├─ permit 0..6
+   ├─ whitespace 6..7
+   ├─ scope 7..37
+   │  ├─ ( 7..8
+   │  ├─ variable definition 8..17
+   │  │  ╰─ principal 8..17
+   │  ├─ , 17..18
+   │  ├─ whitespace 18..19
+   │  ├─ variable definition 19..25
+   │  │  ╰─ action 19..25
+   │  ├─ , 25..26
+   │  ├─ whitespace 26..27
+   │  ├─ variable definition 27..35
+   │  │  ╰─ resource 27..35
+   │  ├─ ) 35..36
+   │  ╰─ whitespace 36..37
+   ├─ condition 37..73
+   │  ├─ when 37..41
+   │  ├─ whitespace 41..42
+   │  ├─ { 42..43
+   │  ├─ whitespace 43..44
+   │  ├─ literal 44..46
+   │  │  ├─ integer 44..45
+   │  │  ╰─ whitespace 45..46
+   │  ├─ error 46..72
+   │  │  ├─ block comment 46..70
+   │  │  ├─ identifier 70..71
+   │  │  ╰─ whitespace 71..72
+   │  ╰─ } 72..73
+   ├─ ; 73..74
+   ╰─ whitespace 74..75

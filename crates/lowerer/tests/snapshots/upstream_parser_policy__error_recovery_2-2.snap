@@ -1,0 +1,18 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected scope variable
+  ╭▸ test:1:28
+  │
+1 │ permit (principal, action, !)
+  │                            ━ not valid in scope
+  ╰╴
+note: `principal`, `action`, and `resource` are the only scope variables
+error: expected scope variable
+  ╭▸ test:4:28
+  │
+4 │ permit (principal, action, +);
+  │                            ━ not valid in scope
+  ╰╴
+note: `principal`, `action`, and `resource` are the only scope variables

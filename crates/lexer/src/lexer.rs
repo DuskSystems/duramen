@@ -44,6 +44,22 @@ impl<'a> Lexer<'a> {
         Some(Token::new(kind, len))
     }
 
+    /// Scans a block comment until `*/` or EOF.
+    fn scan_block_comment(&mut self) {
+        loop {
+            let Some(current) = self.cursor.current() else {
+                return;
+            };
+
+            if current == b'*' && self.cursor.peek() == Some(b'/') {
+                self.cursor.bump_n(2);
+                return;
+            }
+
+            self.cursor.bump();
+        }
+    }
+
     /// Scans the next token.
     fn scan_token(&mut self) -> TokenKind {
         let Some(current) = self.cursor.current() else {
@@ -76,11 +92,23 @@ impl<'a> Lexer<'a> {
                     TokenKind::StringUnterminated
                 }
             }
+            b'\'' => {
+                self.cursor.bump();
+                if self.cursor.scan_single_quote_string() {
+                    TokenKind::StringSingleQuoted
+                } else {
+                    TokenKind::Unknown
+                }
+            }
             b'/' => {
                 if self.cursor.peek() == Some(b'/') {
                     self.cursor.bump_n(2);
                     self.cursor.skip_line();
                     TokenKind::Comment
+                } else if self.cursor.peek() == Some(b'*') {
+                    self.cursor.bump_n(2);
+                    self.scan_block_comment();
+                    TokenKind::CommentBlock
                 } else {
                     self.cursor.bump();
                     TokenKind::Slash
@@ -310,6 +338,44 @@ mod tests {
             Some(Token::new(TokenKind::GreaterThanEquals, 2))
         );
         assert_eq!(lexer.next(), None);
+    }
+
+    #[test]
+    fn single_quote_string() {
+        let mut lexer = Lexer::new("'hello'");
+        assert_eq!(
+            lexer.next(),
+            Some(Token::new(TokenKind::StringSingleQuoted, 7))
+        );
+        assert_eq!(lexer.next(), None);
+
+        let mut lexer = Lexer::new("'it\\'s'");
+        assert_eq!(
+            lexer.next(),
+            Some(Token::new(TokenKind::StringSingleQuoted, 7))
+        );
+        assert_eq!(lexer.next(), None);
+
+        // Stray single quote (no closing before newline)
+        let mut lexer = Lexer::new("'\n");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Unknown, 1)));
+    }
+
+    #[test]
+    fn block_comment() {
+        let mut lexer = Lexer::new("/* hello */");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::CommentBlock, 11)));
+        assert_eq!(lexer.next(), None);
+
+        // Unterminated block comment consumes to EOF
+        let mut lexer = Lexer::new("/* never closed");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::CommentBlock, 15)));
+        assert_eq!(lexer.next(), None);
+
+        // Multiline block comment
+        let mut lexer = Lexer::new("/* line1\nline2 */x");
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::CommentBlock, 17)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Identifier, 1)));
     }
 
     #[test]

@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: unknown variable `one`
+  ╭▸ test:3:5
+  │
+3 │     one { num: true, trivia: "first!" }
+  │     ━━━ not a valid variable
+  ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables

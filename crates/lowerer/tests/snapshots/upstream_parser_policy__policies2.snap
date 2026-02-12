@@ -1,0 +1,68 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: root
+---
+policies 0..174
+╰─ policy 0..174
+   ├─ permit 0..6
+   ├─ whitespace 6..7
+   ├─ scope 7..172
+   │  ├─ ( 7..8
+   │  ├─ whitespace 8..13
+   │  ├─ variable definition 13..47
+   │  │  ├─ principal 13..22
+   │  │  ├─ whitespace 22..23
+   │  │  ├─ in 23..25
+   │  │  ├─ whitespace 25..26
+   │  │  ╰─ entity reference 26..47
+   │  │     ├─ name 26..31
+   │  │     │  ╰─ identifier 26..31
+   │  │     ├─ :: 31..33
+   │  │     ╰─ string 33..47
+   │  ├─ , 47..48
+   │  ├─ whitespace 48..50
+   │  ├─ comment 50..62
+   │  ├─ whitespace 62..67
+   │  ├─ variable definition 67..114
+   │  │  ├─ action 67..73
+   │  │  ├─ whitespace 73..74
+   │  │  ├─ in 74..76
+   │  │  ├─ whitespace 76..77
+   │  │  ╰─ list 77..114
+   │  │     ├─ [ 77..78
+   │  │     ├─ arguments 78..113
+   │  │     │  ├─ entity reference 78..93
+   │  │     │  │  ├─ name 78..85
+   │  │     │  │  │  ╰─ identifier 78..85
+   │  │     │  │  ├─ :: 85..87
+   │  │     │  │  ╰─ string 87..93
+   │  │     │  ├─ , 93..94
+   │  │     │  ├─ whitespace 94..95
+   │  │     │  ╰─ entity reference 95..113
+   │  │     │     ├─ name 95..102
+   │  │     │     │  ╰─ identifier 95..102
+   │  │     │     ├─ :: 102..104
+   │  │     │     ╰─ string 104..113
+   │  │     ╰─ ] 113..114
+   │  ├─ , 114..115
+   │  ├─ whitespace 115..120
+   │  ├─ variable definition 120..151
+   │  │  ├─ resource 120..128
+   │  │  ├─ whitespace 128..129
+   │  │  ├─ in 129..131
+   │  │  ├─ whitespace 131..132
+   │  │  ╰─ entity reference 132..151
+   │  │     ├─ name 132..137
+   │  │     │  ╰─ identifier 132..137
+   │  │     ├─ :: 137..139
+   │  │     ╰─ string 139..151
+   │  ├─ , 151..152
+   │  ├─ whitespace 152..157
+   │  ├─ error 157..171
+   │  │  ├─ context 157..164
+   │  │  ├─ : 164..165
+   │  │  ├─ identifier 165..170
+   │  │  ╰─ whitespace 170..171
+   │  ╰─ ) 171..172
+   ├─ ; 172..173
+   ╰─ whitespace 173..174

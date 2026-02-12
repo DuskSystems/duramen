@@ -1,4 +1,9 @@
 # https://github.com/crate-ci/typos/blob/master/docs/reference.md
 
 [files]
-extend-exclude = ["cedar", "cedar-integration-tests"]
+extend-exclude = [
+  "cedar",
+  "cedar-integration-tests",
+  "crates/diagnostic/src/suggest.rs",
+  "crates/diagnostic/benches/suggest.rs",
+]

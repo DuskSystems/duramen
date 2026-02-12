@@ -6,6 +6,7 @@ extern crate alloc;
 extern crate std;
 
 use alloc::borrow::Cow;
+use alloc::format;
 use alloc::vec::Vec;
 
 use duramen_cst::CstNode as _;
@@ -13,10 +14,6 @@ use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::{Node, Syntax};
 use {duramen_ast as ast, duramen_cst as cst};
-
-use crate::error::LowerError;
-
-mod error;
 
 mod policy;
 pub use policy::PolicyLowerer;
@@ -89,6 +86,91 @@ impl<'a, 'src> LowerContext<'a, 'src> {
         }
     }
 
+    /// Emits a context-aware diagnostic for the first error child of `node`.
+    fn emit_error(&mut self, node: Node<'_>, context: &str) {
+        let Some(error_node) = node.children().find(|child| child.kind().is_error()) else {
+            return;
+        };
+
+        if let Some(diagnostic) = Self::recognize_error(error_node) {
+            self.diagnostic(diagnostic);
+            return;
+        }
+
+        let span = error_node
+            .children()
+            .filter(|child| !child.kind().is_trivial())
+            .last()
+            .map_or_else(
+                || error_node.range(),
+                |last| error_node.range().start..last.range().end,
+            );
+
+        let text = &self.source[span.clone()];
+        self.diagnostic(
+            Diagnostic::error(format!("unexpected token `{text}`"))
+                .with_label(span, format!("not valid in {context}")),
+        );
+    }
+
+    /// Recognizes well-known error tokens and returns a tailored diagnostic.
+    fn recognize_error(node: Node<'_>) -> Option<Diagnostic> {
+        let child = if node.kind().is_token() {
+            node
+        } else {
+            node.children().find(|child| !child.kind().is_trivial())?
+        };
+        let kind = child.kind();
+        let range = child.range();
+        let outer_range = node.range();
+
+        let diagnostic = match kind {
+            Syntax::StringSingleQuoted => {
+                Diagnostic::error("strings must use double quotes, not single quotes")
+                    .with_label(range, "single-quoted string")
+                    .with_help("replace single quotes `'` with double quotes `\"`")
+            }
+
+            Syntax::CommentBlock => {
+                let text = child.text();
+                let mut diagnostic = Diagnostic::error("block comments are not supported")
+                    .with_label(range.start..range.start + 2, "comment opened here")
+                    .with_help("use `//` for line comments");
+
+                if text.ends_with("*/") {
+                    diagnostic =
+                        diagnostic.with_context(range.end - 2..range.end, "comment closed here");
+                }
+
+                diagnostic
+            }
+
+            Syntax::StringUnterminated => Diagnostic::error("unterminated string literal")
+                .with_label(range.start..range.start + 1, "string is never closed")
+                .with_help("add a closing `\"` to terminate the string"),
+
+            Syntax::Ampersand => Diagnostic::error("unexpected `&`")
+                .with_label(range, "not a valid operator")
+                .with_help("use `&&` for logical and"),
+
+            Syntax::Pipe => Diagnostic::error("unexpected `|`")
+                .with_label(range, "not a valid operator")
+                .with_help("use `||` for logical or"),
+
+            Syntax::ContextKeyword => Diagnostic::error("`context` is not a scope variable")
+                .with_label(range, "not valid in scope")
+                .with_note("`context` can only be used in conditions, not in the scope"),
+
+            Syntax::At => Diagnostic::error("annotations are not valid in the scope")
+                .with_label(outer_range, "not valid in scope")
+                .with_help("move annotations before the effect"),
+
+            _ => return None,
+        };
+
+        Some(diagnostic)
+    }
+
     /// Lowers annotations.
     fn lower_annotations<'cst>(
         &mut self,
@@ -101,6 +183,15 @@ impl<'a, 'src> LowerContext<'a, 'src> {
             if node.child(Syntax::OpenParenthesis).is_some()
                 && node.child(Syntax::CloseParenthesis).is_none()
             {
+                if let Some(diagnostic) = node
+                    .descendants()
+                    .filter(|child| child.kind().is_error())
+                    .find_map(Self::recognize_error)
+                {
+                    self.diagnostic(diagnostic);
+                    return None;
+                }
+
                 let span = node
                     .after(Syntax::OpenParenthesis)
                     .find(|child| !child.kind().is_trivial())
@@ -112,10 +203,63 @@ impl<'a, 'src> LowerContext<'a, 'src> {
                         |child| child.first().range(),
                     );
 
-                self.diagnostic(LowerError::ExpectedToken {
-                    span,
-                    expected: "`)`",
-                });
+                self.diagnostic(Diagnostic::error("expected `)`").with_label(span, "expected `)`"));
+
+                return None;
+            }
+
+            if let Some(error_node) = node
+                .after(Syntax::OpenParenthesis)
+                .take_while(|child| child.kind() != Syntax::CloseParenthesis)
+                .find(|child| child.kind().is_error())
+            {
+                if let Some(diagnostic) = Self::recognize_error(error_node) {
+                    self.diagnostic(diagnostic);
+                } else if let Some(value_node) = annotation.value() {
+                    let span = value_node.range().start..error_node.range().end;
+                    self.diagnostic(
+                        Diagnostic::error("annotations accept only a single string value")
+                            .with_label(span, "unexpected extra content")
+                            .with_note("use `@name(\"value\")` with a single string"),
+                    );
+                } else {
+                    self.diagnostic(
+                        Diagnostic::error("expected a string literal")
+                            .with_label(error_node.range(), "not a valid annotation value")
+                            .with_note("use `@name(\"value\")` with a double-quoted string"),
+                    );
+                }
+
+                return None;
+            }
+
+            // Check for error nodes in the annotation name (e.g. @bad-annotation
+            // where `-` splits the identifier into multiple tokens).
+            if let Some(error_node) = node
+                .children()
+                .take_while(|child| child.kind() != Syntax::OpenParenthesis)
+                .find(|child| child.kind().is_error())
+            {
+                let name_start = annotation
+                    .name()
+                    .map_or_else(|| error_node.range().start, |name| name.range().start);
+
+                let name_end = error_node
+                    .children()
+                    .filter(|child| !child.kind().is_trivial())
+                    .last()
+                    .map_or_else(|| error_node.range().end, |last| last.range().end);
+
+                let span = name_start..name_end;
+                let text = &self.source[span.clone()];
+
+                self.diagnostic(
+                    Diagnostic::error(format!("invalid annotation name `{text}`"))
+                        .with_label(span, "must be a valid identifier")
+                        .with_help("annotation names can only contain letters, digits, and `_`"),
+                );
+
+                return None;
             }
 
             let Some(name_node) = annotation.name() else {
@@ -141,24 +285,17 @@ impl<'a, 'src> LowerContext<'a, 'src> {
                         continue;
                     }
                 }
-            } else if node.child(Syntax::OpenParenthesis).is_some()
-                && node.child(Syntax::CloseParenthesis).is_some()
+            } else if let Some(open) = node.child(Syntax::OpenParenthesis)
+                && let Some(close) = node.child(Syntax::CloseParenthesis)
             {
-                let span = node
-                    .after(Syntax::OpenParenthesis)
-                    .find(|child| !child.kind().is_trivial())
-                    .map_or_else(
-                        || {
-                            let end = node.range().end;
-                            end..end
-                        },
-                        |child| child.first().range(),
-                    );
-
-                self.diagnostic(LowerError::ExpectedToken {
-                    span,
-                    expected: "a string literal",
-                });
+                self.diagnostic(
+                    Diagnostic::error("empty annotation value")
+                        .with_label(
+                            open.range().start..close.range().end,
+                            "value cannot be empty",
+                        )
+                        .with_help("provide a string value: `@name(\"value\")`"),
+                );
 
                 continue;
             } else {

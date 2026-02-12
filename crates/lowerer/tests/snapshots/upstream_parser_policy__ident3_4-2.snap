@@ -1,0 +1,9 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: invalid `if` expression
+  ╭▸ test:2:8
+  │
+2 │ when { if::then::else };
+  ╰╴       ━━━━━━━━━━━━━━ expected `if <expr> then <expr> else <expr>`

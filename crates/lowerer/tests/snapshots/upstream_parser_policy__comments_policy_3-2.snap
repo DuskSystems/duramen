@@ -1,0 +1,13 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: block comments are not supported
+  ╭▸ test:2:10
+  │
+2 │ when { 1 /* multi-line
+  │          ━━ comment opened here
+3 │ comment */d };
+  │         ── comment closed here
+  ╰╴
+help: use `//` for line comments

@@ -1,0 +1,9 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: integer literal `5555555555555555555555` is out of range
+  ╭▸ test:2:21
+  │
+2 │ when { principal == 5555555555555555555555 };
+  ╰╴                    ━━━━━━━━━━━━━━━━━━━━━━ out of range for a 64-bit integer

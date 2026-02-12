@@ -1,0 +1,9 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected an attribute name
+  ╭▸ test:3:21
+  │
+3 │     principal has a.(b)
+  ╰╴                    ━━━ unexpected field access

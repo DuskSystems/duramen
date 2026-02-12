@@ -32,6 +32,7 @@ pub struct Diagnostic {
     label: Option<(Range<usize>, String)>,
     context: Vec<(Range<usize>, String)>,
     notes: Vec<String>,
+    help: Vec<String>,
     suggestions: Vec<Suggestion>,
 }
 
@@ -45,6 +46,7 @@ impl Diagnostic {
             label: None,
             context: Vec::new(),
             notes: Vec::new(),
+            help: Vec::new(),
             suggestions: Vec::new(),
         }
     }
@@ -58,6 +60,7 @@ impl Diagnostic {
             label: None,
             context: Vec::new(),
             notes: Vec::new(),
+            help: Vec::new(),
             suggestions: Vec::new(),
         }
     }
@@ -100,6 +103,12 @@ impl Diagnostic {
         &self.notes
     }
 
+    /// Returns the help messages.
+    #[must_use]
+    pub fn help(&self) -> &[String] {
+        &self.help
+    }
+
     /// Returns the suggestions.
     #[must_use]
     pub fn suggestions(&self) -> &[Suggestion] {
@@ -126,6 +135,13 @@ impl Diagnostic {
     #[must_use]
     pub fn with_note<N: Into<String>>(mut self, note: N) -> Self {
         self.notes.push(note.into());
+        self
+    }
+
+    /// Adds a help message to the diagnostic.
+    #[must_use]
+    pub fn with_help<H: Into<String>>(mut self, help: H) -> Self {
+        self.help.push(help.into());
         self
     }
 
@@ -157,6 +173,10 @@ impl Diagnostic {
         let mut groups = vec![title.element(snippet)];
         for note in &self.notes {
             groups.push(Group::with_title(Level::NOTE.secondary_title(note)));
+        }
+
+        for help in &self.help {
+            groups.push(Group::with_title(Level::HELP.secondary_title(help)));
         }
 
         for suggestion in &self.suggestions {

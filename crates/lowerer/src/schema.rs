@@ -4,12 +4,11 @@ use alloc::vec::Vec;
 
 use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::Syntax;
 
 use crate::LowerContext;
-use crate::error::LowerError;
 
 /// Schema lowerer for CST-to-AST transformation.
 pub struct SchemaLowerer<'a, 'src> {
@@ -108,9 +107,10 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
                 }
                 Syntax::NamespaceDeclaration => {
                     if let Some(nested) = cst::Namespace::cast(child) {
-                        self.ctx.diagnostic(LowerError::NestedNamespace {
-                            span: nested.range(),
-                        });
+                        self.ctx.diagnostic(
+                            Diagnostic::error("nested namespaces are not supported")
+                                .with_label(nested.range(), "nested namespace"),
+                        );
                     }
                 }
                 _ => {}
@@ -139,8 +139,10 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
         let mut names: Vec<ast::Identifier<'src>> = Vec::new();
         for name in entity.names() {
             if name.is_qualified() {
-                self.ctx
-                    .diagnostic(LowerError::QualifiedEntityName { span: name.range() });
+                self.ctx.diagnostic(
+                    Diagnostic::error("unexpected namespace qualifier on entity name")
+                        .with_label(name.range(), "remove namespace qualifier"),
+                );
 
                 continue;
             }
@@ -313,9 +315,11 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
             cst::TypeExpression::Set(_)
             | cst::TypeExpression::Entity(_)
             | cst::TypeExpression::Enum(_) => {
-                self.ctx.diagnostic(LowerError::InvalidContextType {
-                    span: definition.range(),
-                });
+                self.ctx
+                    .diagnostic(Diagnostic::error("invalid context type").with_label(
+                        definition.range(),
+                        "expected a record type or type reference",
+                    ));
 
                 None
             }
@@ -331,9 +335,10 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
 
         let cst_name = type_declaration.name()?;
         if cst_name.is_qualified() {
-            self.ctx.diagnostic(LowerError::QualifiedTypeName {
-                span: cst_name.range(),
-            });
+            self.ctx.diagnostic(
+                Diagnostic::error("unexpected namespace qualifier on type name")
+                    .with_label(cst_name.range(), "remove namespace qualifier"),
+            );
             return None;
         }
 
@@ -367,9 +372,10 @@ impl<'a, 'src> SchemaLowerer<'a, 'src> {
                 Some(ast::TypeExpression::Record(record_type))
             }
             cst::TypeExpression::Entity(_entity) => {
-                self.ctx.diagnostic(LowerError::MissingTypeExpression {
-                    span: type_expr.range(),
-                });
+                self.ctx.diagnostic(
+                    Diagnostic::error("missing type expression")
+                        .with_label(type_expr.range(), "expected a type"),
+                );
 
                 None
             }

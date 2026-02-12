@@ -11,5 +11,8 @@ pub use diagnostic::{Diagnostic, DiagnosticKind};
 mod diagnostics;
 pub use diagnostics::Diagnostics;
 
+mod suggest;
+pub use suggest::suggest;
+
 mod suggestion;
 pub use suggestion::{Suggestion, SuggestionKind};

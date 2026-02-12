@@ -1,0 +1,169 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: root
+---
+policies 0..263
+├─ policy 0..174
+│  ├─ error 0..84
+│  │  ├─ integer 0..1
+│  │  ├─ ( 1..2
+│  │  ├─ principal 2..11
+│  │  ├─ : 11..12
+│  │  ├─ whitespace 12..13
+│  │  ├─ identifier 13..14
+│  │  ├─ , 14..15
+│  │  ├─ whitespace 15..16
+│  │  ├─ action 16..22
+│  │  ├─ : 22..23
+│  │  ├─ whitespace 23..24
+│  │  ├─ identifier 24..25
+│  │  ├─ , 25..26
+│  │  ├─ whitespace 26..27
+│  │  ├─ resource 27..35
+│  │  ├─ : 35..36
+│  │  ├─ whitespace 36..37
+│  │  ├─ identifier 37..38
+│  │  ├─ ) 38..39
+│  │  ├─ whitespace 39..40
+│  │  ├─ when 40..44
+│  │  ├─ whitespace 44..45
+│  │  ├─ { 45..46
+│  │  ├─ whitespace 46..47
+│  │  ├─ identifier 47..48
+│  │  ├─ whitespace 48..49
+│  │  ├─ } 49..50
+│  │  ├─ whitespace 50..51
+│  │  ├─ unless 51..57
+│  │  ├─ whitespace 57..58
+│  │  ├─ { 58..59
+│  │  ├─ whitespace 59..60
+│  │  ├─ identifier 60..61
+│  │  ├─ whitespace 61..62
+│  │  ├─ } 62..63
+│  │  ├─ whitespace 63..64
+│  │  ├─ identifier 64..70
+│  │  ├─ whitespace 70..71
+│  │  ├─ { 71..72
+│  │  ├─ whitespace 72..73
+│  │  ├─ string 73..79
+│  │  ├─ whitespace 79..80
+│  │  ├─ } 80..81
+│  │  ├─ ; 81..82
+│  │  ╰─ whitespace 82..84
+│  ├─ permit 84..90
+│  ├─ whitespace 90..91
+│  ├─ scope 91..130
+│  │  ├─ ( 91..92
+│  │  ├─ variable definition 92..104
+│  │  │  ├─ principal 92..101
+│  │  │  ├─ : 101..102
+│  │  │  ├─ whitespace 102..103
+│  │  │  ╰─ name 103..104
+│  │  │     ╰─ identifier 103..104
+│  │  ├─ , 104..105
+│  │  ├─ whitespace 105..106
+│  │  ├─ variable definition 106..115
+│  │  │  ├─ action 106..112
+│  │  │  ├─ : 112..113
+│  │  │  ├─ whitespace 113..114
+│  │  │  ╰─ name 114..115
+│  │  │     ╰─ identifier 114..115
+│  │  ├─ , 115..116
+│  │  ├─ whitespace 116..117
+│  │  ├─ variable definition 117..128
+│  │  │  ├─ resource 117..125
+│  │  │  ├─ : 125..126
+│  │  │  ├─ whitespace 126..127
+│  │  │  ╰─ name 127..128
+│  │  │     ╰─ identifier 127..128
+│  │  ├─ ) 128..129
+│  │  ╰─ whitespace 129..130
+│  ├─ condition 130..141
+│  │  ├─ when 130..134
+│  │  ├─ whitespace 134..135
+│  │  ├─ { 135..136
+│  │  ├─ whitespace 136..137
+│  │  ├─ name 137..139
+│  │  │  ├─ identifier 137..138
+│  │  │  ╰─ whitespace 138..139
+│  │  ├─ } 139..140
+│  │  ╰─ whitespace 140..141
+│  ├─ condition 141..154
+│  │  ├─ unless 141..147
+│  │  ├─ whitespace 147..148
+│  │  ├─ { 148..149
+│  │  ├─ whitespace 149..150
+│  │  ├─ name 150..152
+│  │  │  ├─ identifier 150..151
+│  │  │  ╰─ whitespace 151..152
+│  │  ├─ } 152..153
+│  │  ╰─ whitespace 153..154
+│  ╰─ error 154..174
+│     ├─ identifier 154..160
+│     ├─ whitespace 160..161
+│     ├─ { 161..162
+│     ├─ whitespace 162..163
+│     ├─ string 163..169
+│     ├─ whitespace 169..170
+│     ├─ } 170..171
+│     ├─ ; 171..172
+│     ╰─ whitespace 172..174
+╰─ policy 174..263
+   ├─ permit 174..180
+   ├─ whitespace 180..181
+   ├─ scope 181..220
+   │  ├─ ( 181..182
+   │  ├─ variable definition 182..194
+   │  │  ├─ principal 182..191
+   │  │  ├─ : 191..192
+   │  │  ├─ whitespace 192..193
+   │  │  ╰─ name 193..194
+   │  │     ╰─ identifier 193..194
+   │  ├─ , 194..195
+   │  ├─ whitespace 195..196
+   │  ├─ variable definition 196..205
+   │  │  ├─ action 196..202
+   │  │  ├─ : 202..203
+   │  │  ├─ whitespace 203..204
+   │  │  ╰─ name 204..205
+   │  │     ╰─ identifier 204..205
+   │  ├─ , 205..206
+   │  ├─ whitespace 206..207
+   │  ├─ variable definition 207..218
+   │  │  ├─ resource 207..215
+   │  │  ├─ : 215..216
+   │  │  ├─ whitespace 216..217
+   │  │  ╰─ name 217..218
+   │  │     ╰─ identifier 217..218
+   │  ├─ ) 218..219
+   │  ╰─ whitespace 219..220
+   ├─ condition 220..231
+   │  ├─ when 220..224
+   │  ├─ whitespace 224..225
+   │  ├─ { 225..226
+   │  ├─ whitespace 226..227
+   │  ├─ name 227..229
+   │  │  ├─ identifier 227..228
+   │  │  ╰─ whitespace 228..229
+   │  ├─ } 229..230
+   │  ╰─ whitespace 230..231
+   ├─ condition 231..244
+   │  ├─ unless 231..237
+   │  ├─ whitespace 237..238
+   │  ├─ { 238..239
+   │  ├─ whitespace 239..240
+   │  ├─ name 240..242
+   │  │  ├─ identifier 240..241
+   │  │  ╰─ whitespace 241..242
+   │  ├─ } 242..243
+   │  ╰─ whitespace 243..244
+   ╰─ error 244..263
+      ├─ identifier 244..250
+      ├─ whitespace 250..251
+      ├─ { 251..252
+      ├─ whitespace 252..253
+      ├─ string 253..259
+      ├─ whitespace 259..260
+      ├─ } 260..261
+      ├─ ; 261..262
+      ╰─ whitespace 262..263

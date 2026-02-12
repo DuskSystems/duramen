@@ -33,6 +33,11 @@ flowchart TD
     Evaluator -.-> Decision([Decision])
 ```
 
+## Specification Deviations
+
+- No support for multiline strings.
+- No serialization (JSON, Protobuf).
+
 ## Disclaimer
 
 Duramen is not an official Cedar project.

@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: invalid annotation name `hi+mom`
+  ╭▸ test:1:2
+  │
+1 │ @hi+mom("this should be invalid")
+  │  ━━━━━━ must be a valid identifier
+  ╰╴
+help: annotation names can only contain letters, digits, and `_`

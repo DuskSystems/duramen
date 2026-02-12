@@ -84,6 +84,9 @@ pub use record_entry::RecordEntry;
 mod relation_expression;
 pub use relation_expression::RelationExpression;
 
+mod scope;
+pub use scope::Scope;
+
 mod relation_operator;
 pub use relation_operator::RelationOperator;
 
@@ -150,26 +153,15 @@ impl<'a> Policy<'a> {
             .find(|child| matches!(child.kind(), Syntax::PermitKeyword | Syntax::ForbidKeyword))
     }
 
-    /// Returns an iterator over the variable definition children.
-    pub fn variable_definitions(&self) -> impl Iterator<Item = VariableDefinition<'a>> {
-        self.node.children().filter_map(VariableDefinition::cast)
+    /// Returns the scope clause.
+    #[must_use]
+    pub fn scope(&self) -> Option<Scope<'a>> {
+        self.node.children().find_map(Scope::cast)
     }
 
     /// Returns an iterator over the condition children.
     pub fn conditions(&self) -> impl Iterator<Item = Condition<'a>> {
         self.node.children().filter_map(Condition::cast)
-    }
-
-    /// Returns the opening parenthesis token.
-    #[must_use]
-    pub fn open_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenParenthesis)
-    }
-
-    /// Returns the closing parenthesis token.
-    #[must_use]
-    pub fn close_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseParenthesis)
     }
 
     /// Returns the semicolon token.

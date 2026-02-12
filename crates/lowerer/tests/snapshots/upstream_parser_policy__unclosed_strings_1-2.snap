@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: unterminated string literal
+  ╭▸ test:3:21
+  │
+3 │     principal.foo = "bar
+  │                     ━ string is never closed
+  ╰╴
+help: add a closing `"` to terminate the string

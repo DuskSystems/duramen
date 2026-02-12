@@ -5,14 +5,14 @@ use duramen_syntax::{Syntax, Tree};
 use crate::common::Parser;
 
 /// Parses Cedar schema source text into a concrete syntax tree.
-pub struct SchemaParser<'a> {
-    parser: Parser<'a>,
+pub struct SchemaParser<'src, 'diag> {
+    parser: Parser<'src, 'diag>,
 }
 
-impl<'a> SchemaParser<'a> {
+impl<'src, 'diag> SchemaParser<'src, 'diag> {
     /// Creates a new schema parser.
     #[must_use]
-    pub const fn new(source: &'a str, diagnostics: &'a mut Diagnostics) -> Self {
+    pub const fn new(source: &'src str, diagnostics: &'diag mut Diagnostics) -> Self {
         Self {
             parser: Parser::new(source, diagnostics),
         }
@@ -20,9 +20,9 @@ impl<'a> SchemaParser<'a> {
 
     /// Parses the source text and returns the concrete syntax tree.
     #[must_use]
-    pub fn parse(mut self) -> Tree {
+    pub fn parse(mut self) -> Tree<'src> {
         self.schema();
-        self.parser.builder.build()
+        self.parser.builder.build(self.parser.source)
     }
 
     /// Parses a schema file.
@@ -114,7 +114,7 @@ impl<'a> SchemaParser<'a> {
             self.parser.advance_pop();
         }
 
-        self.parser.eat(TokenKind::CloseBrace);
+        self.parser.recover_to_close(TokenKind::CloseBrace);
     }
 
     /// Parses a declaration (entity, action, type, or nested namespace).
@@ -230,7 +230,7 @@ impl<'a> SchemaParser<'a> {
 
                 self.parser.next();
                 self.enum_variants();
-                self.parser.eat(TokenKind::CloseBracket);
+                self.parser.recover_to_close(TokenKind::CloseBracket);
 
                 self.parser.builder.close(&branch);
             }
@@ -272,7 +272,7 @@ impl<'a> SchemaParser<'a> {
 
         self.parser.next();
         self.attribute_entries();
-        self.parser.eat(TokenKind::CloseBrace);
+        self.parser.recover_to_close(TokenKind::CloseBrace);
 
         self.parser.builder.close(&branch);
     }
@@ -361,6 +361,8 @@ impl<'a> SchemaParser<'a> {
         while !self.parser.at(&[TokenKind::CloseBracket, TokenKind::Eof]) {
             self.parser.advance_push();
             self.qualified_name();
+            self.parser
+                .recover_to(&[TokenKind::Comma, TokenKind::CloseBracket]);
             let comma = self.parser.eat(TokenKind::Comma);
             self.parser.advance_pop();
             if !comma {
@@ -368,7 +370,7 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        self.parser.eat(TokenKind::CloseBracket);
+        self.parser.recover_to_close(TokenKind::CloseBracket);
         self.parser.builder.close(&branch);
     }
 
@@ -392,7 +394,7 @@ impl<'a> SchemaParser<'a> {
                 }
             }
 
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.recover_to_close(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -442,7 +444,7 @@ impl<'a> SchemaParser<'a> {
         self.parser.next();
         if self.parser.eat(TokenKind::OpenBrace) {
             self.attribute_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.recover_to_close(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -508,7 +510,7 @@ impl<'a> SchemaParser<'a> {
             self.parser.next();
             self.parser.next();
             self.enum_variants();
-            self.parser.eat(TokenKind::CloseBracket);
+            self.parser.recover_to_close(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Syntax::EnumType);
 
             return;
@@ -517,7 +519,7 @@ impl<'a> SchemaParser<'a> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.attribute_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.recover_to_close(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Syntax::RecordType);
 
             return;
@@ -548,22 +550,8 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        if !self
-            .parser
-            .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-        {
-            let err = self.parser.builder.open(Syntax::Error);
-            while !self
-                .parser
-                .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-            {
-                self.parser.advance_push();
-                self.parser.next();
-                self.parser.advance_pop();
-            }
-
-            self.parser.builder.close(&err);
-        }
+        self.parser
+            .recover_to(&[TokenKind::Comma, TokenKind::CloseBrace]);
 
         self.parser
             .builder
@@ -587,6 +575,8 @@ impl<'a> SchemaParser<'a> {
         while !self.parser.at(&[TokenKind::CloseBracket, TokenKind::Eof]) {
             self.parser.advance_push();
             self.name();
+            self.parser
+                .recover_to(&[TokenKind::Comma, TokenKind::CloseBracket]);
             let comma = self.parser.eat(TokenKind::Comma);
             self.parser.advance_pop();
 
@@ -595,7 +585,7 @@ impl<'a> SchemaParser<'a> {
             }
         }
 
-        self.parser.eat(TokenKind::CloseBracket);
+        self.parser.recover_to_close(TokenKind::CloseBracket);
         self.parser.builder.close(&branch);
     }
 
@@ -606,12 +596,14 @@ impl<'a> SchemaParser<'a> {
     /// ```
     fn enum_variants(&mut self) {
         while !self.parser.at(&[TokenKind::Eof, TokenKind::CloseBracket]) {
-            if !self.parser.at(&[TokenKind::String]) {
-                break;
+            self.parser.advance_push();
+            if self.parser.at(&[TokenKind::String]) {
+                self.parser.next();
+            } else {
+                self.parser
+                    .recover_to(&[TokenKind::Comma, TokenKind::CloseBracket]);
             }
 
-            self.parser.advance_push();
-            self.parser.next();
             let comma = self.parser.eat(TokenKind::Comma);
             self.parser.advance_pop();
 

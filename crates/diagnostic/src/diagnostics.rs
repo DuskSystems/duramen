@@ -41,6 +41,11 @@ impl Diagnostics {
         self.items.len()
     }
 
+    /// Truncates the collection to the given length.
+    pub fn truncate(&mut self, len: usize) {
+        self.items.truncate(len);
+    }
+
     /// Returns an iterator over the diagnostics.
     pub fn iter(&self) -> Iter<'_, Diagnostic> {
         self.items.iter()

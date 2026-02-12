@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: empty annotation value
+  ╭▸ test:1:16
+  │
+1 │ @bad_annotation()
+  │                ━━ value cannot be empty
+  ╰╴
+help: provide a string value: `@name("value")`

@@ -134,7 +134,7 @@ impl<'a> Cursor<'a> {
     #[must_use]
     pub fn scan_string(&mut self) -> bool {
         while let Some(remaining) = self.bytes().get(self.position..) {
-            let Some(offset) = memchr::memchr2(b'"', b'\\', remaining) else {
+            let Some(offset) = memchr::memchr3(b'"', b'\\', b'\n', remaining) else {
                 // Unterminated string
                 self.position = self.bytes().len();
                 return false;
@@ -151,9 +151,41 @@ impl<'a> Cursor<'a> {
                 return true;
             }
 
+            if byte == b'\n' {
+                return false;
+            }
+
             // Escaped character
             self.bump();
             self.bump_char();
+        }
+
+        false
+    }
+
+    /// Scans a single-quoted string after the opening quote.
+    ///
+    /// Returns `true` if a closing `'` is found before a newline or EOF.
+    #[must_use]
+    pub fn scan_single_quote_string(&mut self) -> bool {
+        while let Some(&byte) = self.bytes().get(self.position) {
+            match byte {
+                b'\'' => {
+                    self.position += 1;
+                    return true;
+                }
+                b'\n' | b'\r' => return false,
+                b'\\' => {
+                    self.bump();
+                    self.bump_char();
+                }
+                _ if byte < 128 => {
+                    self.position += 1;
+                }
+                _ => {
+                    self.bump_char();
+                }
+            }
         }
 
         false

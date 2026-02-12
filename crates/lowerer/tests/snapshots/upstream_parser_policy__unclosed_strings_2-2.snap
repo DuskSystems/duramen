@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: unterminated string literal
+  ╭▸ test:1:47
+  │
+1 │ permit (principal, action, resource == Photo::"mine.jpg);
+  │                                               ━ string is never closed
+  ╰╴
+help: add a closing `"` to terminate the string

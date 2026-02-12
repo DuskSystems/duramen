@@ -1,0 +1,11 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: strings must use double quotes, not single quotes
+  ╭▸ test:1:5
+  │
+1 │ @id('0')
+  │     ━━━ single-quoted string
+  ╰╴
+help: replace single quotes `'` with double quotes `"`
