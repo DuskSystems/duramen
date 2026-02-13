@@ -5,7 +5,6 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use alloc::vec;
 use alloc::vec::Vec;
 
 #[must_use]
@@ -26,51 +25,73 @@ pub fn suggest<'a>(query: &str, candidates: &[&'a str]) -> Option<&'a str> {
     winner
 }
 
-/// <https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance>.
+/// <https://en.wikipedia.org/wiki/Damerau-Levenshtein_distance>.
 fn damerau_levenshtein_distance(source: &str, target: &str) -> usize {
     let source: Vec<char> = source.chars().collect();
-    let source_len = source.len();
-
     let target: Vec<char> = target.chars().collect();
+
+    let prefix = source
+        .iter()
+        .zip(&target)
+        .take_while(|(source_char, target_char)| source_char == target_char)
+        .count();
+
+    let suffix = source[prefix..]
+        .iter()
+        .rev()
+        .zip(target[prefix..].iter().rev())
+        .take_while(|(source_char, target_char)| source_char == target_char)
+        .count();
+
+    let source = &source[prefix..source.len() - suffix];
+    let target = &target[prefix..target.len() - suffix];
+
+    if source.is_empty() {
+        return target.len();
+    }
+
+    if target.is_empty() {
+        return source.len();
+    }
+
+    let source_len = source.len();
     let target_len = target.len();
 
-    if source_len == 0 {
-        return target_len;
-    }
-
-    if target_len == 0 {
-        return source_len;
-    }
-
-    let mut matrix = vec![vec![0; target_len + 1]; source_len + 1];
-
-    for (index, row) in matrix.iter_mut().enumerate() {
-        row[0] = index;
-    }
-
-    for (index, cell) in matrix[0].iter_mut().enumerate() {
-        *cell = index;
-    }
+    let mut window: [Vec<usize>; 3] = [
+        Vec::with_capacity(target_len + 1),
+        (0..=target_len).collect(),
+        Vec::with_capacity(target_len + 1),
+    ];
 
     for row in 1..=source_len {
+        window[2].clear();
+        window[2].push(row);
+
         for column in 1..=target_len {
             let cost = usize::from(source[row - 1] != target[column - 1]);
 
-            matrix[row][column] = (matrix[row - 1][column] + 1)
-                .min(matrix[row][column - 1] + 1)
-                .min(matrix[row - 1][column - 1] + cost);
+            let deletion = window[1][column] + 1;
+            let insertion = window[2][column - 1] + 1;
+            let substitution = window[1][column - 1] + cost;
+
+            let mut distance = deletion.min(insertion).min(substitution);
 
             if row > 1
                 && column > 1
                 && source[row - 1] == target[column - 2]
                 && source[row - 2] == target[column - 1]
             {
-                matrix[row][column] = matrix[row][column].min(matrix[row - 2][column - 2] + cost);
+                let transposition = window[0][column - 2] + cost;
+                distance = distance.min(transposition);
             }
+
+            window[2].push(distance);
         }
+
+        window.rotate_left(1);
     }
 
-    matrix[source_len][target_len]
+    window[1][target_len]
 }
 
 // Tests sourced from: https://github.com/rapidfuzz/strsim-rs/blob/v0.11.1/src/lib.rs
