@@ -70,17 +70,26 @@ impl<'a> Lexer<'a> {
             // String
             b'"' => {
                 self.cursor.bump();
-                if self.cursor.scan_string() {
+                if self.cursor.scan_string_until(b'"') {
                     TokenKind::String
                 } else {
                     TokenKind::StringUnterminated
                 }
+            }
+            b'\'' => {
+                self.cursor.bump();
+                let _ = self.cursor.scan_string_until(b'\'');
+                TokenKind::StringSingleQuoted
             }
             b'/' => {
                 if self.cursor.peek() == Some(b'/') {
                     self.cursor.bump_n(2);
                     self.cursor.skip_line();
                     TokenKind::Comment
+                } else if self.cursor.peek() == Some(b'*') {
+                    self.cursor.bump_n(2);
+                    self.cursor.scan_block_comment();
+                    TokenKind::CommentBlock
                 } else {
                     self.cursor.bump();
                     TokenKind::Slash

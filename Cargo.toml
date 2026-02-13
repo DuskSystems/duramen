@@ -73,6 +73,7 @@ unused_trait_names = "deny"
 # Style
 deref_by_slicing = "deny"
 mod_module_files = "deny"
+option_if_let_else = "allow"
 redundant_type_annotations = "deny"
 ref_patterns = "deny"
 renamed_function_params = "deny"

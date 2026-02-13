@@ -12,6 +12,10 @@ pub enum Syntax {
     Integer,
     /// String literal: `"hello"`.
     String,
+    /// Unterminated string literal: `"hello`.
+    StringUnterminated,
+    /// Single-quoted string literal: `'hello'`.
+    StringSingleQuoted,
 
     /// Keyword: `action`.
     ActionKeyword,
@@ -98,6 +102,8 @@ pub enum Syntax {
     /// Semicolon: `;`.
     Semicolon,
 
+    /// Ampersand: `&`.
+    Ampersand,
     /// Logical and: `&&`.
     And,
     /// Assign: `=`.
@@ -118,6 +124,8 @@ pub enum Syntax {
     Not,
     /// Not equal: `!=`.
     NotEqual,
+    /// Pipe: `|`.
+    Pipe,
     /// Logical or: `||`.
     Or,
     /// Modulo: `%`.
@@ -131,9 +139,13 @@ pub enum Syntax {
 
     /// Line comment: `// ...`.
     Comment,
+    /// Block comment: `/* ... */`.
+    CommentBlock,
     /// Whitespace.
     Whitespace,
 
+    /// Unknown token.
+    Unknown,
     /// Error node.
     Error,
 
@@ -258,7 +270,14 @@ impl Syntax {
     /// Checks if this is an error token.
     #[must_use]
     pub const fn is_error(self) -> bool {
-        matches!(self, Self::Error)
+        matches!(
+            self,
+            Self::Unknown
+                | Self::Error
+                | Self::StringUnterminated
+                | Self::StringSingleQuoted
+                | Self::CommentBlock
+        )
     }
 
     /// Checks if this is a reserved keyword in policy context.
@@ -310,6 +329,8 @@ impl fmt::Display for Syntax {
             Self::Identifier => "identifier",
             Self::Integer => "integer",
             Self::String => "string",
+            Self::StringUnterminated => "unterminated string",
+            Self::StringSingleQuoted => "single-quoted string",
 
             Self::ActionKeyword => "action",
             Self::AppliesToKeyword => "appliesTo",
@@ -355,6 +376,7 @@ impl fmt::Display for Syntax {
             Self::QuestionMark => "?",
             Self::Semicolon => ";",
 
+            Self::Ampersand => "&",
             Self::And => "&&",
             Self::Assign => "=",
             Self::Equal => "==",
@@ -365,6 +387,7 @@ impl fmt::Display for Syntax {
             Self::Subtract => "-",
             Self::Not => "!",
             Self::NotEqual => "!=",
+            Self::Pipe => "|",
             Self::Or => "||",
             Self::Modulo => "%",
             Self::Add => "+",
@@ -372,7 +395,10 @@ impl fmt::Display for Syntax {
             Self::Multiply => "*",
 
             Self::Comment => "comment",
+            Self::CommentBlock => "block comment",
             Self::Whitespace => "whitespace",
+
+            Self::Unknown => "unknown",
             Self::Error => "error",
 
             Self::Annotation => "annotation",
@@ -447,6 +473,8 @@ impl From<TokenKind> for Syntax {
             TokenKind::Identifier => Self::Identifier,
             TokenKind::Integer => Self::Integer,
             TokenKind::String => Self::String,
+            TokenKind::StringUnterminated => Self::StringUnterminated,
+            TokenKind::StringSingleQuoted => Self::StringSingleQuoted,
 
             TokenKind::ActionKeyword => Self::ActionKeyword,
             TokenKind::AppliesToKeyword => Self::AppliesToKeyword,
@@ -492,12 +520,9 @@ impl From<TokenKind> for Syntax {
             TokenKind::QuestionMark => Self::QuestionMark,
             TokenKind::Semicolon => Self::Semicolon,
 
-            TokenKind::Ampersand
-            | TokenKind::Pipe
-            | TokenKind::StringUnterminated
-            | TokenKind::Unknown
-            | TokenKind::Eof => Self::Error,
+            TokenKind::Ampersand => Self::Ampersand,
             TokenKind::Ampersand2 => Self::And,
+            TokenKind::Asterisk => Self::Multiply,
             TokenKind::Bang => Self::Not,
             TokenKind::BangEquals => Self::NotEqual,
             TokenKind::Equals => Self::Assign,
@@ -508,13 +533,17 @@ impl From<TokenKind> for Syntax {
             TokenKind::LessThanEquals => Self::LessEqual,
             TokenKind::Minus => Self::Subtract,
             TokenKind::Percent => Self::Modulo,
+            TokenKind::Pipe => Self::Pipe,
             TokenKind::Pipe2 => Self::Or,
             TokenKind::Plus => Self::Add,
             TokenKind::Slash => Self::Divide,
-            TokenKind::Asterisk => Self::Multiply,
 
             TokenKind::Comment => Self::Comment,
+            TokenKind::CommentBlock => Self::CommentBlock,
             TokenKind::Whitespace => Self::Whitespace,
+
+            TokenKind::Unknown => Self::Unknown,
+            TokenKind::Eof => Self::Error,
         }
     }
 }
@@ -527,6 +556,8 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::Identifier => Ok(Self::Identifier),
             Syntax::Integer => Ok(Self::Integer),
             Syntax::String => Ok(Self::String),
+            Syntax::StringUnterminated => Ok(Self::StringUnterminated),
+            Syntax::StringSingleQuoted => Ok(Self::StringSingleQuoted),
 
             Syntax::ActionKeyword => Ok(Self::ActionKeyword),
             Syntax::AppliesToKeyword => Ok(Self::AppliesToKeyword),
@@ -572,6 +603,7 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::QuestionMark => Ok(Self::QuestionMark),
             Syntax::Semicolon => Ok(Self::Semicolon),
 
+            Syntax::Ampersand => Ok(Self::Ampersand),
             Syntax::And => Ok(Self::Ampersand2),
             Syntax::Assign => Ok(Self::Equals),
             Syntax::Equal => Ok(Self::Equals2),
@@ -582,6 +614,7 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::Subtract => Ok(Self::Minus),
             Syntax::Not => Ok(Self::Bang),
             Syntax::NotEqual => Ok(Self::BangEquals),
+            Syntax::Pipe => Ok(Self::Pipe),
             Syntax::Or => Ok(Self::Pipe2),
             Syntax::Modulo => Ok(Self::Percent),
             Syntax::Add => Ok(Self::Plus),
@@ -589,7 +622,10 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::Multiply => Ok(Self::Asterisk),
 
             Syntax::Comment => Ok(Self::Comment),
+            Syntax::CommentBlock => Ok(Self::CommentBlock),
             Syntax::Whitespace => Ok(Self::Whitespace),
+
+            Syntax::Unknown => Ok(Self::Unknown),
 
             _ => Err(()),
         }

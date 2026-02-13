@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 
 use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::Syntax;
 
@@ -42,35 +42,23 @@ impl<'a> PolicyLowerer<'a> {
 
     /// Lowers a single policy.
     fn lower_policy<'src>(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
+        let checkpoint = self.ctx.diagnostics.checkpoint();
         let node = policy.syntax();
-
-        if let Some(effect_token) = policy.effect_token() {
-            let effect_start = effect_token.range().start;
-
-            for child in node.children() {
-                if child.kind() == Syntax::Error && child.range().start < effect_start {
-                    self.ctx.diagnostic(LowerError::InvalidToken {
-                        span: child.range(),
-                    });
-                }
-            }
-        }
 
         if node.child(Syntax::OpenParenthesis).is_some()
             && node.child(Syntax::CloseParenthesis).is_none()
         {
-            let span = node
+            let span = if let Some(child) = node
                 .after(Syntax::OpenParenthesis)
                 .find(|child| !child.kind().is_trivial())
-                .map_or_else(
-                    || {
-                        let end = node.range().end;
-                        end..end
-                    },
-                    |child| child.first().range(),
-                );
+            {
+                child.first().range()
+            } else {
+                let range = node.range();
+                range.end..range.end
+            };
 
-            self.ctx.diagnostic(LowerError::ExpectedToken {
+            self.ctx.diagnostics.push(LowerError::ExpectedToken {
                 span,
                 expected: "`)`",
             });
@@ -84,7 +72,7 @@ impl<'a> PolicyLowerer<'a> {
         });
 
         let Some(effect) = effect else {
-            self.ctx.diagnostic(LowerError::MissingEffect {
+            self.ctx.diagnostics.push(LowerError::MissingEffect {
                 span: policy.range(),
             });
 
@@ -117,7 +105,7 @@ impl<'a> PolicyLowerer<'a> {
                     );
                 }
                 cst::Variable::Context => {
-                    self.ctx.diagnostic(LowerError::ContextInScope {
+                    self.ctx.diagnostics.push(LowerError::ContextInScope {
                         span: variable_definition.range(),
                     });
                 }
@@ -147,6 +135,10 @@ impl<'a> PolicyLowerer<'a> {
             if let Some(lowered) = self.lower_condition(&condition) {
                 conditions.push(lowered);
             }
+        }
+
+        if !self.ctx.diagnostics.since(checkpoint).is_empty() {
+            return None;
         }
 
         Some(ast::Policy::new(
@@ -198,7 +190,7 @@ impl<'a> PolicyLowerer<'a> {
                 Some(ast::ScopeConstraint::In(entity_or_slot))
             }
             _ => {
-                self.ctx.diagnostic(LowerError::InvalidScopeOperator {
+                self.ctx.diagnostics.push(LowerError::InvalidScopeOperator {
                     span: operator_token.range(),
                     variable: String::from(variable_name),
                 });
@@ -232,7 +224,7 @@ impl<'a> PolicyLowerer<'a> {
         match ast::SlotKind::new(text) {
             Ok(_) => Some(ast::EntityOrSlot::Slot),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -250,7 +242,7 @@ impl<'a> PolicyLowerer<'a> {
                 Some(ast::EntityOrSlot::Entity(reference))
             }
             _ => {
-                self.ctx.diagnostic(LowerError::MissingExpression {
+                self.ctx.diagnostics.push(LowerError::MissingExpression {
                     span: expression.range(),
                     expected: "expected an entity reference or slot",
                 });
@@ -277,7 +269,7 @@ impl<'a> PolicyLowerer<'a> {
             }
             Syntax::InKeyword => self.lower_action_in_constraint(variable_definition),
             _ => {
-                self.ctx.diagnostic(LowerError::InvalidScopeOperator {
+                self.ctx.diagnostics.push(LowerError::InvalidScopeOperator {
                     span: operator_token.range(),
                     variable: String::from("action"),
                 });
@@ -307,7 +299,7 @@ impl<'a> PolicyLowerer<'a> {
             match ast::ActionList::new(actions) {
                 Ok(list) => Some(ast::ActionConstraint::In(list)),
                 Err(error) => {
-                    self.ctx.diagnostic(error);
+                    self.ctx.diagnostics.push(error);
                     None
                 }
             }
@@ -317,7 +309,7 @@ impl<'a> PolicyLowerer<'a> {
             match ast::ActionList::new(vec![entity_reference]) {
                 Ok(list) => Some(ast::ActionConstraint::In(list)),
                 Err(error) => {
-                    self.ctx.diagnostic(error);
+                    self.ctx.diagnostics.push(error);
                     None
                 }
             }
@@ -332,7 +324,7 @@ impl<'a> PolicyLowerer<'a> {
         if let cst::Expression::EntityReference(entity_reference) = expression {
             self.lower_entity_reference(entity_reference)
         } else {
-            self.ctx.diagnostic(LowerError::MissingExpression {
+            self.ctx.diagnostics.push(LowerError::MissingExpression {
                 span: expression.range(),
                 expected: "expected an entity reference",
             });
@@ -362,18 +354,17 @@ impl<'a> PolicyLowerer<'a> {
     ) -> Option<ast::Condition<'src>> {
         let node = condition.syntax();
         if node.child(Syntax::OpenBrace).is_some() && node.child(Syntax::CloseBrace).is_none() {
-            let span = node
+            let span = if let Some(child) = node
                 .after(Syntax::OpenBrace)
                 .find(|child| !child.kind().is_trivial())
-                .map_or_else(
-                    || {
-                        let end = node.range().end;
-                        end..end
-                    },
-                    |child| child.first().range(),
-                );
+            {
+                child.first().range()
+            } else {
+                let range = node.range();
+                range.end..range.end
+            };
 
-            self.ctx.diagnostic(LowerError::ExpectedToken {
+            self.ctx.diagnostics.push(LowerError::ExpectedToken {
                 span,
                 expected: "`}`",
             });
@@ -385,15 +376,6 @@ impl<'a> PolicyLowerer<'a> {
         })?;
 
         let body = condition.body();
-
-        if body.is_none()
-            && let Some(error_node) = node.children().find(|child| child.kind() == Syntax::Error)
-        {
-            self.ctx.diagnostic(LowerError::InvalidToken {
-                span: error_node.range(),
-            });
-        }
-
         let body = self.lower_expression(&body?)?;
 
         Some(ast::Condition::new(kind, body))
@@ -437,11 +419,18 @@ impl<'a> PolicyLowerer<'a> {
         &mut self,
         expression: &cst::IfExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
-        let test = expression.test()?;
+        let Some(test) = expression.test() else {
+            self.ctx.diagnostics.push(LowerError::MissingExpression {
+                span: expression.range(),
+                expected: "expected expression after `if`",
+            });
+
+            return None;
+        };
 
         if expression.then_token().is_none() {
             let end = expression.range().end;
-            self.ctx.diagnostic(LowerError::ExpectedToken {
+            self.ctx.diagnostics.push(LowerError::ExpectedToken {
                 span: end..end,
                 expected: "`then`",
             });
@@ -453,7 +442,7 @@ impl<'a> PolicyLowerer<'a> {
 
         if expression.else_token().is_none() {
             let end = expression.range().end;
-            self.ctx.diagnostic(LowerError::ExpectedToken {
+            self.ctx.diagnostics.push(LowerError::ExpectedToken {
                 span: end..end,
                 expected: "`else`",
             });
@@ -475,6 +464,14 @@ impl<'a> PolicyLowerer<'a> {
         &mut self,
         expression: &cst::OrExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
+        if let Some(token) = expression.operator_token()
+            && token.kind() == Syntax::Pipe
+        {
+            self.ctx.diagnostics.push(LowerError::InvalidPipe {
+                span: token.range(),
+            });
+        }
+
         let left = expression.left()?;
         let left = self.lower_expression(&left)?;
 
@@ -489,6 +486,14 @@ impl<'a> PolicyLowerer<'a> {
         &mut self,
         expression: &cst::AndExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
+        if let Some(token) = expression.operator_token()
+            && token.kind() == Syntax::Ampersand
+        {
+            self.ctx.diagnostics.push(LowerError::InvalidAmpersand {
+                span: token.range(),
+            });
+        }
+
         let left = expression.left()?;
         let left = self.lower_expression(&left)?;
 
@@ -507,7 +512,7 @@ impl<'a> PolicyLowerer<'a> {
             if let Some(token) = expression.operator_token()
                 && token.kind() == Syntax::Assign
             {
-                self.ctx.diagnostic(LowerError::InvalidEquals {
+                self.ctx.diagnostics.push(LowerError::InvalidEquals {
                     span: token.range(),
                 });
             }
@@ -575,7 +580,7 @@ impl<'a> PolicyLowerer<'a> {
                 ))
             }
             cst::ProductOperator::Divide | cst::ProductOperator::Modulo => {
-                self.ctx.diagnostic(LowerError::UnsupportedDivision {
+                self.ctx.diagnostics.push(LowerError::UnsupportedDivision {
                     span: expression.range(),
                 });
 
@@ -617,7 +622,7 @@ impl<'a> PolicyLowerer<'a> {
                 Some(Cow::Borrowed(text))
             }
             _ => {
-                self.ctx.diagnostic(LowerError::MissingExpression {
+                self.ctx.diagnostics.push(LowerError::MissingExpression {
                     span: expression.range(),
                     expected: "expected an attribute name",
                 });
@@ -648,7 +653,7 @@ impl<'a> PolicyLowerer<'a> {
             }
             Err(errors) => {
                 for error in errors {
-                    self.ctx.diagnostic(error.offset(offset));
+                    self.ctx.diagnostics.push(error.offset(offset));
                 }
 
                 None
@@ -684,7 +689,7 @@ impl<'a> PolicyLowerer<'a> {
 
         let operator_count = expression.operator_tokens().count();
         if operator_count > 4 {
-            self.ctx.diagnostic(LowerError::UnaryOpLimit {
+            self.ctx.diagnostics.push(LowerError::UnaryOpLimit {
                 span: expression.range(),
                 count: operator_count,
             });
@@ -707,7 +712,9 @@ impl<'a> PolicyLowerer<'a> {
             return match ast::IntegerLiteral::new(&negated) {
                 Ok(literal) => Some(ast::Expression::integer(literal)),
                 Err(error) => {
-                    self.ctx.diagnostic(error);
+                    self.ctx
+                        .diagnostics
+                        .push(Diagnostic::from(error).with_label(expression.range(), ""));
                     None
                 }
             };
@@ -776,7 +783,7 @@ impl<'a> PolicyLowerer<'a> {
             }
             cst::MemberAccess::Call(call) => self.lower_method_call(base, call),
             cst::MemberAccess::Index(index) => {
-                self.ctx.diagnostic(LowerError::UnsupportedIndex {
+                self.ctx.diagnostics.push(LowerError::UnsupportedIndex {
                     span: index.range(),
                 });
 
@@ -797,7 +804,7 @@ impl<'a> PolicyLowerer<'a> {
             return true;
         }
 
-        self.ctx.diagnostic(LowerError::WrongArgumentCount {
+        self.ctx.diagnostics.push(LowerError::WrongArgumentCount {
             span: call.range(),
             function: String::from(function),
             expected,
@@ -898,14 +905,21 @@ impl<'a> PolicyLowerer<'a> {
                         all_arguments.push(self.lower_expression(argument)?);
                     }
 
-                    let identifier = self.ctx.make_identifier(method_name)?;
+                    let identifier = match ast::Identifier::new(method_name) {
+                        Ok(identifier) => identifier,
+                        Err(error) => {
+                            self.ctx.diagnostics.push(error);
+                            return None;
+                        }
+                    };
+
                     let function_name = ast::Name::unqualified(identifier);
                     Some(ast::Expression::extension_call(
                         function_name,
                         all_arguments,
                     ))
                 } else {
-                    self.ctx.diagnostic(LowerError::UnknownMethod {
+                    self.ctx.diagnostics.push(LowerError::UnknownMethod {
                         span: name_node.range(),
                         name: String::from(method_name),
                     });
@@ -925,9 +939,9 @@ impl<'a> PolicyLowerer<'a> {
         let text = name.basename()?;
 
         if name.is_qualified() || !EXTENSION_FUNCTIONS.contains(&text) {
-            self.ctx.diagnostic(LowerError::UnknownFunction {
+            self.ctx.diagnostics.push(LowerError::UnknownFunction {
                 span: name.range(),
-                name: String::from(name.text()),
+                name: String::from(name.basename().unwrap_or_default()),
             });
 
             return None;
@@ -940,7 +954,14 @@ impl<'a> PolicyLowerer<'a> {
             }
         }
 
-        let identifier = self.ctx.make_identifier(text)?;
+        let identifier = match ast::Identifier::new(text) {
+            Ok(identifier) => identifier,
+            Err(error) => {
+                self.ctx.diagnostics.push(error);
+                return None;
+            }
+        };
+
         let function_name = ast::Name::unqualified(identifier);
         Some(ast::Expression::extension_call(function_name, arguments))
     }
@@ -964,7 +985,9 @@ impl<'a> PolicyLowerer<'a> {
                 match ast::IntegerLiteral::new(text) {
                     Ok(literal) => Some(ast::Expression::integer(literal)),
                     Err(error) => {
-                        self.ctx.diagnostic(error);
+                        self.ctx
+                            .diagnostics
+                            .push(Diagnostic::from(error).with_label(literal.range(), ""));
                         None
                     }
                 }
@@ -984,7 +1007,7 @@ impl<'a> PolicyLowerer<'a> {
         match ast::SlotKind::new(text) {
             Ok(kind) => Some(ast::Expression::slot(kind)),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -1037,7 +1060,7 @@ impl<'a> PolicyLowerer<'a> {
         let record_expression = match ast::RecordExpression::new(entries) {
             Ok(record_expression) => record_expression,
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 return None;
             }
         };
@@ -1062,9 +1085,9 @@ impl<'a> PolicyLowerer<'a> {
             }
         }
 
-        self.ctx.diagnostic(LowerError::UnknownVariable {
+        self.ctx.diagnostics.push(LowerError::UnknownVariable {
             span: name.range(),
-            name: String::from(name.text()),
+            name: String::from(name.basename().unwrap_or_default()),
         });
 
         None

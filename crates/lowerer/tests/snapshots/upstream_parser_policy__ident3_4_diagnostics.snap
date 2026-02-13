@@ -2,8 +2,13 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `}`
+error: unexpected token
+  ╭▸ ident3_4:2:10
+  │
+2 │ when { if::then::else };
+  ╰╴         ━━━━━━━━━━━━
+error: missing expression
   ╭▸ ident3_4:2:8
   │
 2 │ when { if::then::else };
-  ╰╴       ━━ expected `}`
+  ╰╴       ━━━━━━━━━━━━━━━ expected expression after `if`

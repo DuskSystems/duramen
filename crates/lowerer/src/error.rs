@@ -67,12 +67,15 @@ pub enum LowerError {
     InvalidEquals {
         span: Range<usize>,
     },
+    InvalidPipe {
+        span: Range<usize>,
+    },
+    InvalidAmpersand {
+        span: Range<usize>,
+    },
     ExpectedToken {
         span: Range<usize>,
         expected: &'static str,
-    },
-    InvalidToken {
-        span: Range<usize>,
     },
 }
 
@@ -92,8 +95,8 @@ impl From<LowerError> for Diagnostic {
                     .with_label(span, label)
             }
             LowerError::ContextInScope { span } => Self::error("`context` is not a scope variable")
-                .with_label(span, "not valid in policy scope")
-                .with_note("`context` can only be used in policy conditions, not in scope"),
+                .with_label(span, "")
+                .with_help("use `context` in policy conditions, not in scope"),
             LowerError::MissingExpression { span, expected } => {
                 Self::error("missing expression").with_label(span, expected)
             }
@@ -103,25 +106,24 @@ impl From<LowerError> for Diagnostic {
             }
             LowerError::UnsupportedDivision { span } => {
                 Self::error("division and remainder are not supported")
-                    .with_label(span, "not supported")
-                    .with_note("only `*` with an integer literal is allowed")
+                    .with_label(span, "")
+                    .with_help("only `*` with an integer literal is allowed")
             }
             LowerError::UnsupportedIndex { span } => Self::error("indexing is not supported")
-                .with_label(span, "not supported")
-                .with_note("use `has` and `.` instead"),
+                .with_label(span, "")
+                .with_help("use `has` and `.` instead"),
             LowerError::UnknownVariable { span, name } => {
                 Self::error(format!("unknown variable `{name}`"))
-                    .with_label(span, "not a valid variable")
+                    .with_label(span, "")
                     .with_note(
                         "`principal`, `action`, `resource`, and `context` are the only variables",
                     )
             }
             LowerError::UnknownMethod { span, name } => {
-                Self::error(format!("unknown method `{name}`")).with_label(span, "unknown method")
+                Self::error(format!("unknown method `{name}`")).with_label(span, "")
             }
             LowerError::UnknownFunction { span, name } => {
-                Self::error(format!("`{name}` is not a known function"))
-                    .with_label(span, "unknown function")
+                Self::error(format!("unknown function `{name}`")).with_label(span, "")
             }
             LowerError::WrongArgumentCount {
                 span,
@@ -131,19 +133,20 @@ impl From<LowerError> for Diagnostic {
             } => Self::error(format!(
                 "`{function}` expects {expected} argument(s), found {found}"
             ))
-            .with_label(span, format!("expected {expected} argument(s)")),
+            .with_label(span, ""),
 
             LowerError::NestedNamespace { span } => {
-                Self::error("nested namespaces are not supported")
-                    .with_label(span, "nested namespace")
+                Self::error("nested namespaces are not supported").with_label(span, "")
             }
             LowerError::QualifiedEntityName { span } => {
                 Self::error("unexpected namespace qualifier on entity name")
-                    .with_label(span, "remove namespace qualifier")
+                    .with_label(span, "")
+                    .with_help("remove namespace qualifier")
             }
             LowerError::QualifiedTypeName { span } => {
                 Self::error("unexpected namespace qualifier on type name")
-                    .with_label(span, "remove namespace qualifier")
+                    .with_label(span, "")
+                    .with_help("remove namespace qualifier")
             }
             LowerError::InvalidContextType { span } => Self::error("invalid context type")
                 .with_label(span, "expected a record type or type reference"),
@@ -156,15 +159,27 @@ impl From<LowerError> for Diagnostic {
                     Suggestion::fix(span.clone(), "==").with_message("use `==` for equality");
 
                 Self::error("invalid operator `=`")
-                    .with_label(span, "not a valid operator")
+                    .with_label(span, "")
+                    .with_suggestion(suggestion)
+            }
+            LowerError::InvalidPipe { span } => {
+                let suggestion =
+                    Suggestion::fix(span.clone(), "||").with_message("use `||` for logical or");
+
+                Self::error("invalid operator `|`")
+                    .with_label(span, "")
+                    .with_suggestion(suggestion)
+            }
+            LowerError::InvalidAmpersand { span } => {
+                let suggestion =
+                    Suggestion::fix(span.clone(), "&&").with_message("use `&&` for logical and");
+
+                Self::error("invalid operator `&`")
+                    .with_label(span, "")
                     .with_suggestion(suggestion)
             }
             LowerError::ExpectedToken { span, expected } => {
-                Self::error(format!("expected {expected}"))
-                    .with_label(span, format!("expected {expected}"))
-            }
-            LowerError::InvalidToken { span } => {
-                Self::error("unexpected token").with_label(span, "unexpected token")
+                Self::error(format!("expected {expected}")).with_label(span, "")
             }
         }
     }

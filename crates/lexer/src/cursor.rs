@@ -132,10 +132,11 @@ impl<'a> Cursor<'a> {
     ///
     /// Returns `true` if properly terminated, `false` if unterminated.
     #[must_use]
-    pub fn scan_string(&mut self) -> bool {
+    pub fn scan_string_until(&mut self, quote: u8) -> bool {
         while let Some(remaining) = self.bytes().get(self.position..) {
-            let Some(offset) = memchr::memchr2(b'"', b'\\', remaining) else {
-                // Unterminated string
+            // Find the next quote, escape, or newline. Cedar does not support
+            // multi-line string literals, so a newline terminates the string.
+            let Some(offset) = memchr::memchr3(quote, b'\\', b'\n', remaining) else {
                 self.position = self.bytes().len();
                 return false;
             };
@@ -146,7 +147,12 @@ impl<'a> Cursor<'a> {
                 return false;
             };
 
-            if byte == b'"' {
+            // Newline terminates an unterminated string without consuming it.
+            if byte == b'\n' {
+                return false;
+            }
+
+            if byte == quote {
                 self.position += 1;
                 return true;
             }
@@ -157,6 +163,23 @@ impl<'a> Cursor<'a> {
         }
 
         false
+    }
+
+    /// Scans a block comment after the opening `/*`.
+    pub fn scan_block_comment(&mut self) {
+        while let Some(remaining) = self.bytes().get(self.position..) {
+            let Some(offset) = memchr::memchr(b'*', remaining) else {
+                self.position = self.bytes().len();
+                return;
+            };
+
+            self.position += offset + 1;
+
+            if self.current() == Some(b'/') {
+                self.bump();
+                return;
+            }
+        }
     }
 
     /// Scans an identifier.
@@ -232,20 +255,29 @@ mod tests {
     #[test]
     fn scan_string() {
         let mut cursor = Cursor::new("alice\";");
-        assert!(cursor.scan_string());
+        assert!(cursor.scan_string_until(b'"'));
         assert_eq!(cursor.current(), Some(b';'));
 
         let mut cursor = Cursor::new("jane\\\"s_photo\"x");
-        assert!(cursor.scan_string());
+        assert!(cursor.scan_string_until(b'"'));
         assert_eq!(cursor.current(), Some(b'x'));
 
         let mut cursor = Cursor::new("\\🦀\"x");
-        assert!(cursor.scan_string());
+        assert!(cursor.scan_string_until(b'"'));
         assert_eq!(cursor.current(), Some(b'x'));
 
         let mut cursor = Cursor::new("VacationPhoto94.jpg");
-        assert!(!cursor.scan_string());
+        assert!(!cursor.scan_string_until(b'"'));
         assert_eq!(cursor.current(), None);
+
+        // Newline terminates an unterminated string
+        let mut cursor = Cursor::new("unterminated\npermit");
+        assert!(!cursor.scan_string_until(b'"'));
+        assert_eq!(cursor.current(), Some(b'\n'));
+
+        let mut cursor = Cursor::new("unterminated\r\npermit");
+        assert!(!cursor.scan_string_until(b'"'));
+        assert_eq!(cursor.current(), Some(b'\n'));
     }
 
     #[test]

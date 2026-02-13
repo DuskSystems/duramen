@@ -2,7 +2,30 @@ use duramen_diagnostic::Diagnostics;
 use duramen_lexer::TokenKind;
 use duramen_syntax::{Syntax, Tree};
 
-use crate::common::Parser;
+use crate::common::{
+    CONDITION_RECOVERY, EXPRESSION_RECOVERY, Parser, RECORD_RECOVERY, SCOPE_RECOVERY,
+};
+
+const POLICY_RECOVERY: &[TokenKind] = &[
+    TokenKind::At,
+    TokenKind::PermitKeyword,
+    TokenKind::ForbidKeyword,
+];
+
+// Extends SCOPE_RECOVERY with variable keywords so that garbage before a
+// variable name (e.g. a misplaced annotation) stops at the variable keyword.
+const SCOPE_VARIABLE_RECOVERY: &[TokenKind] = &[
+    TokenKind::Comma,
+    TokenKind::CloseParenthesis,
+    TokenKind::WhenKeyword,
+    TokenKind::UnlessKeyword,
+    TokenKind::Semicolon,
+    TokenKind::PrincipalKeyword,
+    TokenKind::ActionKeyword,
+    TokenKind::ResourceKeyword,
+    TokenKind::ContextKeyword,
+    TokenKind::QuestionMark,
+];
 
 /// Binding power and syntax kind for an infix operator.
 struct InfixOperator {
@@ -60,27 +83,7 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
     /// ```
     fn policy(&mut self) {
         let branch = self.parser.builder.open(Syntax::Policy);
-
-        if !self.parser.at(&[
-            TokenKind::Eof,
-            TokenKind::At,
-            TokenKind::PermitKeyword,
-            TokenKind::ForbidKeyword,
-        ]) {
-            let err = self.parser.builder.open(Syntax::Error);
-            while !self.parser.at(&[
-                TokenKind::Eof,
-                TokenKind::At,
-                TokenKind::PermitKeyword,
-                TokenKind::ForbidKeyword,
-            ]) {
-                self.parser.advance_push();
-                self.parser.next();
-                self.parser.advance_pop();
-            }
-
-            self.parser.builder.close(&err);
-        }
+        self.parser.recover(POLICY_RECOVERY);
 
         while self.parser.at(&[TokenKind::At]) {
             self.parser.advance_push();
@@ -88,26 +91,36 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
             self.parser.advance_pop();
         }
 
-        if self
+        self.parser.recover(POLICY_RECOVERY);
+
+        let has_effect = self
             .parser
-            .at(&[TokenKind::PermitKeyword, TokenKind::ForbidKeyword])
-        {
+            .at(&[TokenKind::PermitKeyword, TokenKind::ForbidKeyword]);
+
+        if has_effect {
             self.parser.next();
         }
 
         if self.parser.eat(TokenKind::OpenParenthesis) {
             self.variable_declaration();
+            self.parser.recover(SCOPE_RECOVERY);
+
             if self.parser.eat(TokenKind::Comma) {
                 self.variable_declaration();
+                self.parser.recover(SCOPE_RECOVERY);
             }
 
             if self.parser.eat(TokenKind::Comma) {
                 self.variable_declaration();
+                self.parser.recover(SCOPE_RECOVERY);
             }
 
             self.parser.eat(TokenKind::Comma);
+            self.parser.recover(SCOPE_RECOVERY);
             self.parser.eat(TokenKind::CloseParenthesis);
         }
+
+        self.parser.recover(SCOPE_RECOVERY);
 
         while self
             .parser
@@ -118,7 +131,12 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
             self.parser.advance_pop();
         }
 
-        self.parser.eat(TokenKind::Semicolon);
+        if has_effect {
+            self.parser.expect(TokenKind::Semicolon, "`;`");
+        } else {
+            self.parser.eat(TokenKind::Semicolon);
+        }
+
         self.parser.builder.close(&branch);
     }
 
@@ -129,6 +147,13 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
     /// ```
     fn variable_declaration(&mut self) {
         let branch = self.parser.builder.open(Syntax::VariableDefinition);
+
+        // Skip garbage before the variable name (e.g. misplaced annotations).
+        if !self.parser.kind().is_identifier()
+            && !self.parser.at(&[TokenKind::QuestionMark, TokenKind::Eof])
+        {
+            self.parser.recover(SCOPE_VARIABLE_RECOVERY);
+        }
 
         if self.parser.at(&[TokenKind::QuestionMark]) {
             self.slot();
@@ -190,6 +215,7 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
                 self.expression();
             }
 
+            self.parser.recover(CONDITION_RECOVERY);
             self.parser.eat(TokenKind::CloseBrace);
         }
 
@@ -463,11 +489,7 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
             return;
         }
 
-        if !self.parser.at(&[TokenKind::Eof]) {
-            let err = self.parser.builder.open(Syntax::Error);
-            self.parser.next();
-            self.parser.builder.close(&err);
-        }
+        self.parser.recover(EXPRESSION_RECOVERY);
     }
 
     /// Parses a record entry.
@@ -485,23 +507,7 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
             }
         }
 
-        if !self
-            .parser
-            .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-        {
-            let err = self.parser.builder.open(Syntax::Error);
-            while !self
-                .parser
-                .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-            {
-                self.parser.advance_push();
-                self.parser.next();
-                self.parser.advance_pop();
-            }
-
-            self.parser.builder.close(&err);
-        }
-
+        self.parser.recover(RECORD_RECOVERY);
         self.parser.builder.close(&branch);
     }
 
@@ -608,10 +614,7 @@ impl<'src, 'diag> PolicyParser<'src, 'diag> {
             }
         } else if !self.parser.at(&[TokenKind::Eof]) {
             self.parser.builder.close(&branch);
-            let err = self.parser.builder.open(Syntax::Error);
-            self.parser.next();
-            self.parser.builder.close(&err);
-
+            self.parser.error();
             return;
         }
 

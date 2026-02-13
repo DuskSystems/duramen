@@ -2,25 +2,20 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `}`
-  ╭▸ single_quote_string_1:3:5
+error: single-quoted strings are not supported
+  ╭▸ single_quote_string_1:3:21
   │
 3 │     principal.foo = 'bar'
-  ╰╴    ━━━━━━━━━ expected `}`
+  │                     ━━━━━
+  ╰╴
+help: use double quotes for strings
 error: invalid operator `=`
   ╭▸ single_quote_string_1:3:19
   │
 3 │     principal.foo = 'bar'
-  │                   ━ not a valid operator
+  │                   ━
   ╰╴
 help: use `==` for equality
   ╭╴
 3 │     principal.foo == 'bar'
   ╰╴                   +
-error: missing policy effect
-  ╭▸ single_quote_string_1:3:22
-  │
-3 │       principal.foo = 'bar'
-  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
-4 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`

@@ -3,6 +3,10 @@ use core::slice::Iter;
 
 use crate::diagnostic::{Diagnostic, DiagnosticKind};
 
+/// Snapshot of the diagnostics collection at a point in time.
+#[derive(Clone, Copy)]
+pub struct Checkpoint(usize);
+
 /// Collection of diagnostics.
 #[derive(Debug, Default)]
 pub struct Diagnostics {
@@ -39,6 +43,18 @@ impl Diagnostics {
     #[must_use]
     pub const fn len(&self) -> usize {
         self.items.len()
+    }
+
+    /// Saves the current position for later comparison.
+    #[must_use]
+    pub const fn checkpoint(&self) -> Checkpoint {
+        Checkpoint(self.items.len())
+    }
+
+    /// Returns diagnostics emitted since the checkpoint.
+    #[must_use]
+    pub fn since(&self, checkpoint: Checkpoint) -> &[Diagnostic] {
+        &self.items[checkpoint.0..]
     }
 
     /// Returns an iterator over the diagnostics.

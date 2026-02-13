@@ -6,7 +6,5 @@ duramen_test::fixtures!(policy = parse);
 
 fn parse(fixture: &TestContext<'_>) {
     let mut diagnostics = Diagnostics::new();
-
     let _tree = PolicyParser::new(fixture.source, &mut diagnostics).parse();
-    assert_eq!(diagnostics.len(), 0, "Expected no parser diagnostics");
 }

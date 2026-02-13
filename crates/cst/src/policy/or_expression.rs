@@ -34,9 +34,11 @@ impl<'a> OrExpression<'a> {
         self.node.children().filter_map(Expression::cast).nth(1)
     }
 
-    /// Returns the `||` operator token.
+    /// Returns the `||` operator token, or `|` if used as a fallback.
     #[must_use]
     pub fn operator_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Or)
+        self.node
+            .child(Syntax::Or)
+            .or_else(|| self.node.child(Syntax::Pipe))
     }
 }

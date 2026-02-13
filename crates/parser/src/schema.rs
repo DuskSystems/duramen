@@ -2,7 +2,16 @@ use duramen_diagnostic::Diagnostics;
 use duramen_lexer::TokenKind;
 use duramen_syntax::{Syntax, Tree};
 
-use crate::common::Parser;
+use crate::common::{Parser, RECORD_RECOVERY};
+
+const SCHEMA_RECOVERY: &[TokenKind] = &[
+    TokenKind::At,
+    TokenKind::EntityKeyword,
+    TokenKind::ActionKeyword,
+    TokenKind::TypeKeyword,
+    TokenKind::NamespaceKeyword,
+    TokenKind::CloseBrace,
+];
 
 /// Parses Cedar schema source text into a concrete syntax tree.
 pub struct SchemaParser<'src, 'diag> {
@@ -52,9 +61,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::CloseBrace]) {
-            let err = self.parser.builder.open(Syntax::Error);
-            self.parser.next();
-            self.parser.builder.close(&err);
+            self.parser.error();
 
             return;
         }
@@ -100,9 +107,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
     /// ```
     fn namespace_body(&mut self) {
         if !self.parser.at(&[TokenKind::OpenBrace]) {
-            let err = self.parser.builder.open(Syntax::Error);
-            self.parser.next();
-            self.parser.builder.close(&err);
+            self.parser.error();
 
             return;
         }
@@ -185,22 +190,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
             return;
         }
 
-        let err = self.parser.builder.open(Syntax::Error);
-        while !self.parser.at(&[
-            TokenKind::Eof,
-            TokenKind::EntityKeyword,
-            TokenKind::ActionKeyword,
-            TokenKind::TypeKeyword,
-            TokenKind::NamespaceKeyword,
-            TokenKind::At,
-            TokenKind::CloseBrace,
-        ]) {
-            self.parser.advance_push();
-            self.parser.next();
-            self.parser.advance_pop();
-        }
-
-        self.parser.builder.close(&err);
+        self.parser.recover(SCHEMA_RECOVERY);
     }
 
     /// Parses an entity declaration.
@@ -409,9 +399,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
             TokenKind::ResourceKeyword => (Syntax::ResourceTypes, false),
             TokenKind::ContextKeyword => (Syntax::ContextType, true),
             _ => {
-                let err = self.parser.builder.open(Syntax::Error);
-                self.parser.next();
-                self.parser.builder.close(&err);
+                self.parser.error();
 
                 return;
             }
@@ -548,23 +536,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
             }
         }
 
-        if !self
-            .parser
-            .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-        {
-            let err = self.parser.builder.open(Syntax::Error);
-            while !self
-                .parser
-                .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
-            {
-                self.parser.advance_push();
-                self.parser.next();
-                self.parser.advance_pop();
-            }
-
-            self.parser.builder.close(&err);
-        }
-
+        self.parser.recover(RECORD_RECOVERY);
         self.parser
             .builder
             .commit(&checkpoint, Syntax::AttributeDeclaration);
@@ -676,9 +648,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            let err = self.parser.builder.open(Syntax::Error);
-            self.parser.next();
-            self.parser.builder.close(&err);
+            self.parser.error();
         }
     }
 
@@ -728,9 +698,7 @@ impl<'src, 'diag> SchemaParser<'src, 'diag> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            let err = self.parser.builder.open(Syntax::Error);
-            self.parser.next();
-            self.parser.builder.close(&err);
+            self.parser.error();
         }
     }
 }

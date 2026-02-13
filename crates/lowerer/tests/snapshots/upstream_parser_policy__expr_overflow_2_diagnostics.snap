@@ -3,5 +3,7 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: integer literal `5555555555555555555555` is out of range
-  ╭▸ expr_overflow_2
+  ╭▸ expr_overflow_2:2:21
   │
+2 │ when { principal == 5555555555555555555555 };
+  ╰╴                    ━━━━━━━━━━━━━━━━━━━━━━━

@@ -2,22 +2,17 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `}`
-  ╭▸ comments_policy_3:2:8
+error: block comments are not supported
+  ╭▸ comments_policy_3:2:10
   │
 2 │ when { 1 /* multi-line
-  ╰╴       ━ expected `}`
-error: division and remainder are not supported
-  ╭▸ comments_policy_3:2:8
-  │
-2 │ when { 1 /* multi-line
-  │        ━━━━━ not supported
+  │          ── opened here
+3 │ comment */d };
+  │         ── closed here
   ╰╴
-note: only `*` with an integer literal is allowed
-error: missing policy effect
-  ╭▸ comments_policy_3:2:13
+help: use `//` for comments
+error: unexpected token
+  ╭▸ comments_policy_3:3:11
   │
-2 │   when { 1 /* multi-line
-  │ ┏━━━━━━━━━━━━━┛
-3 │ ┃ comment */d };
-  ╰╴┗━━━━━━━━━━━━━━━┛ expected `permit` or `forbid`
+3 │ comment */d };
+  ╰╴          ━

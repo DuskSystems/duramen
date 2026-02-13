@@ -2,15 +2,8 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: missing policy effect
-  ╭▸ policy_annotations_bad_id_2:1:1
-  │
-1 │ @hi mom("this should be invalid")
-  ╰╴━━━━ expected `permit` or `forbid`
 error: unexpected token
   ╭▸ policy_annotations_bad_id_2:1:5
   │
-1 │   @hi mom("this should be invalid")
-  │ ┏━━━━━┛
-2 │ ┃ permit (principal, action, resource);
-  ╰╴┗━┛ unexpected token
+1 │ @hi mom("this should be invalid")
+  ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

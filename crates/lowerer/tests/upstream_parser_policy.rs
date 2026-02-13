@@ -18,5 +18,6 @@ fn lower_corpus(fixture: &TestContext<'_>) {
     let cst = Policies::cast(root).unwrap();
     let _ast = PolicyLowerer::new(&mut diagnostics).lower(cst);
 
+    assert!(!diagnostics.is_empty(), "Expect diagnostics");
     assert_diagnostics_snapshot!("diagnostics", fixture, &diagnostics);
 }

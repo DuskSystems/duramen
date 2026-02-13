@@ -63,7 +63,7 @@ impl<'a> SchemaLowerer<'a> {
         {
             match ast::Namespace::new(annotations, None, top_declarations) {
                 Ok(namespace) => namespaces.push(namespace),
-                Err(error) => self.ctx.diagnostic(error),
+                Err(error) => self.ctx.diagnostics.push(error),
             }
         }
 
@@ -108,7 +108,7 @@ impl<'a> SchemaLowerer<'a> {
                 }
                 Syntax::NamespaceDeclaration => {
                     if let Some(nested) = cst::Namespace::cast(child) {
-                        self.ctx.diagnostic(LowerError::NestedNamespace {
+                        self.ctx.diagnostics.push(LowerError::NestedNamespace {
                             span: nested.range(),
                         });
                     }
@@ -123,7 +123,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::Namespace::new(annotations, name, declarations) {
             Ok(namespace) => Some(namespace),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -140,7 +140,8 @@ impl<'a> SchemaLowerer<'a> {
         for name in entity.names() {
             if name.is_qualified() {
                 self.ctx
-                    .diagnostic(LowerError::QualifiedEntityName { span: name.range() });
+                    .diagnostics
+                    .push(LowerError::QualifiedEntityName { span: name.range() });
 
                 continue;
             }
@@ -161,7 +162,7 @@ impl<'a> SchemaLowerer<'a> {
             return match ast::EntityDeclaration::new(annotations, names, kind) {
                 Ok(declaration) => Some(declaration),
                 Err(error) => {
-                    self.ctx.diagnostic(error);
+                    self.ctx.diagnostics.push(error);
                     None
                 }
             };
@@ -183,7 +184,7 @@ impl<'a> SchemaLowerer<'a> {
         let standard = match ast::StandardEntity::new(parents, attributes, tags) {
             Ok(standard) => standard,
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 return None;
             }
         };
@@ -193,7 +194,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::EntityDeclaration::new(annotations, names, kind) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -231,7 +232,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::ActionDeclaration::new(annotations, names, parents, applies_to, attributes) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -288,7 +289,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::AppliesTo::new(principals, resources, context) {
             Ok(applies_to) => Some(applies_to),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -313,7 +314,7 @@ impl<'a> SchemaLowerer<'a> {
             cst::TypeExpression::Set(_)
             | cst::TypeExpression::Entity(_)
             | cst::TypeExpression::Enum(_) => {
-                self.ctx.diagnostic(LowerError::InvalidContextType {
+                self.ctx.diagnostics.push(LowerError::InvalidContextType {
                     span: definition.range(),
                 });
 
@@ -331,9 +332,10 @@ impl<'a> SchemaLowerer<'a> {
 
         let cst_name = type_declaration.name()?;
         if cst_name.is_qualified() {
-            self.ctx.diagnostic(LowerError::QualifiedTypeName {
+            self.ctx.diagnostics.push(LowerError::QualifiedTypeName {
                 span: cst_name.range(),
             });
+
             return None;
         }
 
@@ -345,7 +347,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::TypeDeclaration::new(annotations, identifier, definition) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -367,9 +369,11 @@ impl<'a> SchemaLowerer<'a> {
                 Some(ast::TypeExpression::Record(record_type))
             }
             cst::TypeExpression::Entity(_entity) => {
-                self.ctx.diagnostic(LowerError::MissingTypeExpression {
-                    span: type_expr.range(),
-                });
+                self.ctx
+                    .diagnostics
+                    .push(LowerError::MissingTypeExpression {
+                        span: type_expr.range(),
+                    });
 
                 None
             }
@@ -394,7 +398,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::RecordType::new(attributes) {
             Ok(record_type) => Some(record_type),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -438,7 +442,7 @@ impl<'a> SchemaLowerer<'a> {
                 Ok(unescaped) => variants.push(unescaped),
                 Err(errors) => {
                     for error in errors {
-                        self.ctx.diagnostic(error.offset(offset));
+                        self.ctx.diagnostics.push(error.offset(offset));
                     }
                 }
             }
@@ -447,7 +451,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::EnumType::new(variants) {
             Ok(enum_type) => Some(enum_type),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }

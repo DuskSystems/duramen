@@ -34,9 +34,11 @@ impl<'a> AndExpression<'a> {
         self.node.children().filter_map(Expression::cast).nth(1)
     }
 
-    /// Returns the `&&` operator token.
+    /// Returns the `&&` operator token, or `&` if used as a fallback.
     #[must_use]
     pub fn operator_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::And)
+        self.node
+            .child(Syntax::And)
+            .or_else(|| self.node.child(Syntax::Ampersand))
     }
 }

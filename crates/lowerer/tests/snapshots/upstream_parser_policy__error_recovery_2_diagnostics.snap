@@ -2,27 +2,13 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `)`
-  ╭▸ error_recovery_2:1:9
-  │
-1 │ permit (principal, action, !)
-  ╰╴        ━━━━━━━━━ expected `)`
 error: unexpected token
   ╭▸ error_recovery_2:1:28
   │
-1 │   permit (principal, action, !)
-  │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-2 │ ┃ when { principal.foo == resource.bar };
-3 │ ┃
-4 │ ┃ permit (principal, action, +);
-  ╰╴┗━┛ unexpected token
-error: expected `)`
-  ╭▸ error_recovery_2:4:9
-  │
-4 │ permit (principal, action, +);
-  ╰╴        ━━━━━━━━━ expected `)`
-error: missing policy effect
+1 │ permit (principal, action, !)
+  ╰╴                           ━
+error: unexpected token
   ╭▸ error_recovery_2:4:28
   │
 4 │ permit (principal, action, +);
-  ╰╴                           ━━━ expected `permit` or `forbid`
+  ╰╴                           ━

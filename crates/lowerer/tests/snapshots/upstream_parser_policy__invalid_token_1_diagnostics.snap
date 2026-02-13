@@ -6,4 +6,4 @@ error: unexpected token
   ╭▸ invalid_token_1:2:8
   │
 2 │ when { ~ };
-  ╰╴       ━━ unexpected token
+  ╰╴       ━

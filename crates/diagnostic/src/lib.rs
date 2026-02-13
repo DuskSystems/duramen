@@ -9,7 +9,7 @@ mod diagnostic;
 pub use diagnostic::{Diagnostic, DiagnosticKind};
 
 mod diagnostics;
-pub use diagnostics::Diagnostics;
+pub use diagnostics::{Checkpoint, Diagnostics};
 
 mod suggestion;
 pub use suggestion::{Suggestion, SuggestionKind};

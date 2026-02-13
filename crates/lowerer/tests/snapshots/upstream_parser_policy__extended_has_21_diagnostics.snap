@@ -2,20 +2,13 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `}`
-  ╭▸ extended_has_21:3:5
+error: unexpected token
+  ╭▸ extended_has_21:3:21
   │
 3 │     principal has a.1
-  ╰╴    ━━━━━━━━━ expected `}`
+  ╰╴                    ━
 error: missing expression
   ╭▸ extended_has_21:3:19
   │
 3 │     principal has a.1
   ╰╴                  ━━ expected an attribute name
-error: missing policy effect
-  ╭▸ extended_has_21:3:21
-  │
-3 │       principal has a.1
-  │ ┏━━━━━━━━━━━━━━━━━━━━━┛
-4 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`

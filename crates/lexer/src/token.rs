@@ -29,6 +29,8 @@ pub enum TokenKind {
     String,
     /// Unterminated string literal: `"hello`.
     StringUnterminated,
+    /// Single-quoted string literal: `'hello'`.
+    StringSingleQuoted,
 
     /// Keyword: `action`.
     ActionKeyword,
@@ -152,6 +154,8 @@ pub enum TokenKind {
 
     /// Comment: `// ...`.
     Comment,
+    /// Block comment: `/* ... */`.
+    CommentBlock,
     /// Whitespace.
     Whitespace,
 
@@ -317,6 +321,7 @@ impl fmt::Display for TokenKind {
             Self::Integer => "integer",
             Self::String => "string",
             Self::StringUnterminated => "unterminated string",
+            Self::StringSingleQuoted => "single-quoted string",
 
             Self::ActionKeyword => "`action`",
             Self::AppliesToKeyword => "`appliesTo`",
@@ -381,6 +386,7 @@ impl fmt::Display for TokenKind {
             Self::Slash => "`/`",
 
             Self::Comment => "comment",
+            Self::CommentBlock => "block comment",
             Self::Whitespace => "whitespace",
 
             Self::Unknown => "unknown",
