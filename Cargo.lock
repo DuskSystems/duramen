@@ -320,6 +320,7 @@ dependencies = [
  "duramen-lowerer",
  "duramen-parser",
  "duramen-runtime",
+ "duramen-suggest",
  "duramen-syntax",
  "duramen-test",
  "duramen-validate",
@@ -418,6 +419,13 @@ name = "duramen-runtime"
 version = "0.1.0"
 dependencies = [
  "duramen-test",
+]
+
+[[package]]
+name = "duramen-suggest"
+version = "0.1.0"
+dependencies = [
+ "codspeed-divan-compat",
 ]
 
 [[package]]

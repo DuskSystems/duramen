@@ -1,0 +1,28 @@
+[package]
+name = "duramen-suggest"
+description = "Duramen Suggest"
+include = ["/src", "/README.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
+publish = false
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["std"]
+std = []
+
+[dev-dependencies]
+# Benchmarking
+divan = { workspace = true }
+
+[[bench]]
+name = "suggest"
+harness = false
