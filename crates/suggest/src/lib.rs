@@ -1,0 +1,170 @@
+#![cfg_attr(doc, doc = include_str!("../README.md"))]
+#![no_std]
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
+
+use alloc::vec;
+use alloc::vec::Vec;
+
+#[must_use]
+pub fn suggest<'a>(query: &str, candidates: &[&'a str]) -> Option<&'a str> {
+    let len = query.chars().count();
+    let mut threshold = len.max(3) / 3;
+
+    let mut winner: Option<&str> = None;
+
+    for candidate in candidates {
+        let distance = damerau_levenshtein_distance(query, candidate);
+        if distance <= threshold {
+            threshold = distance.saturating_sub(1);
+            winner = Some(candidate);
+        }
+    }
+
+    winner
+}
+
+/// <https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance>.
+fn damerau_levenshtein_distance(source: &str, target: &str) -> usize {
+    let source: Vec<char> = source.chars().collect();
+    let source_len = source.len();
+
+    let target: Vec<char> = target.chars().collect();
+    let target_len = target.len();
+
+    if source_len == 0 {
+        return target_len;
+    }
+
+    if target_len == 0 {
+        return source_len;
+    }
+
+    let mut matrix = vec![vec![0; target_len + 1]; source_len + 1];
+
+    for (index, row) in matrix.iter_mut().enumerate() {
+        row[0] = index;
+    }
+
+    for (index, cell) in matrix[0].iter_mut().enumerate() {
+        *cell = index;
+    }
+
+    for row in 1..=source_len {
+        for column in 1..=target_len {
+            let cost = usize::from(source[row - 1] != target[column - 1]);
+
+            matrix[row][column] = (matrix[row - 1][column] + 1)
+                .min(matrix[row][column - 1] + 1)
+                .min(matrix[row - 1][column - 1] + cost);
+
+            if row > 1
+                && column > 1
+                && source[row - 1] == target[column - 2]
+                && source[row - 2] == target[column - 1]
+            {
+                matrix[row][column] = matrix[row][column].min(matrix[row - 2][column - 2] + cost);
+            }
+        }
+    }
+
+    matrix[source_len][target_len]
+}
+
+// Tests sourced from: https://github.com/rapidfuzz/strsim-rs/blob/v0.11.1/src/lib.rs
+#[cfg(test)]
+mod tests {
+    use super::damerau_levenshtein_distance;
+
+    #[test]
+    fn empty() {
+        assert_eq!(damerau_levenshtein_distance("", ""), 0);
+    }
+
+    #[test]
+    fn same() {
+        assert_eq!(damerau_levenshtein_distance("damerau", "damerau"), 0);
+    }
+
+    #[test]
+    fn first_empty() {
+        assert_eq!(damerau_levenshtein_distance("", "damerau"), 7);
+    }
+
+    #[test]
+    fn second_empty() {
+        assert_eq!(damerau_levenshtein_distance("damerau", ""), 7);
+    }
+
+    #[test]
+    fn diff() {
+        assert_eq!(damerau_levenshtein_distance("ca", "abc"), 3);
+    }
+
+    #[test]
+    fn diff_short() {
+        assert_eq!(damerau_levenshtein_distance("damerau", "aderua"), 3);
+    }
+
+    #[test]
+    fn diff_reversed() {
+        assert_eq!(damerau_levenshtein_distance("aderua", "damerau"), 3);
+    }
+
+    #[test]
+    fn diff_multibyte() {
+        assert_eq!(damerau_levenshtein_distance("öঙ香", "abc"), 3);
+        assert_eq!(damerau_levenshtein_distance("abc", "öঙ香"), 3);
+    }
+
+    #[test]
+    fn diff_unequal_length() {
+        assert_eq!(damerau_levenshtein_distance("damerau", "aderuaxyz"), 6);
+    }
+
+    #[test]
+    fn diff_unequal_length_reversed() {
+        assert_eq!(damerau_levenshtein_distance("aderuaxyz", "damerau"), 6);
+    }
+
+    #[test]
+    fn diff_comedians() {
+        assert_eq!(damerau_levenshtein_distance("Stewart", "Colbert"), 5);
+    }
+
+    #[test]
+    fn many_transpositions() {
+        assert_eq!(
+            damerau_levenshtein_distance("abcdefghijkl", "bacedfgihjlk"),
+            4
+        );
+    }
+
+    #[test]
+    fn diff_longer() {
+        assert_eq!(
+            damerau_levenshtein_distance(
+                "The quick brown fox jumped over the angry dog.",
+                "Lehem ipsum dolor sit amet, dicta latine an eam.",
+            ),
+            36,
+        );
+    }
+
+    #[test]
+    fn beginning_transposition() {
+        assert_eq!(damerau_levenshtein_distance("foobar", "ofobar"), 1);
+    }
+
+    #[test]
+    fn end_transposition() {
+        assert_eq!(damerau_levenshtein_distance("specter", "spectre"), 1);
+    }
+
+    #[test]
+    fn restricted_edit() {
+        assert_eq!(damerau_levenshtein_distance("a cat", "an abct"), 4);
+    }
+}

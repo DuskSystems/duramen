@@ -119,6 +119,7 @@ duramen-lexer = { path = "crates/lexer", default-features = false }
 duramen-lowerer = { path = "crates/lowerer", default-features = false }
 duramen-parser = { path = "crates/parser", default-features = false }
 duramen-runtime = { path = "crates/runtime", default-features = false }
+duramen-suggest = { path = "crates/suggest", default-features = false }
 duramen-syntax = { path = "crates/syntax", default-features = false }
 duramen-test = { path = "crates/test", default-features = false }
 duramen-validate = { path = "crates/validate", default-features = false }
@@ -186,6 +187,7 @@ std = [
     "duramen-lowerer/std",
     "duramen-parser/std",
     "duramen-runtime/std",
+    "duramen-suggest/std",
     "duramen-validate/std",
 ]
 
@@ -199,6 +201,7 @@ duramen-lexer = { workspace = true }
 duramen-lowerer = { workspace = true }
 duramen-parser = { workspace = true }
 duramen-runtime = { workspace = true }
+duramen-suggest = { workspace = true }
 duramen-syntax = { workspace = true }
 duramen-validate = { workspace = true }
 
