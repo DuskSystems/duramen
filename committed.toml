@@ -2,3 +2,30 @@
 
 style = "conventional"
 merge_commit = false
+
+allowed_types = [
+  "fix",
+  "feat",
+  "chore",
+  "docs",
+  "style",
+  "refactor",
+  "perf",
+  "test",
+]
+
+allowed_scopes = [
+  "ast",
+  "cst",
+  "diagnostic",
+  "escape",
+  "evaluate",
+  "lexer",
+  "lowerer",
+  "parser",
+  "runtime",
+  "suggest",
+  "syntax",
+  "test",
+  "validate",
+]
