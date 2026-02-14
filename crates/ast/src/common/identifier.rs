@@ -18,6 +18,18 @@ impl<'a> Identifier<'a> {
             return Err(Error::Empty);
         }
 
+        let mut chars = value.chars();
+        let valid = chars
+            .next()
+            .is_some_and(|ch| ch == '_' || ch.is_ascii_alphabetic())
+            && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric());
+
+        if !valid {
+            return Err(Error::InvalidIdentifier {
+                name: String::from(value),
+            });
+        }
+
         if value.starts_with("__cedar") {
             return Err(Error::ReservedPrefix {
                 name: String::from(value),

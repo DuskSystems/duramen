@@ -7,3 +7,8 @@ error: expected `;`
   │
 2 │ when { principal.foo == resource.bar }
   ╰╴                                      ━ expected `;`
+error: invalid scope variable
+  ╭▸ error_recovery_3:1:28
+  │
+1 │ permit (principal, action, !)
+  ╰╴                           ━ expected `principal`, `action`, or `resource`

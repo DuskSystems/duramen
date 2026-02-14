@@ -18,7 +18,7 @@ Policies 0..75
 │ ├─VariableDefinition 27..35
 │ │ └─ResourceKeyword "resource" 27..35
 │ ├─CloseParenthesis ")" 35..36
-│ ├─Whitespace "\n" 36..37
+│ ├─Newline "\n" 36..37
 │ ├─Condition 37..49
 │ │ ├─WhenKeyword "when" 37..41
 │ │ ├─Whitespace " " 41..42
@@ -39,7 +39,7 @@ Policies 0..75
   │ ├─Identifier "multi" 49..54
   │ ├─Subtract "-" 54..55
   │ ├─Identifier "line" 55..59
-  │ ├─Whitespace "\n" 59..60
+  │ ├─Newline "\n" 59..60
   │ ├─Identifier "comment" 60..67
   │ ├─Whitespace " " 67..68
   │ ├─Multiply "*" 68..69
@@ -48,5 +48,5 @@ Policies 0..75
   │ ├─Whitespace " " 71..72
   │ ├─CloseBrace "}" 72..73
   │ ├─Semicolon ";" 73..74
-  │ └─Whitespace "\n" 74..75
+  │ └─Newline "\n" 74..75
   └─Semicolon "" 75..75

@@ -131,8 +131,13 @@ pub enum Syntax {
 
     /// Line comment: `// ...`.
     Comment,
-    /// Whitespace.
+    /// Newline: `\n` or `\r\n`.
+    Newline,
+    /// Same-line whitespace: spaces, tabs.
     Whitespace,
+
+    /// Unknown token from the lexer.
+    Unknown,
 
     /// Error node.
     Error,
@@ -255,10 +260,10 @@ impl Syntax {
         TokenKind::try_from(self).is_ok_and(TokenKind::is_trivial)
     }
 
-    /// Checks if this is an error token.
+    /// Checks if this is an error or unknown token.
     #[must_use]
     pub const fn is_error(self) -> bool {
-        matches!(self, Self::Error)
+        matches!(self, Self::Error | Self::Unknown)
     }
 
     /// Checks if this is a reserved keyword in policy context.
@@ -372,7 +377,10 @@ impl fmt::Display for Syntax {
             Self::Multiply => "*",
 
             Self::Comment => "comment",
+            Self::Newline => "newline",
             Self::Whitespace => "whitespace",
+
+            Self::Unknown => "unknown",
             Self::Error => "error",
 
             Self::Annotation => "annotation",
@@ -496,7 +504,7 @@ impl From<TokenKind> for Syntax {
             | TokenKind::Pipe
             | TokenKind::StringUnterminated
             | TokenKind::Unknown
-            | TokenKind::Eof => Self::Error,
+            | TokenKind::Eof => Self::Unknown,
             TokenKind::Ampersand2 => Self::And,
             TokenKind::Bang => Self::Not,
             TokenKind::BangEquals => Self::NotEqual,
@@ -514,6 +522,7 @@ impl From<TokenKind> for Syntax {
             TokenKind::Asterisk => Self::Multiply,
 
             TokenKind::Comment => Self::Comment,
+            TokenKind::Newline => Self::Newline,
             TokenKind::Whitespace => Self::Whitespace,
         }
     }
@@ -589,7 +598,10 @@ impl TryFrom<Syntax> for TokenKind {
             Syntax::Multiply => Ok(Self::Asterisk),
 
             Syntax::Comment => Ok(Self::Comment),
+            Syntax::Newline => Ok(Self::Newline),
             Syntax::Whitespace => Ok(Self::Whitespace),
+
+            Syntax::Unknown => Ok(Self::Unknown),
 
             _ => Err(()),
         }

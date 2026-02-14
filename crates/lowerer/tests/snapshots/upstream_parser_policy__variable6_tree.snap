@@ -28,5 +28,5 @@ Policies 0..39
   │ ├─ResourceKeyword "resource" 28..36
   │ ├─CloseParenthesis ")" 36..37
   │ ├─Semicolon ";" 37..38
-  │ └─Whitespace "\n" 38..39
+  │ └─Newline "\n" 38..39
   └─Semicolon "" 39..39

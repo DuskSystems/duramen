@@ -18,12 +18,13 @@ Policies 0..81
   ├─VariableDefinition 27..35
   │ └─ResourceKeyword "resource" 27..35
   ├─CloseParenthesis ")" 35..36
-  ├─Whitespace "\n" 36..37
+  ├─Newline "\n" 36..37
   ├─Condition 37..79
   │ ├─WhenKeyword "when" 37..41
   │ ├─Whitespace " " 41..42
   │ ├─OpenBrace "{" 42..43
-  │ ├─Whitespace "\n    " 43..48
+  │ ├─Newline "\n" 43..44
+  │ ├─Whitespace "    " 44..48
   │ ├─Record 48..78
   │ │ ├─OpenBrace "{" 48..49
   │ │ ├─RecordEntry 49..61
@@ -47,7 +48,7 @@ Policies 0..81
   │ │ │   └─Literal 75..76
   │ │ │     └─Integer "4" 75..76
   │ │ ├─CloseBrace "}" 76..77
-  │ │ └─Whitespace "\n" 77..78
+  │ │ └─Newline "\n" 77..78
   │ └─CloseBrace "}" 78..79
   ├─Semicolon ";" 79..80
-  └─Whitespace "\n" 80..81
+  └─Newline "\n" 80..81

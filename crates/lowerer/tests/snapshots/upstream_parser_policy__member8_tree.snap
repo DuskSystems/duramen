@@ -18,12 +18,13 @@ Policies 0..82
   ├─VariableDefinition 27..35
   │ └─ResourceKeyword "resource" 27..35
   ├─CloseParenthesis ")" 35..36
-  ├─Whitespace "\n" 36..37
+  ├─Newline "\n" 36..37
   ├─Condition 37..80
   │ ├─WhenKeyword "when" 37..41
   │ ├─Whitespace " " 41..42
   │ ├─OpenBrace "{" 42..43
-  │ ├─Whitespace "\n    " 43..48
+  │ ├─Newline "\n" 43..44
+  │ ├─Whitespace "    " 44..48
   │ ├─MemberExpression 48..79
   │ │ ├─Record 48..64
   │ │ │ ├─OpenBrace "{" 48..49
@@ -50,7 +51,7 @@ Policies 0..82
   │ │   ├─Literal 70..77
   │ │   │ └─String "\"pizza\"" 70..77
   │ │   ├─CloseBracket "]" 77..78
-  │ │   └─Whitespace "\n" 78..79
+  │ │   └─Newline "\n" 78..79
   │ └─CloseBrace "}" 79..80
   ├─Semicolon ";" 80..81
-  └─Whitespace "\n" 81..82
+  └─Newline "\n" 81..82

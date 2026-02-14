@@ -64,6 +64,16 @@ pub enum LowerError {
     InvalidEquals {
         span: Range<usize>,
     },
+
+    InvalidVariable {
+        span: Range<usize>,
+    },
+    InvalidKey {
+        span: Range<usize>,
+    },
+    InvalidAnnotation {
+        span: Range<usize>,
+    },
 }
 
 impl From<LowerError> for Diagnostic {
@@ -108,7 +118,7 @@ impl From<LowerError> for Diagnostic {
                 Self::error(format!("unknown method `{name}`")).with_label(span, "unknown method")
             }
             LowerError::UnknownFunction { span, name } => {
-                Self::error(format!("`{name}` is not a known function"))
+                Self::error(format!("unknown function `{name}`"))
                     .with_label(span, "unknown function")
             }
             LowerError::WrongArgumentCount {
@@ -116,10 +126,18 @@ impl From<LowerError> for Diagnostic {
                 function,
                 expected,
                 found,
-            } => Self::error(format!(
-                "`{function}` expects {expected} argument(s), found {found}"
-            ))
-            .with_label(span, format!("expected {expected} argument(s)")),
+            } => {
+                let args = if expected == 1 {
+                    "argument"
+                } else {
+                    "arguments"
+                };
+
+                Self::error(format!(
+                    "`{function}` takes {expected} {args}, found {found}"
+                ))
+                .with_label(span, format!("expected {expected} {args}"))
+            }
 
             LowerError::NestedNamespace { span } => {
                 Self::error("nested namespaces are not supported")
@@ -146,6 +164,15 @@ impl From<LowerError> for Diagnostic {
                 Self::error("invalid operator `=`")
                     .with_label(span, "not a valid operator")
                     .with_suggestion(suggestion)
+            }
+
+            LowerError::InvalidVariable { span } => Self::error("invalid scope variable")
+                .with_label(span, "expected `principal`, `action`, or `resource`"),
+            LowerError::InvalidKey { span } => {
+                Self::error("invalid key").with_label(span, "expected a name or string")
+            }
+            LowerError::InvalidAnnotation { span } => {
+                Self::error("invalid annotation").with_label(span, "expected a name after `@`")
             }
         }
     }

@@ -81,7 +81,7 @@ impl<'a> Cursor<'a> {
         }
     }
 
-    /// Skips whitespace characters.
+    /// Skips same-line whitespace characters (spaces, tabs, not newlines).
     pub fn skip_whitespace(&mut self) -> bool {
         let start = self.position;
 
@@ -106,7 +106,7 @@ impl<'a> Cursor<'a> {
                 break;
             };
 
-            if !char.is_whitespace() {
+            if !char.is_whitespace() || char == '\n' || char == '\r' {
                 break;
             }
 
@@ -115,6 +115,25 @@ impl<'a> Cursor<'a> {
 
         self.position = position;
         position > start
+    }
+
+    /// Skips newline characters (`\n` or `\r\n`).
+    pub fn skip_newline(&mut self) -> bool {
+        match self.current() {
+            Some(b'\r') => {
+                self.bump();
+                if self.current() == Some(b'\n') {
+                    self.bump();
+                }
+
+                true
+            }
+            Some(b'\n') => {
+                self.bump();
+                true
+            }
+            _ => false,
+        }
     }
 
     /// Skips to end of line.
@@ -205,13 +224,32 @@ mod tests {
 
     #[test]
     fn skip_whitespace() {
-        let mut cursor = Cursor::new("  \t\n\r\x0B\x0Cx");
+        let mut cursor = Cursor::new("  \t\x0B\x0Cx");
         cursor.skip_whitespace();
         assert_eq!(cursor.current(), Some(b'x'));
+
+        let mut cursor = Cursor::new("  \t\n");
+        cursor.skip_whitespace();
+        assert_eq!(cursor.current(), Some(b'\n'));
 
         let mut cursor = Cursor::new("\u{00A0}\u{2003}\u{3000}x");
         cursor.skip_whitespace();
         assert_eq!(cursor.current(), Some(b'x'));
+    }
+
+    #[test]
+    fn skip_newline() {
+        let mut cursor = Cursor::new("\nx");
+        assert!(cursor.skip_newline());
+        assert_eq!(cursor.current(), Some(b'x'));
+
+        let mut cursor = Cursor::new("\r\nx");
+        assert!(cursor.skip_newline());
+        assert_eq!(cursor.current(), Some(b'x'));
+
+        let mut cursor = Cursor::new(" x");
+        assert!(!cursor.skip_newline());
+        assert_eq!(cursor.current(), Some(b' '));
     }
 
     #[test]

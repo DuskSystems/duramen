@@ -2,4 +2,8 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-
+error: `hi+mom` is not a valid name
+  ╭▸ policy_annotations_bad_id_3:1:2
+  │
+1 │ @hi+mom("this should be invalid")
+  ╰╴ ━━━━━━ not a valid name

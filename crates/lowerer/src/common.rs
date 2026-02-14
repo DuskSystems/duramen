@@ -2,10 +2,12 @@ use alloc::borrow::Cow;
 use alloc::vec::Vec;
 
 use duramen_cst::CstNode as _;
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::{Node, Syntax};
 use {duramen_ast as ast, duramen_cst as cst};
+
+use crate::error::LowerError;
 
 /// Shared context for lowering CST to AST.
 pub struct LowerContext {
@@ -69,13 +71,19 @@ impl LowerContext {
 
         for annotation in annotations {
             let Some(name_node) = annotation.name() else {
+                self.diagnostics.push(LowerError::InvalidAnnotation {
+                    span: annotation.range(),
+                });
                 continue;
             };
 
             let identifier = match ast::Identifier::new(name_node.text()) {
                 Ok(identifier) => identifier,
                 Err(error) => {
-                    self.diagnostics.push(error);
+                    let diagnostic =
+                        Diagnostic::from(error).with_label(name_node.range(), "not a valid name");
+
+                    self.diagnostics.push(diagnostic);
                     continue;
                 }
             };

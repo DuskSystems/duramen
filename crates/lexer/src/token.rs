@@ -152,7 +152,9 @@ pub enum TokenKind {
 
     /// Comment: `// ...`.
     Comment,
-    /// Whitespace.
+    /// Newline: `\n` or `\r\n`.
+    Newline,
+    /// Same-line whitespace: spaces, tabs.
     Whitespace,
 
     /// Unrecognized token.
@@ -165,7 +167,7 @@ impl TokenKind {
     /// Checks if this is a trivial token.
     #[must_use]
     pub const fn is_trivial(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Comment)
+        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
 
     /// Checks if this is a keyword token.
@@ -381,6 +383,7 @@ impl fmt::Display for TokenKind {
             Self::Slash => "`/`",
 
             Self::Comment => "comment",
+            Self::Newline => "newline",
             Self::Whitespace => "whitespace",
 
             Self::Unknown => "unknown",

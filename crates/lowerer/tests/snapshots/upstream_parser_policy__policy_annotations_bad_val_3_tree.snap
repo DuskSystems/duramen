@@ -6,7 +6,8 @@ Policies 0..70
 ├─Policy 0..16
 │ ├─Annotation 0..16
 │ │ ├─At "@" 0..1
-│ │ ├─Identifier "bad_annotation" 1..15
+│ │ ├─Name 1..15
+│ │ │ └─Identifier "bad_annotation" 1..15
 │ │ ├─OpenParenthesis "(" 15..16
 │ │ └─CloseParenthesis "" 16..16
 │ └─Semicolon "" 16..16
@@ -14,7 +15,7 @@ Policies 0..70
   ├─Error 16..32
   │ ├─Identifier "bad_annotation" 16..30
   │ ├─CloseParenthesis ")" 30..31
-  │ └─Whitespace "\n" 31..32
+  │ └─Newline "\n" 31..32
   ├─PermitKeyword "permit" 32..38
   ├─Whitespace " " 38..39
   ├─OpenParenthesis "(" 39..40
@@ -30,4 +31,4 @@ Policies 0..70
   │ └─ResourceKeyword "resource" 59..67
   ├─CloseParenthesis ")" 67..68
   ├─Semicolon ";" 68..69
-  └─Whitespace "\n" 69..70
+  └─Newline "\n" 69..70

@@ -480,6 +480,9 @@ impl SchemaLowerer {
 
         for attribute in attributes {
             let Some(name_node) = attribute.name() else {
+                self.ctx.diagnostics.push(LowerError::InvalidKey {
+                    span: attribute.range(),
+                });
                 continue;
             };
 

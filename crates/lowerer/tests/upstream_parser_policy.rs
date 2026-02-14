@@ -13,5 +13,6 @@ fn lower_corpus(fixture: &TestContext<'_>) {
     assert_fixture_snapshot!("tree", fixture, root);
 
     let (_policies, diagnostics) = PolicyLowerer::lower(&tree, diagnostics);
+    assert!(!diagnostics.is_empty(), "Expected diagnostics");
     assert_diagnostics_snapshot!("diagnostics", fixture, &diagnostics);
 }

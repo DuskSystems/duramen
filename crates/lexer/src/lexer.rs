@@ -15,13 +15,19 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// Peeks at the next token without consuming it.
+    #[must_use]
+    pub fn peek_token(&mut self) -> Option<Token> {
+        let checkpoint = self.cursor.checkpoint();
+        let token = self.next_token();
+        self.cursor.restore(checkpoint);
+        token
+    }
+
     /// Peeks at the kind of the next token without consuming it.
     #[must_use]
     pub fn peek(&mut self) -> Option<TokenKind> {
-        let checkpoint = self.cursor.checkpoint();
-        let kind = self.next_token().map(|token| token.kind);
-        self.cursor.restore(checkpoint);
-        kind
+        self.peek_token().map(|token| token.kind)
     }
 
     /// Returns the next token.
@@ -42,8 +48,13 @@ impl<'a> Lexer<'a> {
         };
 
         match current {
+            // Newline
+            b'\n' | b'\r' => {
+                self.cursor.skip_newline();
+                TokenKind::Newline
+            }
             // Whitespace
-            b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C => {
+            b' ' | b'\t' | 0x0B | 0x0C => {
                 self.cursor.skip_whitespace();
                 TokenKind::Whitespace
             }
@@ -238,7 +249,8 @@ mod tests {
     #[test]
     fn whitespace() {
         let mut lexer = Lexer::new("  \t\n");
-        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Whitespace, 4)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Whitespace, 3)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Newline, 1)));
         assert_eq!(lexer.next(), None);
     }
 

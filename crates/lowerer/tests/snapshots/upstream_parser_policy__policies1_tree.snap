@@ -30,7 +30,7 @@ Policies 0..89
 │ │ └─Name 43..44
 │ │   └─Identifier "r" 43..44
 │ ├─CloseParenthesis ")" 44..45
-│ ├─Whitespace "\n" 45..46
+│ ├─Newline "\n" 45..46
 │ ├─Condition 46..57
 │ │ ├─WhenKeyword "when" 46..50
 │ │ ├─Whitespace " " 50..51
@@ -40,7 +40,7 @@ Policies 0..89
 │ │ │ ├─Identifier "w" 53..54
 │ │ │ └─Whitespace " " 54..55
 │ │ ├─CloseBrace "}" 55..56
-│ │ └─Whitespace "\n" 56..57
+│ │ └─Newline "\n" 56..57
 │ ├─Condition 57..70
 │ │ ├─UnlessKeyword "unless" 57..63
 │ │ ├─Whitespace " " 63..64
@@ -50,7 +50,7 @@ Policies 0..89
 │ │ │ ├─Identifier "u" 66..67
 │ │ │ └─Whitespace " " 67..68
 │ │ ├─CloseBrace "}" 68..69
-│ │ └─Whitespace "\n" 69..70
+│ │ └─Newline "\n" 69..70
 │ └─Semicolon "" 70..70
 └─Policy 70..89
   ├─Error 70..89
@@ -62,5 +62,5 @@ Policies 0..89
   │ ├─Whitespace " " 85..86
   │ ├─CloseBrace "}" 86..87
   │ ├─Semicolon ";" 87..88
-  │ └─Whitespace "\n" 88..89
+  │ └─Newline "\n" 88..89
   └─Semicolon "" 89..89

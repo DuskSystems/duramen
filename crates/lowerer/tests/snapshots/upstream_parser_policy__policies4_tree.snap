@@ -30,7 +30,7 @@ Policies 0..405
 │ │ └─Name 43..44
 │ │   └─Identifier "r" 43..44
 │ ├─CloseParenthesis ")" 44..45
-│ ├─Whitespace "\n" 45..46
+│ ├─Newline "\n" 45..46
 │ ├─Condition 46..57
 │ │ ├─WhenKeyword "when" 46..50
 │ │ ├─Whitespace " " 50..51
@@ -40,7 +40,7 @@ Policies 0..405
 │ │ │ ├─Identifier "w" 53..54
 │ │ │ └─Whitespace " " 54..55
 │ │ ├─CloseBrace "}" 55..56
-│ │ └─Whitespace "\n" 56..57
+│ │ └─Newline "\n" 56..57
 │ ├─Condition 57..70
 │ │ ├─UnlessKeyword "unless" 57..63
 │ │ ├─Whitespace " " 63..64
@@ -50,7 +50,7 @@ Policies 0..405
 │ │ │ ├─Identifier "u" 66..67
 │ │ │ └─Whitespace " " 67..68
 │ │ ├─CloseBrace "}" 68..69
-│ │ └─Whitespace "\n" 69..70
+│ │ └─Newline "\n" 69..70
 │ └─Semicolon "" 70..70
 ├─Policy 70..232
 │ ├─Error 70..90
@@ -62,7 +62,8 @@ Policies 0..405
 │ │ ├─Whitespace " " 85..86
 │ │ ├─CloseBrace "}" 86..87
 │ │ ├─Semicolon ";" 87..88
-│ │ └─Whitespace "\n\n" 88..90
+│ │ ├─Newline "\n" 88..89
+│ │ └─Newline "\n" 89..90
 │ ├─PermitKeyword "permit" 90..96
 │ ├─Whitespace " " 96..97
 │ ├─OpenParenthesis "(" 97..98
@@ -79,7 +80,7 @@ Policies 0..405
 │ ├─Comma "," 132..133
 │ ├─Whitespace "  " 133..135
 │ ├─Comment "// Policy c1" 135..147
-│ ├─Whitespace "\n" 147..148
+│ ├─Newline "\n" 147..148
 │ ├─VariableDefinition 148..195
 │ │ ├─ActionKeyword "action" 148..154
 │ │ ├─Whitespace " " 154..155
@@ -102,7 +103,7 @@ Policies 0..405
 │ │   │   └─String "\"comment\"" 185..194
 │ │   └─CloseBracket "]" 194..195
 │ ├─Comma "," 195..196
-│ ├─Whitespace "\n" 196..197
+│ ├─Newline "\n" 196..197
 │ ├─VariableDefinition 197..228
 │ │ ├─ResourceKeyword "resource" 197..205
 │ │ ├─Whitespace " " 205..206
@@ -115,7 +116,8 @@ Policies 0..405
 │ │   └─String "\"jane_trips\"" 216..228
 │ ├─CloseParenthesis ")" 228..229
 │ ├─Semicolon ";" 229..230
-│ └─Whitespace "\n\n" 230..232
+│ ├─Newline "\n" 230..231
+│ └─Newline "\n" 231..232
 └─Policy 232..405
   ├─ForbidKeyword "forbid" 232..238
   ├─Whitespace " " 238..239
@@ -133,7 +135,7 @@ Policies 0..405
   ├─CloseParenthesis ")" 267..268
   ├─Whitespace "           " 268..279
   ├─Comment "// Policy c2" 279..291
-  ├─Whitespace "\n" 291..292
+  ├─Newline "\n" 291..292
   ├─Condition 292..368
   │ ├─WhenKeyword "when" 292..296
   │ ├─Whitespace "   " 296..299
@@ -155,7 +157,7 @@ Policies 0..405
   │ ├─CloseBrace "}" 328..329
   │ ├─Whitespace "  " 329..331
   │ ├─Comment "// resource.tags is a set of strings" 331..367
-  │ └─Whitespace "\n" 367..368
+  │ └─Newline "\n" 367..368
   ├─Condition 368..403
   │ ├─UnlessKeyword "unless" 368..374
   │ ├─Whitespace " " 374..375
@@ -176,4 +178,4 @@ Policies 0..405
   │ │     └─Whitespace " " 401..402
   │ └─CloseBrace "}" 402..403
   ├─Semicolon ";" 403..404
-  └─Whitespace "\n" 404..405
+  └─Newline "\n" 404..405

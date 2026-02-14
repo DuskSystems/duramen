@@ -23,6 +23,6 @@ Policies 0..58
   │ └─Name 39..58
   │   ├─Identifier "Photo" 39..44
   │   ├─PathSeparator "::" 44..46
-  │   └─Error "\"mine.jpg);\n" 46..58
+  │   └─Unknown "\"mine.jpg);\n" 46..58
   ├─CloseParenthesis "" 58..58
   └─Semicolon "" 58..58

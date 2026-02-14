@@ -2,4 +2,8 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-
+error: `bad-annotation` is not a valid name
+  ╭▸ policy_annotations_bad_id_1:1:2
+  │
+1 │ @bad-annotation("bad")
+  ╰╴ ━━━━━━━━━━━━━━ not a valid name

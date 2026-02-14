@@ -25,11 +25,12 @@ Policies 0..100
   ├─Error 37..100
   │ ├─ContextKeyword "context" 37..44
   │ ├─CloseParenthesis ")" 44..45
-  │ ├─Whitespace "\n" 45..46
+  │ ├─Newline "\n" 45..46
   │ ├─WhenKeyword "when" 46..50
   │ ├─Whitespace " " 50..51
   │ ├─OpenBrace "{" 51..52
-  │ ├─Whitespace "\n    " 52..57
+  │ ├─Newline "\n" 52..53
+  │ ├─Whitespace "    " 53..57
   │ ├─ContextKeyword "context" 57..64
   │ ├─Dot "." 64..65
   │ ├─Identifier "contains" 65..73
@@ -48,8 +49,8 @@ Policies 0..100
   │ ├─Integer "7" 93..94
   │ ├─CloseParenthesis ")" 94..95
   │ ├─CloseParenthesis ")" 95..96
-  │ ├─Whitespace "\n" 96..97
+  │ ├─Newline "\n" 96..97
   │ ├─CloseBrace "}" 97..98
   │ ├─Semicolon ";" 98..99
-  │ └─Whitespace "\n" 99..100
+  │ └─Newline "\n" 99..100
   └─Semicolon "" 100..100

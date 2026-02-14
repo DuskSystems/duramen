@@ -23,7 +23,7 @@ Policies 0..59
 │ │ └─Name 39..47
 │ │   ├─Identifier "Photo" 39..44
 │ │   ├─PathSeparator "::" 44..46
-│ │   └─Error "'" 46..47
+│ │   └─Unknown "'" 46..47
 │ ├─CloseParenthesis "" 47..47
 │ └─Semicolon "" 47..47
 └─Policy 47..59
@@ -31,8 +31,8 @@ Policies 0..59
   │ ├─Identifier "mine" 47..51
   │ ├─Dot "." 51..52
   │ ├─Identifier "jpg" 52..55
-  │ ├─Error "'" 55..56
+  │ ├─Unknown "'" 55..56
   │ ├─CloseParenthesis ")" 56..57
   │ ├─Semicolon ";" 57..58
-  │ └─Whitespace "\n" 58..59
+  │ └─Newline "\n" 58..59
   └─Semicolon "" 59..59

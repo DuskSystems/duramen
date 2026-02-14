@@ -89,15 +89,31 @@ impl<'src> Parser<'src> {
         }
     }
 
-    /// Consumes the current token and moves to the next non-trivial token.
-    pub fn next(&mut self) {
+    /// Emits the current token into the tree without advancing.
+    pub fn emit(&mut self) {
         if self.current.kind != TokenKind::Eof {
             self.builder
                 .token(Syntax::from(self.current.kind), self.current.len);
 
             self.position += self.current.len;
         }
+    }
 
+    /// Skips same-line whitespace tokens.
+    pub fn skip_whitespace(&mut self) {
+        while self.lexer.peek() == Some(TokenKind::Whitespace) {
+            let token = self.lexer.next().unwrap_or(Token {
+                kind: TokenKind::Eof,
+                len: 0,
+            });
+
+            self.builder.token(Syntax::from(token.kind), token.len);
+            self.position += token.len;
+        }
+    }
+
+    /// Skips all trivia and sets the current token to the next non-trivial one.
+    pub fn advance(&mut self) {
         loop {
             let token = self.lexer.next().unwrap_or(Token {
                 kind: TokenKind::Eof,
@@ -114,6 +130,12 @@ impl<'src> Parser<'src> {
         }
     }
 
+    /// Consumes the current token and moves to the next non-trivial token.
+    pub fn next(&mut self) {
+        self.emit();
+        self.advance();
+    }
+
     /// Parses an annotation.
     ///
     /// ```cedar
@@ -123,13 +145,27 @@ impl<'src> Parser<'src> {
         let branch = self.builder.open(Syntax::Annotation);
 
         self.next();
-        while !self.at(&[TokenKind::OpenParenthesis, TokenKind::Eof]) {
-            let stop = self.lexer.peek().is_none_or(TokenKind::is_trivial);
+        if !self.at(&[TokenKind::OpenParenthesis, TokenKind::Eof]) {
+            let name = self.builder.open(Syntax::Name);
 
-            self.next();
-            if stop {
-                break;
+            loop {
+                self.emit();
+                self.skip_whitespace();
+
+                let done = !matches!(
+                    self.lexer.peek(),
+                    Some(kind) if !kind.is_trivial() && kind != TokenKind::OpenParenthesis
+                );
+
+                if done {
+                    break;
+                }
+
+                self.advance();
             }
+
+            self.builder.close(&name);
+            self.advance();
         }
 
         if self.eat(TokenKind::OpenParenthesis) {

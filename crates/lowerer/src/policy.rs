@@ -87,6 +87,9 @@ impl PolicyLowerer {
 
         for variable_definition in policy.variable_definitions() {
             let Some(variable) = variable_definition.variable() else {
+                self.ctx.diagnostics.push(LowerError::InvalidVariable {
+                    span: variable_definition.range(),
+                });
                 continue;
             };
 
@@ -961,6 +964,9 @@ impl PolicyLowerer {
 
         for entry in record.entries() {
             let Some(key_node) = entry.key() else {
+                self.ctx.diagnostics.push(LowerError::InvalidKey {
+                    span: entry.range(),
+                });
                 continue;
             };
 

@@ -11,6 +11,8 @@ pub enum Error {
     Empty,
     /// A map or set contained a duplicate key.
     DuplicateKey { key: String },
+    /// An identifier contains invalid characters.
+    InvalidIdentifier { name: String },
     /// An identifier uses the reserved `__cedar` prefix.
     ReservedPrefix { name: String },
     /// A type name conflicts with a built-in type.
@@ -26,8 +28,11 @@ impl fmt::Display for Error {
         match self {
             Self::Empty => f.write_str("expected at least one element"),
             Self::DuplicateKey { key } => write!(f, "duplicate key `{key}`"),
+            Self::InvalidIdentifier { name } => {
+                write!(f, "`{name}` is not a valid name")
+            }
             Self::ReservedPrefix { name } => {
-                write!(f, "identifier `{name}` uses reserved `__cedar` prefix")
+                write!(f, "`{name}` uses the reserved `__cedar` prefix")
             }
             Self::ReservedTypeName { name } => write!(f, "`{name}` is a reserved type name"),
             Self::InvalidSlot { name } => {

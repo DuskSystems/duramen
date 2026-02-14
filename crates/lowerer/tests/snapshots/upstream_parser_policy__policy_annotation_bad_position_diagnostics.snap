@@ -22,3 +22,8 @@ error: expected `;`
   │
 1 │ permit (@comment("your name here") principal, action, resource);
   ╰╴                                                                ━ expected `;`
+error: invalid scope variable
+  ╭▸ policy_annotation_bad_position:1:9
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴        ━━━━━━━━━━━━━━━━━━━━━━━━━ expected `principal`, `action`, or `resource`

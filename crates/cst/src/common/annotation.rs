@@ -27,12 +27,10 @@ impl<'a> Annotation<'a> {
         self.node.child(Syntax::At)
     }
 
-    /// Returns the annotation name token (identifier).
+    /// Returns the annotation name node.
     #[must_use]
     pub fn name(&self) -> Option<Node<'a>> {
-        self.node
-            .children()
-            .find(|child| child.kind().is_identifier())
+        self.node.child(Syntax::Name)
     }
 
     /// Returns the annotation value string token.
