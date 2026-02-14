@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 
-pub use duramen_diagnostic::{Diagnostic, Diagnostics};
+pub use duramen_diagnostic::Diagnostic;
 pub use rand;
 pub use similar_asserts::*;
 use walkdir::WalkDir;

@@ -6,74 +6,78 @@ use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
 use duramen_diagnostic::Diagnostics;
 use duramen_escape::Escaper;
-use duramen_syntax::Syntax;
+use duramen_syntax::{Syntax, Tree};
 
-use crate::LowerContext;
+use crate::common::LowerContext;
 use crate::error::LowerError;
 
 /// Schema lowerer for CST-to-AST transformation.
-pub struct SchemaLowerer<'a> {
-    ctx: LowerContext<'a>,
+pub struct SchemaLowerer {
+    ctx: LowerContext,
 }
 
-impl<'a> SchemaLowerer<'a> {
-    /// Creates a new schema lowerer.
+impl SchemaLowerer {
+    /// Lowers a parsed tree and its diagnostics to an AST.
     #[must_use]
-    pub const fn new(diagnostics: &'a mut Diagnostics) -> Self {
-        Self {
+    pub fn lower<'src>(
+        tree: &'src Tree<'_>,
+        diagnostics: Diagnostics,
+    ) -> (ast::Schema<'src>, Diagnostics) {
+        let mut this = Self {
             ctx: LowerContext::new(diagnostics),
-        }
-    }
+        };
 
-    /// Lowers a CST schema node to an AST.
-    #[must_use]
-    pub fn lower(mut self, schema: cst::Schema<'_>) -> ast::Schema<'_> {
         let mut namespaces = Vec::new();
         let mut top_declarations = Vec::new();
 
-        for child in schema.syntax().children() {
-            match child.kind() {
-                Syntax::EntityDeclaration => {
-                    if let Some(entity) = cst::EntityDeclaration::cast(child)
-                        && let Some(declaration) = self.lower_entity_declaration(&entity)
-                    {
-                        top_declarations.push(ast::Declaration::Entity(declaration));
-                    }
-                }
-                Syntax::ActionDeclaration => {
-                    if let Some(action) = cst::ActionDeclaration::cast(child)
-                        && let Some(declaration) = self.lower_action_declaration(&action)
-                    {
-                        top_declarations.push(ast::Declaration::Action(declaration));
-                    }
-                }
-                Syntax::TypeDeclaration => {
-                    if let Some(type_declaration) = cst::TypeDeclaration::cast(child)
-                        && let Some(declaration) = self.lower_type_declaration(&type_declaration)
-                    {
-                        top_declarations.push(ast::Declaration::Type(declaration));
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        if !top_declarations.is_empty()
-            && let Some(annotations) = self.ctx.lower_annotations(schema.annotations())
+        if let Some(root) = tree.root()
+            && let Some(schema) = cst::Schema::cast(root)
         {
-            match ast::Namespace::new(annotations, None, top_declarations) {
-                Ok(namespace) => namespaces.push(namespace),
-                Err(error) => self.ctx.diagnostic(error),
+            for child in schema.syntax().children() {
+                match child.kind() {
+                    Syntax::EntityDeclaration => {
+                        if let Some(entity) = cst::EntityDeclaration::cast(child)
+                            && let Some(declaration) = this.lower_entity_declaration(&entity)
+                        {
+                            top_declarations.push(ast::Declaration::Entity(declaration));
+                        }
+                    }
+                    Syntax::ActionDeclaration => {
+                        if let Some(action) = cst::ActionDeclaration::cast(child)
+                            && let Some(declaration) = this.lower_action_declaration(&action)
+                        {
+                            top_declarations.push(ast::Declaration::Action(declaration));
+                        }
+                    }
+                    Syntax::TypeDeclaration => {
+                        if let Some(type_declaration) = cst::TypeDeclaration::cast(child)
+                            && let Some(declaration) =
+                                this.lower_type_declaration(&type_declaration)
+                        {
+                            top_declarations.push(ast::Declaration::Type(declaration));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            if !top_declarations.is_empty()
+                && let Some(annotations) = this.ctx.lower_annotations(schema.annotations())
+            {
+                match ast::Namespace::new(annotations, None, top_declarations) {
+                    Ok(namespace) => namespaces.push(namespace),
+                    Err(error) => this.ctx.diagnostics.push(error),
+                }
+            }
+
+            for namespace in schema.namespaces() {
+                if let Some(ns) = this.lower_namespace(&namespace) {
+                    namespaces.push(ns);
+                }
             }
         }
 
-        for namespace in schema.namespaces() {
-            if let Some(ns) = self.lower_namespace(&namespace) {
-                namespaces.push(ns);
-            }
-        }
-
-        ast::Schema::new(namespaces)
+        (ast::Schema::new(namespaces), this.ctx.diagnostics)
     }
 
     /// Lowers a namespace declaration.
@@ -108,7 +112,7 @@ impl<'a> SchemaLowerer<'a> {
                 }
                 Syntax::NamespaceDeclaration => {
                     if let Some(nested) = cst::Namespace::cast(child) {
-                        self.ctx.diagnostic(LowerError::NestedNamespace {
+                        self.ctx.diagnostics.push(LowerError::NestedNamespace {
                             span: nested.range(),
                         });
                     }
@@ -123,7 +127,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::Namespace::new(annotations, name, declarations) {
             Ok(namespace) => Some(namespace),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -140,7 +144,8 @@ impl<'a> SchemaLowerer<'a> {
         for name in entity.names() {
             if name.is_qualified() {
                 self.ctx
-                    .diagnostic(LowerError::QualifiedEntityName { span: name.range() });
+                    .diagnostics
+                    .push(LowerError::QualifiedEntityName { span: name.range() });
 
                 continue;
             }
@@ -161,19 +166,23 @@ impl<'a> SchemaLowerer<'a> {
             return match ast::EntityDeclaration::new(annotations, names, kind) {
                 Ok(declaration) => Some(declaration),
                 Err(error) => {
-                    self.ctx.diagnostic(error);
+                    self.ctx.diagnostics.push(error);
                     None
                 }
             };
         }
 
-        let parents = entity.parents().map_or_else(Vec::new, |parents| {
+        let parents = if let Some(parents) = entity.parents() {
             self.lower_name_list(parents.types(), parents.name())
-        });
+        } else {
+            Vec::new()
+        };
 
-        let attributes = entity.attributes().map_or_else(Vec::new, |attributes| {
+        let attributes = if let Some(attributes) = entity.attributes() {
             self.lower_schema_attributes(attributes.attributes())
-        });
+        } else {
+            Vec::new()
+        };
 
         let tags = entity.tags().and_then(|tags| {
             let definition = tags.definition()?;
@@ -183,7 +192,7 @@ impl<'a> SchemaLowerer<'a> {
         let standard = match ast::StandardEntity::new(parents, attributes, tags) {
             Ok(standard) => standard,
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 return None;
             }
         };
@@ -193,7 +202,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::EntityDeclaration::new(annotations, names, kind) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -216,22 +225,26 @@ impl<'a> SchemaLowerer<'a> {
             return None;
         }
 
-        let parents = action
-            .parents()
-            .map_or_else(Vec::new, |parents| self.lower_action_parents(&parents));
+        let parents = if let Some(parents) = action.parents() {
+            self.lower_action_parents(&parents)
+        } else {
+            Vec::new()
+        };
 
         let applies_to = action
             .applies_to()
             .and_then(|applies_to| self.lower_applies_to(&applies_to));
 
-        let attributes = action.attributes().map_or_else(Vec::new, |attributes| {
+        let attributes = if let Some(attributes) = action.attributes() {
             self.lower_schema_attributes(attributes.attributes())
-        });
+        } else {
+            Vec::new()
+        };
 
         match ast::ActionDeclaration::new(annotations, names, parents, applies_to, attributes) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -273,13 +286,17 @@ impl<'a> SchemaLowerer<'a> {
         &mut self,
         applies_to: &cst::AppliesTo<'src>,
     ) -> Option<ast::AppliesTo<'src>> {
-        let principals = applies_to.principals().map_or_else(Vec::new, |principals| {
+        let principals = if let Some(principals) = applies_to.principals() {
             self.lower_name_list(principals.types(), principals.name())
-        });
+        } else {
+            Vec::new()
+        };
 
-        let resources = applies_to.resources().map_or_else(Vec::new, |resources| {
+        let resources = if let Some(resources) = applies_to.resources() {
             self.lower_name_list(resources.types(), resources.name())
-        });
+        } else {
+            Vec::new()
+        };
 
         let context = applies_to
             .context()
@@ -288,7 +305,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::AppliesTo::new(principals, resources, context) {
             Ok(applies_to) => Some(applies_to),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -313,7 +330,7 @@ impl<'a> SchemaLowerer<'a> {
             cst::TypeExpression::Set(_)
             | cst::TypeExpression::Entity(_)
             | cst::TypeExpression::Enum(_) => {
-                self.ctx.diagnostic(LowerError::InvalidContextType {
+                self.ctx.diagnostics.push(LowerError::InvalidContextType {
                     span: definition.range(),
                 });
 
@@ -331,7 +348,7 @@ impl<'a> SchemaLowerer<'a> {
 
         let cst_name = type_declaration.name()?;
         if cst_name.is_qualified() {
-            self.ctx.diagnostic(LowerError::QualifiedTypeName {
+            self.ctx.diagnostics.push(LowerError::QualifiedTypeName {
                 span: cst_name.range(),
             });
             return None;
@@ -345,7 +362,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::TypeDeclaration::new(annotations, identifier, definition) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -367,9 +384,11 @@ impl<'a> SchemaLowerer<'a> {
                 Some(ast::TypeExpression::Record(record_type))
             }
             cst::TypeExpression::Entity(_entity) => {
-                self.ctx.diagnostic(LowerError::MissingTypeExpression {
-                    span: type_expr.range(),
-                });
+                self.ctx
+                    .diagnostics
+                    .push(LowerError::MissingTypeExpression {
+                        span: type_expr.range(),
+                    });
 
                 None
             }
@@ -390,11 +409,10 @@ impl<'a> SchemaLowerer<'a> {
         record: &cst::RecordType<'src>,
     ) -> Option<ast::RecordType<'src>> {
         let attributes = self.lower_schema_attributes(record.attributes());
-
         match ast::RecordType::new(attributes) {
             Ok(record_type) => Some(record_type),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }
@@ -438,7 +456,7 @@ impl<'a> SchemaLowerer<'a> {
                 Ok(unescaped) => variants.push(unescaped),
                 Err(errors) => {
                     for error in errors {
-                        self.ctx.diagnostic(error.offset(offset));
+                        self.ctx.diagnostics.push(error.offset(offset));
                     }
                 }
             }
@@ -447,7 +465,7 @@ impl<'a> SchemaLowerer<'a> {
         match ast::EnumType::new(variants) {
             Ok(enum_type) => Some(enum_type),
             Err(error) => {
-                self.ctx.diagnostic(error);
+                self.ctx.diagnostics.push(error);
                 None
             }
         }

@@ -1,7 +1,5 @@
 #![expect(clippy::unwrap_used, reason = "Tests")]
 
-use duramen_cst::{CstNode as _, Policies};
-use duramen_diagnostic::Diagnostics;
 use duramen_lowerer::PolicyLowerer;
 use duramen_parser::PolicyParser;
 use duramen_test::{TestContext, assert_diagnostics_snapshot, assert_fixture_snapshot};
@@ -9,14 +7,11 @@ use duramen_test::{TestContext, assert_diagnostics_snapshot, assert_fixture_snap
 duramen_test::fixtures!(policy::failure = lower_corpus);
 
 fn lower_corpus(fixture: &TestContext<'_>) {
-    let mut diagnostics = Diagnostics::new();
+    let (tree, diagnostics) = PolicyParser::parse(fixture.source);
 
-    let tree = PolicyParser::new(fixture.source, &mut diagnostics).parse();
     let root = tree.root().unwrap();
     assert_fixture_snapshot!("tree", fixture, root);
 
-    let cst = Policies::cast(root).unwrap();
-    let _ast = PolicyLowerer::new(&mut diagnostics).lower(cst);
-
+    let (_policies, diagnostics) = PolicyLowerer::lower(&tree, diagnostics);
     assert_diagnostics_snapshot!("diagnostics", fixture, &diagnostics);
 }
