@@ -15,14 +15,17 @@ Policies 0..58
 │ │ └─ActionKeyword "action" 19..25
 │ ├─Comma "," 25..26
 │ ├─Whitespace " " 26..27
-│ └─VariableDefinition 27..46
-│   ├─ResourceKeyword "resource" 27..35
-│   ├─Whitespace " " 35..36
-│   ├─Equal "==" 36..38
-│   ├─Whitespace " " 38..39
-│   └─Name 39..46
-│     ├─Identifier "Photo" 39..44
-│     └─PathSeparator "::" 44..46
+│ ├─VariableDefinition 27..46
+│ │ ├─ResourceKeyword "resource" 27..35
+│ │ ├─Whitespace " " 35..36
+│ │ ├─Equal "==" 36..38
+│ │ ├─Whitespace " " 38..39
+│ │ └─Name 39..46
+│ │   ├─Identifier "Photo" 39..44
+│ │   └─PathSeparator "::" 44..46
+│ ├─CloseParenthesis "" 46..46
+│ └─Semicolon "" 46..46
 └─Policy 46..58
-  └─Error 46..58
-    └─Error "\"mine.jpg);\n" 46..58
+  ├─Error 46..58
+  │ └─Error "\"mine.jpg);\n" 46..58
+  └─Semicolon "" 58..58

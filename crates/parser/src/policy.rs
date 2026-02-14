@@ -105,7 +105,7 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.eat(TokenKind::Comma);
-            self.parser.eat(TokenKind::CloseParenthesis);
+            self.parser.expect(TokenKind::CloseParenthesis);
         }
 
         while self
@@ -117,7 +117,7 @@ impl<'src> PolicyParser<'src> {
             self.parser.advance_pop();
         }
 
-        self.parser.eat(TokenKind::Semicolon);
+        self.parser.expect(TokenKind::Semicolon);
         self.parser.builder.close(&branch);
     }
 
@@ -189,7 +189,7 @@ impl<'src> PolicyParser<'src> {
                 self.expression();
             }
 
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -367,7 +367,7 @@ impl<'src> PolicyParser<'src> {
                             self.argument_list();
                         }
 
-                        self.parser.eat(TokenKind::CloseParenthesis);
+                        self.parser.expect(TokenKind::CloseParenthesis);
                         self.parser.builder.commit(&inner, Syntax::Call);
                     } else {
                         self.parser.builder.commit(&inner, Syntax::Field);
@@ -381,7 +381,7 @@ impl<'src> PolicyParser<'src> {
                         self.argument_list();
                     }
 
-                    self.parser.eat(TokenKind::CloseParenthesis);
+                    self.parser.expect(TokenKind::CloseParenthesis);
                     self.parser.builder.commit(&inner, Syntax::Call);
                 }
                 _ => {
@@ -389,7 +389,7 @@ impl<'src> PolicyParser<'src> {
 
                     self.parser.next();
                     self.expression();
-                    self.parser.eat(TokenKind::CloseBracket);
+                    self.parser.expect(TokenKind::CloseBracket);
 
                     self.parser.builder.commit(&inner, Syntax::Index);
                 }
@@ -428,7 +428,7 @@ impl<'src> PolicyParser<'src> {
         if self.parser.at(&[TokenKind::OpenParenthesis]) {
             self.parser.next();
             self.expression();
-            self.parser.eat(TokenKind::CloseParenthesis);
+            self.parser.expect(TokenKind::CloseParenthesis);
             self.parser
                 .builder
                 .commit(&checkpoint, Syntax::Parenthesized);
@@ -442,7 +442,7 @@ impl<'src> PolicyParser<'src> {
                 self.argument_list();
             }
 
-            self.parser.eat(TokenKind::CloseBracket);
+            self.parser.expect(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Syntax::List);
 
             return;
@@ -451,7 +451,7 @@ impl<'src> PolicyParser<'src> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.record_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Syntax::Record);
 
             return;

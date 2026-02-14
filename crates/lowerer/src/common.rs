@@ -71,9 +71,7 @@ impl LowerContext {
 
         for annotation in annotations {
             let node = annotation.syntax();
-            if node.child(Syntax::OpenParenthesis).is_some()
-                && node.child(Syntax::CloseParenthesis).is_none()
-            {
+            if node.has(Syntax::OpenParenthesis) && !node.has(Syntax::CloseParenthesis) {
                 let span = if let Some(child) = node
                     .after(Syntax::OpenParenthesis)
                     .find(|child| !child.kind().is_trivial())
@@ -115,9 +113,7 @@ impl LowerContext {
                         continue;
                     }
                 }
-            } else if node.child(Syntax::OpenParenthesis).is_some()
-                && node.child(Syntax::CloseParenthesis).is_some()
-            {
+            } else if node.has(Syntax::OpenParenthesis) && node.has(Syntax::CloseParenthesis) {
                 let span = if let Some(child) = node
                     .after(Syntax::OpenParenthesis)
                     .find(|child| !child.kind().is_trivial())

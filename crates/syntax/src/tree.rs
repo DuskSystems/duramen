@@ -147,6 +147,13 @@ impl<'a> Node<'a> {
         self.children().find(|child| child.kind() == kind)
     }
 
+    /// Returns `true` if this node has a non-missing child with the given kind.
+    #[must_use]
+    pub fn has(&self, kind: Syntax) -> bool {
+        self.child(kind)
+            .is_some_and(|node| !node.kind().is_token() || !node.range().is_empty())
+    }
+
     /// Returns children after the first occurrence of a child with the given kind.
     ///
     /// Skips all children up to and including the marker, then yields the rest.

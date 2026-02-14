@@ -15,7 +15,9 @@ Policies 0..109
 │ │ └─ActionKeyword "action" 19..25
 │ ├─Comma "," 25..26
 │ ├─Whitespace " " 26..27
-│ └─VariableDefinition "" 27..27
+│ ├─VariableDefinition "" 27..27
+│ ├─CloseParenthesis "" 27..27
+│ └─Semicolon "" 27..27
 └─Policy 27..109
   ├─Error 27..71
   │ ├─Not "!" 27..28

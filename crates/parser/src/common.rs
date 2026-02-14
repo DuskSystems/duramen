@@ -73,6 +73,17 @@ impl<'src> Parser<'src> {
         }
     }
 
+    /// Consumes the current token if it matches, or emits a zero-width token.
+    pub fn expect(&mut self, kind: TokenKind) -> bool {
+        if self.current.kind == kind {
+            self.next();
+            true
+        } else {
+            self.builder.token(Syntax::from(kind), 0);
+            false
+        }
+    }
+
     /// Consumes the current token and moves to the next non-trivial token.
     pub fn next(&mut self) {
         if self.current.kind != TokenKind::Eof {
@@ -113,7 +124,7 @@ impl<'src> Parser<'src> {
 
         if self.eat(TokenKind::OpenParenthesis) {
             self.eat(TokenKind::String);
-            self.eat(TokenKind::CloseParenthesis);
+            self.expect(TokenKind::CloseParenthesis);
         }
 
         self.builder.close(&branch);

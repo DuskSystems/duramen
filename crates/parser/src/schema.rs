@@ -113,7 +113,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.advance_pop();
         }
 
-        self.parser.eat(TokenKind::CloseBrace);
+        self.parser.expect(TokenKind::CloseBrace);
     }
 
     /// Parses a declaration (entity, action, type, or nested namespace).
@@ -229,12 +229,12 @@ impl<'src> SchemaParser<'src> {
 
                 self.parser.next();
                 self.enum_variants();
-                self.parser.eat(TokenKind::CloseBracket);
+                self.parser.expect(TokenKind::CloseBracket);
 
                 self.parser.builder.close(&branch);
             }
         } else {
-            self.parser.eat(TokenKind::Equals);
+            self.parser.expect(TokenKind::Equals);
             if self.parser.at(&[TokenKind::OpenBrace]) {
                 self.entity_attributes();
             }
@@ -244,7 +244,7 @@ impl<'src> SchemaParser<'src> {
             }
         }
 
-        self.parser.eat(TokenKind::Semicolon);
+        self.parser.expect(TokenKind::Semicolon);
     }
 
     /// Parses entity parents.
@@ -271,7 +271,7 @@ impl<'src> SchemaParser<'src> {
 
         self.parser.next();
         self.attribute_entries();
-        self.parser.eat(TokenKind::CloseBrace);
+        self.parser.expect(TokenKind::CloseBrace);
 
         self.parser.builder.close(&branch);
     }
@@ -337,7 +337,7 @@ impl<'src> SchemaParser<'src> {
             self.action_attributes();
         }
 
-        self.parser.eat(TokenKind::Semicolon);
+        self.parser.expect(TokenKind::Semicolon);
     }
 
     /// Parses action parents.
@@ -367,7 +367,7 @@ impl<'src> SchemaParser<'src> {
             }
         }
 
-        self.parser.eat(TokenKind::CloseBracket);
+        self.parser.expect(TokenKind::CloseBracket);
         self.parser.builder.close(&branch);
     }
 
@@ -391,7 +391,7 @@ impl<'src> SchemaParser<'src> {
                 }
             }
 
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -441,7 +441,7 @@ impl<'src> SchemaParser<'src> {
         self.parser.next();
         if self.parser.eat(TokenKind::OpenBrace) {
             self.attribute_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -466,9 +466,9 @@ impl<'src> SchemaParser<'src> {
             self.name();
         }
 
-        self.parser.eat(TokenKind::Equals);
+        self.parser.expect(TokenKind::Equals);
         self.type_expression();
-        self.parser.eat(TokenKind::Semicolon);
+        self.parser.expect(TokenKind::Semicolon);
     }
 
     /// Parses a type expression.
@@ -495,7 +495,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.next();
             self.parser.next();
             self.type_expression();
-            self.parser.eat(TokenKind::GreaterThan);
+            self.parser.expect(TokenKind::GreaterThan);
             self.parser.builder.commit(&checkpoint, Syntax::SetType);
 
             return;
@@ -507,7 +507,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.next();
             self.parser.next();
             self.enum_variants();
-            self.parser.eat(TokenKind::CloseBracket);
+            self.parser.expect(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Syntax::EnumType);
 
             return;
@@ -516,7 +516,7 @@ impl<'src> SchemaParser<'src> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.attribute_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Syntax::RecordType);
 
             return;
@@ -594,7 +594,7 @@ impl<'src> SchemaParser<'src> {
             }
         }
 
-        self.parser.eat(TokenKind::CloseBracket);
+        self.parser.expect(TokenKind::CloseBracket);
         self.parser.builder.close(&branch);
     }
 

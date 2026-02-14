@@ -19,31 +19,34 @@ Policies 0..87
 │ │ └─ResourceKeyword "resource" 27..35
 │ ├─CloseParenthesis ")" 35..36
 │ ├─Whitespace "\n" 36..37
-│ └─Condition 37..52
-│   ├─WhenKeyword "when" 37..41
-│   ├─Whitespace " " 41..42
-│   ├─OpenBrace "{" 42..43
-│   ├─Whitespace "\n    " 43..48
-│   └─Name 48..52
-│     ├─Identifier "one" 48..51
-│     └─Whitespace " " 51..52
+│ ├─Condition 37..52
+│ │ ├─WhenKeyword "when" 37..41
+│ │ ├─Whitespace " " 41..42
+│ │ ├─OpenBrace "{" 42..43
+│ │ ├─Whitespace "\n    " 43..48
+│ │ ├─Name 48..52
+│ │ │ ├─Identifier "one" 48..51
+│ │ │ └─Whitespace " " 51..52
+│ │ └─CloseBrace "" 52..52
+│ └─Semicolon "" 52..52
 └─Policy 52..87
-  └─Error 52..87
-    ├─OpenBrace "{" 52..53
-    ├─Whitespace " " 53..54
-    ├─Identifier "num" 54..57
-    ├─Colon ":" 57..58
-    ├─Whitespace " " 58..59
-    ├─TrueKeyword "true" 59..63
-    ├─Comma "," 63..64
-    ├─Whitespace " " 64..65
-    ├─Identifier "trivia" 65..71
-    ├─Colon ":" 71..72
-    ├─Whitespace " " 72..73
-    ├─String "\"first!\"" 73..81
-    ├─Whitespace " " 81..82
-    ├─CloseBrace "}" 82..83
-    ├─Whitespace "\n" 83..84
-    ├─CloseBrace "}" 84..85
-    ├─Semicolon ";" 85..86
-    └─Whitespace "\n" 86..87
+  ├─Error 52..87
+  │ ├─OpenBrace "{" 52..53
+  │ ├─Whitespace " " 53..54
+  │ ├─Identifier "num" 54..57
+  │ ├─Colon ":" 57..58
+  │ ├─Whitespace " " 58..59
+  │ ├─TrueKeyword "true" 59..63
+  │ ├─Comma "," 63..64
+  │ ├─Whitespace " " 64..65
+  │ ├─Identifier "trivia" 65..71
+  │ ├─Colon ":" 71..72
+  │ ├─Whitespace " " 72..73
+  │ ├─String "\"first!\"" 73..81
+  │ ├─Whitespace " " 81..82
+  │ ├─CloseBrace "}" 82..83
+  │ ├─Whitespace "\n" 83..84
+  │ ├─CloseBrace "}" 84..85
+  │ ├─Semicolon ";" 85..86
+  │ └─Whitespace "\n" 86..87
+  └─Semicolon "" 87..87

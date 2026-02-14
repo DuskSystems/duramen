@@ -87,9 +87,7 @@ impl PolicyLowerer {
             }
         }
 
-        if node.child(Syntax::OpenParenthesis).is_some()
-            && node.child(Syntax::CloseParenthesis).is_none()
-        {
+        if node.has(Syntax::OpenParenthesis) && !node.has(Syntax::CloseParenthesis) {
             let span = if let Some(child) = node
                 .after(Syntax::OpenParenthesis)
                 .find(|child| !child.kind().is_trivial())
@@ -390,7 +388,7 @@ impl PolicyLowerer {
         condition: &cst::Condition<'src>,
     ) -> Option<ast::Condition<'src>> {
         let node = condition.syntax();
-        if node.child(Syntax::OpenBrace).is_some() && node.child(Syntax::CloseBrace).is_none() {
+        if node.has(Syntax::OpenBrace) && !node.has(Syntax::CloseBrace) {
             let span = if let Some(child) = node
                 .after(Syntax::OpenBrace)
                 .find(|child| !child.kind().is_trivial())

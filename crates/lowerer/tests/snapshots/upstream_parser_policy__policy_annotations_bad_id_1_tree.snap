@@ -4,9 +4,10 @@ expression: value
 ---
 Policies 0..61
 ├─Policy 0..4
-│ └─Annotation 0..4
-│   ├─At "@" 0..1
-│   └─Identifier "bad" 1..4
+│ ├─Annotation 0..4
+│ │ ├─At "@" 0..1
+│ │ └─Identifier "bad" 1..4
+│ └─Semicolon "" 4..4
 └─Policy 4..61
   ├─Error 4..23
   │ ├─Subtract "-" 4..5

@@ -19,20 +19,22 @@ Policies 0..72
   │ └─ResourceKeyword "resource" 27..35
   ├─CloseParenthesis ")" 35..36
   ├─Whitespace "\n" 36..37
-  └─Condition 37..72
-    ├─WhenKeyword "when" 37..41
-    ├─Whitespace " " 41..42
-    ├─OpenBrace "{" 42..43
-    ├─Whitespace "\n    " 43..48
-    └─RelationExpression 48..72
-      ├─MemberExpression 48..62
-      │ ├─Name 48..57
-      │ │ └─PrincipalKeyword "principal" 48..57
-      │ └─Field 57..62
-      │   ├─Dot "." 57..58
-      │   ├─Identifier "foo" 58..61
-      │   └─Whitespace " " 61..62
-      ├─Assign "=" 62..63
-      ├─Whitespace " " 63..64
-      └─Error 64..72
-        └─Error "\"bar\n};\n" 64..72
+  ├─Condition 37..72
+  │ ├─WhenKeyword "when" 37..41
+  │ ├─Whitespace " " 41..42
+  │ ├─OpenBrace "{" 42..43
+  │ ├─Whitespace "\n    " 43..48
+  │ ├─RelationExpression 48..72
+  │ │ ├─MemberExpression 48..62
+  │ │ │ ├─Name 48..57
+  │ │ │ │ └─PrincipalKeyword "principal" 48..57
+  │ │ │ └─Field 57..62
+  │ │ │   ├─Dot "." 57..58
+  │ │ │   ├─Identifier "foo" 58..61
+  │ │ │   └─Whitespace " " 61..62
+  │ │ ├─Assign "=" 62..63
+  │ │ ├─Whitespace " " 63..64
+  │ │ └─Error 64..72
+  │ │   └─Error "\"bar\n};\n" 64..72
+  │ └─CloseBrace "" 72..72
+  └─Semicolon "" 72..72

@@ -7,23 +7,26 @@ Policies 0..39
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
 │ ├─OpenParenthesis "(" 7..8
-│ └─VariableDefinition 8..17
-│   ├─Identifier "var" 8..11
-│   ├─Whitespace " " 11..12
-│   ├─Colon ":" 12..13
-│   ├─Whitespace " " 13..14
-│   └─Name 14..17
-│     ├─InKeyword "in" 14..16
-│     └─Whitespace " " 16..17
+│ ├─VariableDefinition 8..17
+│ │ ├─Identifier "var" 8..11
+│ │ ├─Whitespace " " 11..12
+│ │ ├─Colon ":" 12..13
+│ │ ├─Whitespace " " 13..14
+│ │ └─Name 14..17
+│ │   ├─InKeyword "in" 14..16
+│ │   └─Whitespace " " 16..17
+│ ├─CloseParenthesis "" 17..17
+│ └─Semicolon "" 17..17
 └─Policy 17..39
-  └─Error 17..39
-    ├─Integer "6" 17..18
-    ├─Comma "," 18..19
-    ├─Whitespace " " 19..20
-    ├─ActionKeyword "action" 20..26
-    ├─Comma "," 26..27
-    ├─Whitespace " " 27..28
-    ├─ResourceKeyword "resource" 28..36
-    ├─CloseParenthesis ")" 36..37
-    ├─Semicolon ";" 37..38
-    └─Whitespace "\n" 38..39
+  ├─Error 17..39
+  │ ├─Integer "6" 17..18
+  │ ├─Comma "," 18..19
+  │ ├─Whitespace " " 19..20
+  │ ├─ActionKeyword "action" 20..26
+  │ ├─Comma "," 26..27
+  │ ├─Whitespace " " 27..28
+  │ ├─ResourceKeyword "resource" 28..36
+  │ ├─CloseParenthesis ")" 36..37
+  │ ├─Semicolon ";" 37..38
+  │ └─Whitespace "\n" 38..39
+  └─Semicolon "" 39..39

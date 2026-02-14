@@ -15,21 +15,24 @@ Policies 0..59
 │ │ └─ActionKeyword "action" 19..25
 │ ├─Comma "," 25..26
 │ ├─Whitespace " " 26..27
-│ └─VariableDefinition 27..46
-│   ├─ResourceKeyword "resource" 27..35
-│   ├─Whitespace " " 35..36
-│   ├─Equal "==" 36..38
-│   ├─Whitespace " " 38..39
-│   └─Name 39..46
-│     ├─Identifier "Photo" 39..44
-│     └─PathSeparator "::" 44..46
+│ ├─VariableDefinition 27..46
+│ │ ├─ResourceKeyword "resource" 27..35
+│ │ ├─Whitespace " " 35..36
+│ │ ├─Equal "==" 36..38
+│ │ ├─Whitespace " " 38..39
+│ │ └─Name 39..46
+│ │   ├─Identifier "Photo" 39..44
+│ │   └─PathSeparator "::" 44..46
+│ ├─CloseParenthesis "" 46..46
+│ └─Semicolon "" 46..46
 └─Policy 46..59
-  └─Error 46..59
-    ├─Error "'" 46..47
-    ├─Identifier "mine" 47..51
-    ├─Dot "." 51..52
-    ├─Identifier "jpg" 52..55
-    ├─Error "'" 55..56
-    ├─CloseParenthesis ")" 56..57
-    ├─Semicolon ";" 57..58
-    └─Whitespace "\n" 58..59
+  ├─Error 46..59
+  │ ├─Error "'" 46..47
+  │ ├─Identifier "mine" 47..51
+  │ ├─Dot "." 51..52
+  │ ├─Identifier "jpg" 52..55
+  │ ├─Error "'" 55..56
+  │ ├─CloseParenthesis ")" 56..57
+  │ ├─Semicolon ";" 57..58
+  │ └─Whitespace "\n" 58..59
+  └─Semicolon "" 59..59
