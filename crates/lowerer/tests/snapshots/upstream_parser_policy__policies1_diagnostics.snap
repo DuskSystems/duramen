@@ -12,6 +12,11 @@ error: unexpected token
   │
 4 │ advice { "doit" };
   ╰╴━━━━━━━━━━━━━━━━━━ unexpected token
+error: expected `permit`
+  ╭▸ policies1:4:20
+  │
+4 │ advice { "doit" };
+  ╰╴                  ━ expected `permit`
 error: expected `;`
   ╭▸ policies1:4:20
   │
@@ -31,8 +36,3 @@ error: unknown variable `u `
   │          ━━ not a valid variable
   ╰╴
 note: `principal`, `action`, `resource`, and `context` are the only variables
-error: missing policy effect
-  ╭▸ policies1:4:1
-  │
-4 │ advice { "doit" };
-  ╰╴━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`

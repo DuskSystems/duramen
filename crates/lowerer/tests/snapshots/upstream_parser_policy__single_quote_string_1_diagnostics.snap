@@ -24,16 +24,16 @@ error: unexpected token
   │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
 4 │ ┃ };
   ╰╴┗━━━┛ unexpected token
+error: expected `permit`
+  ╭▸ single_quote_string_1:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `permit`
 error: expected `;`
   ╭▸ single_quote_string_1:4:4
   │
 4 │ };
   ╰╴  ━ expected `;`
-error: expected `}`
-  ╭▸ single_quote_string_1:3:5
-  │
-3 │     principal.foo = 'bar'
-  ╰╴    ━━━━━━━━━ expected `}`
 error: invalid operator `=`
   ╭▸ single_quote_string_1:3:19
   │
@@ -44,10 +44,3 @@ help: use `==` for equality
   ╭╴
 3 │     principal.foo == 'bar'
   ╰╴                   +
-error: missing policy effect
-  ╭▸ single_quote_string_1:3:22
-  │
-3 │       principal.foo = 'bar'
-  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
-4 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`

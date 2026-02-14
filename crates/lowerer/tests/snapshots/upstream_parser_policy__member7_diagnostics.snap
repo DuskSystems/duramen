@@ -19,16 +19,16 @@ error: unexpected token
   │ ┏━━━━━━━━━┛
 4 │ ┃ };
   ╰╴┗━━━┛ unexpected token
+error: expected `permit`
+  ╭▸ member7:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `permit`
 error: expected `;`
   ╭▸ member7:4:4
   │
 4 │ };
   ╰╴  ━ expected `;`
-error: expected `}`
-  ╭▸ member7:3:5
-  │
-3 │     one { num: true, trivia: "first!" }
-  ╰╴    ━━━ expected `}`
 error: unknown variable `one `
   ╭▸ member7:3:5
   │
@@ -36,10 +36,3 @@ error: unknown variable `one `
   │     ━━━━ not a valid variable
   ╰╴
 note: `principal`, `action`, `resource`, and `context` are the only variables
-error: missing policy effect
-  ╭▸ member7:3:9
-  │
-3 │       one { num: true, trivia: "first!" }
-  │ ┏━━━━━━━━━┛
-4 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`

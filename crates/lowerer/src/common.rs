@@ -7,8 +7,6 @@ use duramen_escape::Escaper;
 use duramen_syntax::{Node, Syntax};
 use {duramen_ast as ast, duramen_cst as cst};
 
-use crate::error::LowerError;
-
 /// Shared context for lowering CST to AST.
 pub struct LowerContext {
     pub diagnostics: Diagnostics,
@@ -70,24 +68,6 @@ impl LowerContext {
         let mut entries = Vec::new();
 
         for annotation in annotations {
-            let node = annotation.syntax();
-            if node.has(Syntax::OpenParenthesis) && !node.has(Syntax::CloseParenthesis) {
-                let span = if let Some(child) = node
-                    .after(Syntax::OpenParenthesis)
-                    .find(|child| !child.kind().is_trivial())
-                {
-                    child.first().range()
-                } else {
-                    let end = node.range().end;
-                    end..end
-                };
-
-                self.diagnostics.push(LowerError::ExpectedToken {
-                    span,
-                    expected: "`)`",
-                });
-            }
-
             let Some(name_node) = annotation.name() else {
                 continue;
             };
@@ -113,22 +93,7 @@ impl LowerContext {
                         continue;
                     }
                 }
-            } else if node.has(Syntax::OpenParenthesis) && node.has(Syntax::CloseParenthesis) {
-                let span = if let Some(child) = node
-                    .after(Syntax::OpenParenthesis)
-                    .find(|child| !child.kind().is_trivial())
-                {
-                    child.first().range()
-                } else {
-                    let end = node.range().end;
-                    end..end
-                };
-
-                self.diagnostics.push(LowerError::ExpectedToken {
-                    span,
-                    expected: "a string literal",
-                });
-
+            } else if annotation.syntax().has(Syntax::OpenParenthesis) {
                 continue;
             } else {
                 ast::AnnotationValue::Empty

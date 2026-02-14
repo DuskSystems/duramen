@@ -97,6 +97,11 @@ impl<'src> PolicyParser<'src> {
             .at(&[TokenKind::PermitKeyword, TokenKind::ForbidKeyword])
         {
             self.parser.next();
+        } else {
+            self.parser.diagnostics.push(ParseError::Missing {
+                span: self.parser.span(),
+                expected: Syntax::PermitKeyword,
+            });
         }
 
         if self.parser.eat(TokenKind::OpenParenthesis) {
@@ -217,10 +222,20 @@ impl<'src> PolicyParser<'src> {
             self.expression();
             if self.parser.eat(TokenKind::ThenKeyword) {
                 self.expression();
-            }
 
-            if self.parser.eat(TokenKind::ElseKeyword) {
-                self.expression();
+                if self.parser.eat(TokenKind::ElseKeyword) {
+                    self.expression();
+                } else {
+                    self.parser.diagnostics.push(ParseError::Missing {
+                        span: self.parser.span(),
+                        expected: Syntax::ElseKeyword,
+                    });
+                }
+            } else {
+                self.parser.diagnostics.push(ParseError::Missing {
+                    span: self.parser.span(),
+                    expected: Syntax::ThenKeyword,
+                });
             }
 
             self.parser

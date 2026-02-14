@@ -7,13 +7,13 @@ error: unexpected token
   │
 2 │ when { if };
   ╰╴          ━ unexpected token
+error: expected `then`
+  ╭▸ ident3_1:2:12
+  │
+2 │ when { if };
+  ╰╴           ━ expected `then`
 error: expected `}`
   ╭▸ ident3_1:2:12
   │
 2 │ when { if };
   ╰╴           ━ expected `}`
-error: expected `}`
-  ╭▸ ident3_1:2:8
-  │
-2 │ when { if };
-  ╰╴       ━━ expected `}`

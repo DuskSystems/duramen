@@ -73,50 +73,12 @@ impl PolicyLowerer {
 
     /// Lowers a single policy.
     fn lower_policy<'src>(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
-        let node = policy.syntax();
-
-        if let Some(effect_token) = policy.effect_token() {
-            let effect_start = effect_token.range().start;
-
-            for child in node.children() {
-                if child.kind() == Syntax::Error && child.range().start < effect_start {
-                    self.ctx.diagnostics.push(LowerError::InvalidToken {
-                        span: child.range(),
-                    });
-                }
-            }
-        }
-
-        if node.has(Syntax::OpenParenthesis) && !node.has(Syntax::CloseParenthesis) {
-            let span = if let Some(child) = node
-                .after(Syntax::OpenParenthesis)
-                .find(|child| !child.kind().is_trivial())
-            {
-                child.first().range()
-            } else {
-                let end = node.range().end;
-                end..end
-            };
-
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span,
-                expected: "`)`",
-            });
-        }
-
         let annotations = self.ctx.lower_annotations(policy.annotations())?;
 
-        let effect = policy.effect().map(|effect| match effect {
+        let effect = policy.effect()?;
+        let effect = match effect {
             cst::Effect::Permit => ast::Effect::Permit,
             cst::Effect::Forbid => ast::Effect::Forbid,
-        });
-
-        let Some(effect) = effect else {
-            self.ctx.diagnostics.push(LowerError::MissingEffect {
-                span: policy.range(),
-            });
-
-            return None;
         };
 
         let mut principal = None;
@@ -278,7 +240,7 @@ impl PolicyLowerer {
                 Some(ast::EntityOrSlot::Entity(reference))
             }
             _ => {
-                self.ctx.diagnostics.push(LowerError::MissingExpression {
+                self.ctx.diagnostics.push(LowerError::UnexpectedExpression {
                     span: expression.range(),
                     expected: "expected an entity reference or slot",
                 });
@@ -359,7 +321,7 @@ impl PolicyLowerer {
         if let cst::Expression::EntityReference(entity_reference) = expression {
             self.lower_entity_reference(entity_reference)
         } else {
-            self.ctx.diagnostics.push(LowerError::MissingExpression {
+            self.ctx.diagnostics.push(LowerError::UnexpectedExpression {
                 span: expression.range(),
                 expected: "expected an entity reference",
             });
@@ -387,39 +349,13 @@ impl PolicyLowerer {
         &mut self,
         condition: &cst::Condition<'src>,
     ) -> Option<ast::Condition<'src>> {
-        let node = condition.syntax();
-        if node.has(Syntax::OpenBrace) && !node.has(Syntax::CloseBrace) {
-            let span = if let Some(child) = node
-                .after(Syntax::OpenBrace)
-                .find(|child| !child.kind().is_trivial())
-            {
-                child.first().range()
-            } else {
-                let end = node.range().end;
-                end..end
-            };
-
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span,
-                expected: "`}`",
-            });
-        }
-
         let kind = condition.kind().map(|kind| match kind {
             cst::ConditionKind::When => ast::ConditionKind::When,
             cst::ConditionKind::Unless => ast::ConditionKind::Unless,
         })?;
 
-        let body = condition.body();
-        if body.is_none()
-            && let Some(error_node) = node.children().find(|child| child.kind() == Syntax::Error)
-        {
-            self.ctx.diagnostics.push(LowerError::InvalidToken {
-                span: error_node.range(),
-            });
-        }
-
-        let body = self.lower_expression(&body?)?;
+        let body = condition.body()?;
+        let body = self.lower_expression(&body)?;
         Some(ast::Condition::new(kind, body))
     }
 
@@ -462,29 +398,7 @@ impl PolicyLowerer {
         expression: &cst::IfExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
         let test = expression.test()?;
-
-        if expression.then_token().is_none() {
-            let end = expression.range().end;
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span: end..end,
-                expected: "`then`",
-            });
-
-            return None;
-        }
-
         let consequent = expression.consequent()?;
-
-        if expression.else_token().is_none() {
-            let end = expression.range().end;
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span: end..end,
-                expected: "`else`",
-            });
-
-            return None;
-        }
-
         let alternate = expression.alternate()?;
 
         let test = self.lower_expression(&test)?;
@@ -641,7 +555,7 @@ impl PolicyLowerer {
                 Some(Cow::Borrowed(text))
             }
             _ => {
-                self.ctx.diagnostics.push(LowerError::MissingExpression {
+                self.ctx.diagnostics.push(LowerError::UnexpectedExpression {
                     span: expression.range(),
                     expected: "expected an attribute name",
                 });

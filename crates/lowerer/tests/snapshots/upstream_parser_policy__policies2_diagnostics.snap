@@ -18,19 +18,13 @@ error: unexpected token
 5 │ ┏     context:Group
 6 │ ┃ );
   ╰╴┗━━━┛ unexpected token
+error: expected `permit`
+  ╭▸ policies2:6:4
+  │
+6 │ );
+  ╰╴  ━ expected `permit`
 error: expected `;`
   ╭▸ policies2:6:4
   │
 6 │ );
   ╰╴  ━ expected `;`
-error: expected `)`
-  ╭▸ policies2:2:5
-  │
-2 │     principal in Group::"jane_friends",  // Policy c1
-  ╰╴    ━━━━━━━━━ expected `)`
-error: missing policy effect
-  ╭▸ policies2:5:5
-  │
-5 │ ┏     context:Group
-6 │ ┃ );
-  ╰╴┗━━━┛ expected `permit` or `forbid`

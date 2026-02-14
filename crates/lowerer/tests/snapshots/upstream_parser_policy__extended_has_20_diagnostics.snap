@@ -2,7 +2,7 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: missing expression
+error: unexpected expression
   ╭▸ extended_has_20:3:19
   │
 3 │       principal has a.(b)

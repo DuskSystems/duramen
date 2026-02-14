@@ -17,23 +17,18 @@ error: unexpected token
   │
 1 │ permit (principal, action, resource == Photo::'mine.jpg');
   ╰╴                                              ━━━━━━━━━━━━ unexpected token
+error: expected `permit`
+  ╭▸ single_quote_string_2:1:60
+  │
+1 │ permit (principal, action, resource == Photo::'mine.jpg');
+  ╰╴                                                          ━ expected `permit`
 error: expected `;`
   ╭▸ single_quote_string_2:1:60
   │
 1 │ permit (principal, action, resource == Photo::'mine.jpg');
   ╰╴                                                          ━ expected `;`
-error: expected `)`
-  ╭▸ single_quote_string_2:1:9
-  │
-1 │ permit (principal, action, resource == Photo::'mine.jpg');
-  ╰╴        ━━━━━━━━━ expected `)`
-error: missing expression
+error: unexpected expression
   ╭▸ single_quote_string_2:1:40
   │
 1 │ permit (principal, action, resource == Photo::'mine.jpg');
   ╰╴                                       ━━━━━━━ expected an entity reference or slot
-error: missing policy effect
-  ╭▸ single_quote_string_2:1:47
-  │
-1 │ permit (principal, action, resource == Photo::'mine.jpg');
-  ╰╴                                              ━━━━━━━━━━━━ expected `permit` or `forbid`

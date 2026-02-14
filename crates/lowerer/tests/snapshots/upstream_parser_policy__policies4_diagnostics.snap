@@ -28,13 +28,6 @@ error: unknown variable `u `
   │          ━━ not a valid variable
   ╰╴
 note: `principal`, `action`, `resource`, and `context` are the only variables
-error: unexpected token
-  ╭▸ policies4:4:1
-  │
-4 │ ┏ advice { "doit" };
-5 │ ┃
-6 │ ┃ permit (principal in Group::"jane_friends",  // Policy c1
-  ╰╴┗━┛ unexpected token
 error: unknown variable `user`
    ╭▸ policies4:12:22
    │

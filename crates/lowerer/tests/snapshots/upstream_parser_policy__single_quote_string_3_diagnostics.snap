@@ -2,33 +2,26 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
+error: expected `string`
+  ╭▸ single_quote_string_3:1:5
+  │
+1 │ @id('0')
+  ╰╴    ━ expected `string`
 error: expected `)`
   ╭▸ single_quote_string_3:1:5
   │
 1 │ @id('0')
   ╰╴    ━ expected `)`
+error: expected `permit`
+  ╭▸ single_quote_string_3:1:5
+  │
+1 │ @id('0')
+  ╰╴    ━ expected `permit`
 error: expected `;`
   ╭▸ single_quote_string_3:1:5
   │
 1 │ @id('0')
   ╰╴    ━ expected `;`
-error: unexpected token
-  ╭▸ single_quote_string_3:1:5
-  │
-1 │   @id('0')
-  │ ┏━━━━━┛
-2 │ ┃ permit (principal, action, resource);
-  ╰╴┗━┛ unexpected token
-error: expected `)`
-  ╭▸ single_quote_string_3:1:5
-  │
-1 │ @id('0')
-  ╰╴    ━ expected `)`
-error: missing policy effect
-  ╭▸ single_quote_string_3:1:1
-  │
-1 │ @id('0')
-  ╰╴━━━━ expected `permit` or `forbid`
 error: unexpected token
   ╭▸ single_quote_string_3:1:5
   │

@@ -5,9 +5,6 @@ use core::ops::Range;
 use duramen_diagnostic::{Diagnostic, Suggestion};
 
 pub enum LowerError {
-    MissingEffect {
-        span: Range<usize>,
-    },
     InvalidScopeOperator {
         span: Range<usize>,
         variable: String,
@@ -15,7 +12,7 @@ pub enum LowerError {
     ContextInScope {
         span: Range<usize>,
     },
-    MissingExpression {
+    UnexpectedExpression {
         span: Range<usize>,
         expected: &'static str,
     },
@@ -60,18 +57,11 @@ pub enum LowerError {
     InvalidContextType {
         span: Range<usize>,
     },
-    MissingTypeExpression {
+    UnexpectedTypeExpression {
         span: Range<usize>,
     },
 
     InvalidEquals {
-        span: Range<usize>,
-    },
-    ExpectedToken {
-        span: Range<usize>,
-        expected: &'static str,
-    },
-    InvalidToken {
         span: Range<usize>,
     },
 }
@@ -79,8 +69,6 @@ pub enum LowerError {
 impl From<LowerError> for Diagnostic {
     fn from(value: LowerError) -> Self {
         match value {
-            LowerError::MissingEffect { span } => Self::error("missing policy effect")
-                .with_label(span, "expected `permit` or `forbid`"),
             LowerError::InvalidScopeOperator { span, variable } => {
                 let label = if variable == "action" {
                     "expected `==` or `in`"
@@ -94,8 +82,8 @@ impl From<LowerError> for Diagnostic {
             LowerError::ContextInScope { span } => Self::error("`context` is not a scope variable")
                 .with_label(span, "not valid in policy scope")
                 .with_note("`context` can only be used in policy conditions, not in scope"),
-            LowerError::MissingExpression { span, expected } => {
-                Self::error("missing expression").with_label(span, expected)
+            LowerError::UnexpectedExpression { span, expected } => {
+                Self::error("unexpected expression").with_label(span, expected)
             }
             LowerError::UnaryOpLimit { span, count } => {
                 Self::error(format!("found {count} chained unary operators"))
@@ -147,8 +135,8 @@ impl From<LowerError> for Diagnostic {
             }
             LowerError::InvalidContextType { span } => Self::error("invalid context type")
                 .with_label(span, "expected a record type or type reference"),
-            LowerError::MissingTypeExpression { span } => {
-                Self::error("missing type expression").with_label(span, "expected a type")
+            LowerError::UnexpectedTypeExpression { span } => {
+                Self::error("unexpected type expression").with_label(span, "expected a type")
             }
 
             LowerError::InvalidEquals { span } => {
@@ -158,13 +146,6 @@ impl From<LowerError> for Diagnostic {
                 Self::error("invalid operator `=`")
                     .with_label(span, "not a valid operator")
                     .with_suggestion(suggestion)
-            }
-            LowerError::ExpectedToken { span, expected } => {
-                Self::error(format!("expected {expected}"))
-                    .with_label(span, format!("expected {expected}"))
-            }
-            LowerError::InvalidToken { span } => {
-                Self::error("unexpected token").with_label(span, "unexpected token")
             }
         }
     }

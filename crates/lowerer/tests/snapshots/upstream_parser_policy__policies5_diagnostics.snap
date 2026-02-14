@@ -14,15 +14,13 @@ error: unexpected token
 7 │ ┃     "{\"type\":\"PhotoFilterInstruction\", \"anonymize\":true}"
 8 │ ┃ };
   ╰╴┗━━━┛ unexpected token
+error: expected `permit`
+  ╭▸ policies5:8:4
+  │
+8 │ };
+  ╰╴  ━ expected `permit`
 error: expected `;`
   ╭▸ policies5:8:4
   │
 8 │ };
   ╰╴  ━ expected `;`
-error: missing policy effect
-  ╭▸ policies5:6:1
-  │
-6 │ ┏ advice {
-7 │ ┃     "{\"type\":\"PhotoFilterInstruction\", \"anonymize\":true}"
-8 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`

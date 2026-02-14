@@ -128,7 +128,13 @@ impl<'src> Parser<'src> {
         }
 
         if self.eat(TokenKind::OpenParenthesis) {
-            self.eat(TokenKind::String);
+            if !self.eat(TokenKind::String) {
+                self.diagnostics.push(ParseError::Missing {
+                    span: self.span(),
+                    expected: Syntax::String,
+                });
+            }
+
             self.expect(TokenKind::CloseParenthesis);
         }
 

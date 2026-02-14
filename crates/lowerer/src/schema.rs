@@ -386,7 +386,7 @@ impl SchemaLowerer {
             cst::TypeExpression::Entity(_entity) => {
                 self.ctx
                     .diagnostics
-                    .push(LowerError::MissingTypeExpression {
+                    .push(LowerError::UnexpectedTypeExpression {
                         span: type_expr.range(),
                     });
 

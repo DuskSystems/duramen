@@ -17,18 +17,13 @@ error: unexpected token
   │
 1 │ permit (var : in 6, action, resource);
   ╰╴                 ━━━━━━━━━━━━━━━━━━━━━ unexpected token
+error: expected `permit`
+  ╭▸ variable6:1:40
+  │
+1 │ permit (var : in 6, action, resource);
+  ╰╴                                      ━ expected `permit`
 error: expected `;`
   ╭▸ variable6:1:40
   │
 1 │ permit (var : in 6, action, resource);
   ╰╴                                      ━ expected `;`
-error: expected `)`
-  ╭▸ variable6:1:9
-  │
-1 │ permit (var : in 6, action, resource);
-  ╰╴        ━━━ expected `)`
-error: missing policy effect
-  ╭▸ variable6:1:18
-  │
-1 │ permit (var : in 6, action, resource);
-  ╰╴                 ━━━━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`

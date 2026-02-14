@@ -19,11 +19,6 @@ error: expected `;`
   │
 4 │ };
   ╰╴  ━ expected `;`
-error: expected `}`
-  ╭▸ unclosed_strings_1:3:5
-  │
-3 │     principal.foo = "bar
-  ╰╴    ━━━━━━━━━ expected `}`
 error: invalid operator `=`
   ╭▸ unclosed_strings_1:3:19
   │

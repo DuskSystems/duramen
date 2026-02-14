@@ -21,22 +21,13 @@ error: unexpected token
 3 │ ┃     context.contains(3, "four", five(6, 7))
 4 │ ┃ };
   ╰╴┗━━━┛ unexpected token
+error: expected `permit`
+  ╭▸ no_comments_policy4:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `permit`
 error: expected `;`
   ╭▸ no_comments_policy4:4:4
   │
 4 │ };
   ╰╴  ━ expected `;`
-error: expected `)`
-  ╭▸ no_comments_policy4:1:9
-  │
-1 │ permit (principal, action, resource, context)
-  ╰╴        ━━━━━━━━━ expected `)`
-error: missing policy effect
-  ╭▸ no_comments_policy4:1:38
-  │
-1 │   permit (principal, action, resource, context)
-  │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-2 │ ┃ when {
-3 │ ┃     context.contains(3, "four", five(6, 7))
-4 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`

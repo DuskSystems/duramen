@@ -9,13 +9,6 @@ error: unexpected token
 2 │ ┃ comment */
 3 │ ┃ permit (principal, action, resource)
   ╰╴┗━┛ unexpected token
-error: unexpected token
-  ╭▸ comments_policy_2:1:1
-  │
-1 │ ┏ /* multi-line
-2 │ ┃ comment */
-3 │ ┃ permit (principal, action, resource)
-  ╰╴┗━┛ unexpected token
 error: unknown variable `one`
   ╭▸ comments_policy_2:5:5
   │

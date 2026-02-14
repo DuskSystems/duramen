@@ -19,25 +19,18 @@ error: unexpected token
   │ ┏━━━━━━━━━━━━━━━━━━━━━┛
 4 │ ┃ };
   ╰╴┗━━━┛ unexpected token
+error: expected `permit`
+  ╭▸ extended_has_21:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `permit`
 error: expected `;`
   ╭▸ extended_has_21:4:4
   │
 4 │ };
   ╰╴  ━ expected `;`
-error: expected `}`
-  ╭▸ extended_has_21:3:5
-  │
-3 │     principal has a.1
-  ╰╴    ━━━━━━━━━ expected `}`
-error: missing expression
+error: unexpected expression
   ╭▸ extended_has_21:3:19
   │
 3 │     principal has a.1
   ╰╴                  ━━ expected an attribute name
-error: missing policy effect
-  ╭▸ extended_has_21:3:21
-  │
-3 │       principal has a.1
-  │ ┏━━━━━━━━━━━━━━━━━━━━━┛
-4 │ ┃ };
-  ╰╴┗━━━┛ expected `permit` or `forbid`
