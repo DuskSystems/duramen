@@ -1,0 +1,60 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+Policies 0..191
+├─Policy 0..115
+│ ├─PermitKeyword "permit" 0..6
+│ ├─Whitespace " " 6..7
+│ ├─OpenParenthesis "(" 7..8
+│ ├─Whitespace "\n    " 8..13
+│ ├─VariableDefinition 13..39
+│ │ ├─PrincipalKeyword "principal" 13..22
+│ │ ├─Whitespace " " 22..23
+│ │ ├─Equal "==" 23..25
+│ │ ├─Whitespace " " 25..26
+│ │ └─EntityReference 26..39
+│ │   ├─Name 26..30
+│ │   │ └─Identifier "User" 26..30
+│ │   ├─PathSeparator "::" 30..32
+│ │   └─String "\"alice\"" 32..39
+│ ├─Comma "," 39..40
+│ ├─Whitespace "\n    " 40..45
+│ ├─VariableDefinition 45..79
+│ │ ├─ActionKeyword "action" 45..51
+│ │ ├─Whitespace " " 51..52
+│ │ ├─InKeyword "in" 52..54
+│ │ ├─Whitespace " " 54..55
+│ │ └─EntityReference 55..79
+│ │   ├─Name 55..69
+│ │   │ └─Identifier "PhotoflashRole" 55..69
+│ │   ├─PathSeparator "::" 69..71
+│ │   └─String "\"viewer\"" 71..79
+│ ├─Comma "," 79..80
+│ ├─Whitespace "\n    " 80..85
+│ ├─VariableDefinition 85..113
+│ │ ├─ResourceKeyword "resource" 85..93
+│ │ ├─Whitespace " " 93..94
+│ │ ├─InKeyword "in" 94..96
+│ │ ├─Whitespace " " 96..97
+│ │ └─EntityReference 97..113
+│ │   ├─Name 97..104
+│ │   │ └─Identifier "Account" 97..104
+│ │   ├─PathSeparator "::" 104..106
+│ │   ├─String "\"jane\"" 106..112
+│ │   └─Whitespace "\n" 112..113
+│ ├─CloseParenthesis ")" 113..114
+│ ├─Whitespace "\n" 114..115
+│ └─Semicolon "" 115..115
+└─Policy 115..191
+  ├─Error 115..191
+  │ ├─Identifier "advice" 115..121
+  │ ├─Whitespace " " 121..122
+  │ ├─OpenBrace "{" 122..123
+  │ ├─Whitespace "\n    " 123..128
+  │ ├─String "\"{\\\"type\\\":\\\"PhotoFilterInstruction\\\", \\\"anonymize\\\":true}\"" 128..187
+  │ ├─Whitespace "\n" 187..188
+  │ ├─CloseBrace "}" 188..189
+  │ ├─Semicolon ";" 189..190
+  │ └─Whitespace "\n" 190..191
+  └─Semicolon "" 191..191

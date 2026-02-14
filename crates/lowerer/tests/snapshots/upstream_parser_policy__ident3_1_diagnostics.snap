@@ -2,6 +2,16 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
+error: unexpected token
+  ╭▸ ident3_1:2:11
+  │
+2 │ when { if };
+  ╰╴          ━ unexpected token
+error: expected `}`
+  ╭▸ ident3_1:2:12
+  │
+2 │ when { if };
+  ╰╴           ━ expected `}`
 error: expected `}`
   ╭▸ ident3_1:2:8
   │

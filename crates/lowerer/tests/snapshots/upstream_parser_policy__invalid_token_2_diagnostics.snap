@@ -7,3 +7,8 @@ error: unexpected token
   │
 2 │ when { 🚀 };
   ╰╴       ━━━ unexpected token
+error: unexpected token
+  ╭▸ invalid_token_2:2:8
+  │
+2 │ when { 🚀 };
+  ╰╴       ━━━ unexpected token

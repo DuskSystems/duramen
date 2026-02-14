@@ -3,6 +3,28 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `)`
+  ╭▸ unclosed_strings_4:4:22
+  │
+4 │     principal.foo = "bar"
+  ╰╴                     ━━━ expected `)`
+error: expected `;`
+  ╭▸ unclosed_strings_4:4:22
+  │
+4 │     principal.foo = "bar"
+  ╰╴                     ━━━ expected `;`
+error: unexpected token
+  ╭▸ unclosed_strings_4:4:22
+  │
+4 │       principal.foo = "bar"
+  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+5 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `;`
+  ╭▸ unclosed_strings_4:5:4
+  │
+5 │ };
+  ╰╴  ━ expected `;`
+error: expected `)`
   ╭▸ unclosed_strings_4:1:5
   │
 1 │   @id("0)

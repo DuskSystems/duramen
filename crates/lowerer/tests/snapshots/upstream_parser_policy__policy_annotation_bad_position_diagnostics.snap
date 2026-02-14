@@ -7,6 +7,31 @@ error: expected `)`
   │
 1 │ permit (@comment("your name here") principal, action, resource);
   ╰╴        ━ expected `)`
+error: expected `;`
+  ╭▸ policy_annotation_bad_position:1:9
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴        ━ expected `;`
+error: expected `;`
+  ╭▸ policy_annotation_bad_position:1:36
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴                                   ━━━━━━━━━ expected `;`
+error: unexpected token
+  ╭▸ policy_annotation_bad_position:1:36
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴                                   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ unexpected token
+error: expected `;`
+  ╭▸ policy_annotation_bad_position:1:66
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴                                                                ━ expected `;`
+error: expected `)`
+  ╭▸ policy_annotation_bad_position:1:9
+  │
+1 │ permit (@comment("your name here") principal, action, resource);
+  ╰╴        ━ expected `)`
 error: missing policy effect
   ╭▸ policy_annotation_bad_position:1:9
   │

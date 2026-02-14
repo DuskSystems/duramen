@@ -1,0 +1,9 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: unexpected token
+  ╭▸ member4:3:6
+  │
+3 │     {3<-4:"what?","ok then":-5>4}
+  ╰╴     ━━━━━━━━━━━━ unexpected token

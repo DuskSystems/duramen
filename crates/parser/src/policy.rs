@@ -3,6 +3,7 @@ use duramen_lexer::TokenKind;
 use duramen_syntax::{Syntax, Tree};
 
 use crate::common::Parser;
+use crate::error::ParseError;
 
 /// Binding power and syntax kind for an infix operator.
 struct InfixOperator {
@@ -66,6 +67,7 @@ impl<'src> PolicyParser<'src> {
             TokenKind::PermitKeyword,
             TokenKind::ForbidKeyword,
         ]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             while !self.parser.at(&[
                 TokenKind::Eof,
@@ -79,6 +81,9 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
 
         while self.parser.at(&[TokenKind::At]) {
@@ -463,9 +468,13 @@ impl<'src> PolicyParser<'src> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
     }
 
@@ -488,6 +497,7 @@ impl<'src> PolicyParser<'src> {
             .parser
             .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
         {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             while !self
                 .parser
@@ -499,6 +509,9 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
 
         self.parser.builder.close(&branch);
@@ -607,9 +620,13 @@ impl<'src> PolicyParser<'src> {
             }
         } else if !self.parser.at(&[TokenKind::Eof]) {
             self.parser.builder.close(&branch);
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
 
             return;
         }

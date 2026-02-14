@@ -3,6 +3,7 @@ use duramen_lexer::TokenKind;
 use duramen_syntax::{Syntax, Tree};
 
 use crate::common::Parser;
+use crate::error::ParseError;
 
 /// Parses Cedar schema source text into a concrete syntax tree.
 pub struct SchemaParser<'src> {
@@ -51,9 +52,13 @@ impl<'src> SchemaParser<'src> {
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::CloseBrace]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
 
             return;
         }
@@ -99,9 +104,13 @@ impl<'src> SchemaParser<'src> {
     /// ```
     fn namespace_body(&mut self) {
         if !self.parser.at(&[TokenKind::OpenBrace]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
 
             return;
         }
@@ -143,6 +152,7 @@ impl<'src> SchemaParser<'src> {
         }
 
         if self.parser.at(&[TokenKind::At]) {
+            let start = self.parser.position;
             let checkpoint = self.parser.builder.checkpoint();
 
             while self.parser.at(&[TokenKind::At]) {
@@ -178,12 +188,16 @@ impl<'src> SchemaParser<'src> {
                 }
                 _ => {
                     self.parser.builder.commit(&checkpoint, Syntax::Error);
+                    self.parser.diagnostics.push(ParseError::Unexpected {
+                        span: start..self.parser.position,
+                    });
                 }
             }
 
             return;
         }
 
+        let start = self.parser.position;
         let err = self.parser.builder.open(Syntax::Error);
         while !self.parser.at(&[
             TokenKind::Eof,
@@ -200,6 +214,9 @@ impl<'src> SchemaParser<'src> {
         }
 
         self.parser.builder.close(&err);
+        self.parser.diagnostics.push(ParseError::Unexpected {
+            span: start..self.parser.position,
+        });
     }
 
     /// Parses an entity declaration.
@@ -408,9 +425,13 @@ impl<'src> SchemaParser<'src> {
             TokenKind::ResourceKeyword => (Syntax::ResourceTypes, false),
             TokenKind::ContextKeyword => (Syntax::ContextType, true),
             _ => {
+                let start = self.parser.position;
                 let err = self.parser.builder.open(Syntax::Error);
                 self.parser.next();
                 self.parser.builder.close(&err);
+                self.parser.diagnostics.push(ParseError::Unexpected {
+                    span: start..self.parser.position,
+                });
 
                 return;
             }
@@ -551,6 +572,7 @@ impl<'src> SchemaParser<'src> {
             .parser
             .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
         {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             while !self
                 .parser
@@ -562,6 +584,9 @@ impl<'src> SchemaParser<'src> {
             }
 
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
 
         self.parser
@@ -675,9 +700,13 @@ impl<'src> SchemaParser<'src> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
     }
 
@@ -727,9 +756,13 @@ impl<'src> SchemaParser<'src> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Syntax::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
     }
 }

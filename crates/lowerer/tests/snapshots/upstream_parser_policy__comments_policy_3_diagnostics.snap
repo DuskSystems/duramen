@@ -2,6 +2,33 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
+error: unexpected token
+  ╭▸ comments_policy_3:2:11
+  │
+2 │ when { 1 /* multi-line
+  ╰╴          ━━ unexpected token
+error: expected `}`
+  ╭▸ comments_policy_3:2:13
+  │
+2 │ when { 1 /* multi-line
+  ╰╴            ━━━━━ expected `}`
+error: expected `;`
+  ╭▸ comments_policy_3:2:13
+  │
+2 │ when { 1 /* multi-line
+  ╰╴            ━━━━━ expected `;`
+error: unexpected token
+  ╭▸ comments_policy_3:2:13
+  │
+2 │   when { 1 /* multi-line
+  │ ┏━━━━━━━━━━━━━┛
+3 │ ┃ comment */d };
+  ╰╴┗━━━━━━━━━━━━━━━┛ unexpected token
+error: expected `;`
+  ╭▸ comments_policy_3:3:16
+  │
+3 │ comment */d };
+  ╰╴              ━ expected `;`
 error: expected `}`
   ╭▸ comments_policy_3:2:8
   │

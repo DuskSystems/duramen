@@ -1,7 +1,7 @@
 use duramen_parser::PolicyParser;
 use duramen_test::TestContext;
 
-duramen_test::fixtures!(policy = parse);
+duramen_test::fixtures!(policy::success = parse);
 
 fn parse(fixture: &TestContext<'_>) {
     let (_tree, diagnostics) = PolicyParser::parse(fixture.source);

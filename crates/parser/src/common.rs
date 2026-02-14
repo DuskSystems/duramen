@@ -79,7 +79,12 @@ impl<'src> Parser<'src> {
             self.next();
             true
         } else {
-            self.builder.token(Syntax::from(kind), 0);
+            let expected = Syntax::from(kind);
+            self.diagnostics.push(ParseError::Missing {
+                span: self.span(),
+                expected,
+            });
+            self.builder.token(expected, 0);
             false
         }
     }

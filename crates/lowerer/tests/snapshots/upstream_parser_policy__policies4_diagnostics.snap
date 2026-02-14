@@ -1,0 +1,44 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `;`
+  ╭▸ policies4:4:1
+  │
+4 │ advice { "doit" };
+  ╰╴━━━━━━ expected `;`
+error: unexpected token
+  ╭▸ policies4:4:1
+  │
+4 │ ┏ advice { "doit" };
+5 │ ┃
+6 │ ┃ permit (principal in Group::"jane_friends",  // Policy c1
+  ╰╴┗━┛ unexpected token
+error: unknown variable `w `
+  ╭▸ policies4:2:8
+  │
+2 │ when { w }
+  │        ━━ not a valid variable
+  ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables
+error: unknown variable `u `
+  ╭▸ policies4:3:10
+  │
+3 │ unless { u }
+  │          ━━ not a valid variable
+  ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables
+error: unexpected token
+  ╭▸ policies4:4:1
+  │
+4 │ ┏ advice { "doit" };
+5 │ ┃
+6 │ ┃ permit (principal in Group::"jane_friends",  // Policy c1
+  ╰╴┗━┛ unexpected token
+error: unknown variable `user`
+   ╭▸ policies4:12:22
+   │
+12 │ unless { resource in user.account };
+   │                      ━━━━ not a valid variable
+   ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables

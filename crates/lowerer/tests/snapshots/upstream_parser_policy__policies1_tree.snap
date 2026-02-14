@@ -1,0 +1,66 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+Policies 0..89
+├─Policy 0..70
+│ ├─PermitKeyword "permit" 0..6
+│ ├─Whitespace " " 6..7
+│ ├─OpenParenthesis "(" 7..8
+│ ├─VariableDefinition 8..20
+│ │ ├─PrincipalKeyword "principal" 8..17
+│ │ ├─Colon ":" 17..18
+│ │ ├─Whitespace " " 18..19
+│ │ └─Name 19..20
+│ │   └─Identifier "p" 19..20
+│ ├─Comma "," 20..21
+│ ├─Whitespace " " 21..22
+│ ├─VariableDefinition 22..31
+│ │ ├─ActionKeyword "action" 22..28
+│ │ ├─Colon ":" 28..29
+│ │ ├─Whitespace " " 29..30
+│ │ └─Name 30..31
+│ │   └─Identifier "a" 30..31
+│ ├─Comma "," 31..32
+│ ├─Whitespace " " 32..33
+│ ├─VariableDefinition 33..44
+│ │ ├─ResourceKeyword "resource" 33..41
+│ │ ├─Colon ":" 41..42
+│ │ ├─Whitespace " " 42..43
+│ │ └─Name 43..44
+│ │   └─Identifier "r" 43..44
+│ ├─CloseParenthesis ")" 44..45
+│ ├─Whitespace "\n" 45..46
+│ ├─Condition 46..57
+│ │ ├─WhenKeyword "when" 46..50
+│ │ ├─Whitespace " " 50..51
+│ │ ├─OpenBrace "{" 51..52
+│ │ ├─Whitespace " " 52..53
+│ │ ├─Name 53..55
+│ │ │ ├─Identifier "w" 53..54
+│ │ │ └─Whitespace " " 54..55
+│ │ ├─CloseBrace "}" 55..56
+│ │ └─Whitespace "\n" 56..57
+│ ├─Condition 57..70
+│ │ ├─UnlessKeyword "unless" 57..63
+│ │ ├─Whitespace " " 63..64
+│ │ ├─OpenBrace "{" 64..65
+│ │ ├─Whitespace " " 65..66
+│ │ ├─Name 66..68
+│ │ │ ├─Identifier "u" 66..67
+│ │ │ └─Whitespace " " 67..68
+│ │ ├─CloseBrace "}" 68..69
+│ │ └─Whitespace "\n" 69..70
+│ └─Semicolon "" 70..70
+└─Policy 70..89
+  ├─Error 70..89
+  │ ├─Identifier "advice" 70..76
+  │ ├─Whitespace " " 76..77
+  │ ├─OpenBrace "{" 77..78
+  │ ├─Whitespace " " 78..79
+  │ ├─String "\"doit\"" 79..85
+  │ ├─Whitespace " " 85..86
+  │ ├─CloseBrace "}" 86..87
+  │ ├─Semicolon ";" 87..88
+  │ └─Whitespace "\n" 88..89
+  └─Semicolon "" 89..89

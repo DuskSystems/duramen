@@ -7,6 +7,23 @@ error: expected `)`
   │
 1 │ @id('0')
   ╰╴    ━ expected `)`
+error: expected `;`
+  ╭▸ single_quote_string_3:1:5
+  │
+1 │ @id('0')
+  ╰╴    ━ expected `;`
+error: unexpected token
+  ╭▸ single_quote_string_3:1:5
+  │
+1 │   @id('0')
+  │ ┏━━━━━┛
+2 │ ┃ permit (principal, action, resource);
+  ╰╴┗━┛ unexpected token
+error: expected `)`
+  ╭▸ single_quote_string_3:1:5
+  │
+1 │ @id('0')
+  ╰╴    ━ expected `)`
 error: missing policy effect
   ╭▸ single_quote_string_3:1:1
   │

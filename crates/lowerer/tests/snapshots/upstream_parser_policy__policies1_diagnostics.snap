@@ -1,0 +1,38 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `;`
+  ╭▸ policies1:4:1
+  │
+4 │ advice { "doit" };
+  ╰╴━━━━━━ expected `;`
+error: unexpected token
+  ╭▸ policies1:4:1
+  │
+4 │ advice { "doit" };
+  ╰╴━━━━━━━━━━━━━━━━━━ unexpected token
+error: expected `;`
+  ╭▸ policies1:4:20
+  │
+4 │ advice { "doit" };
+  ╰╴                  ━ expected `;`
+error: unknown variable `w `
+  ╭▸ policies1:2:8
+  │
+2 │ when { w }
+  │        ━━ not a valid variable
+  ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables
+error: unknown variable `u `
+  ╭▸ policies1:3:10
+  │
+3 │ unless { u }
+  │          ━━ not a valid variable
+  ╰╴
+note: `principal`, `action`, `resource`, and `context` are the only variables
+error: missing policy effect
+  ╭▸ policies1:4:1
+  │
+4 │ advice { "doit" };
+  ╰╴━━━━━━━━━━━━━━━━━━ expected `permit` or `forbid`

@@ -6,6 +6,23 @@ error: expected `)`
   ╭▸ policy_annotations_bad_val_3:1:17
   │
 1 │ @bad_annotation(bad_annotation)
+  ╰╴                ━━━━━━━━━━━━━━ expected `)`
+error: expected `;`
+  ╭▸ policy_annotations_bad_val_3:1:17
+  │
+1 │ @bad_annotation(bad_annotation)
+  ╰╴                ━━━━━━━━━━━━━━ expected `;`
+error: unexpected token
+  ╭▸ policy_annotations_bad_val_3:1:17
+  │
+1 │   @bad_annotation(bad_annotation)
+  │ ┏━━━━━━━━━━━━━━━━━┛
+2 │ ┃ permit (principal, action, resource);
+  ╰╴┗━┛ unexpected token
+error: expected `)`
+  ╭▸ policy_annotations_bad_val_3:1:17
+  │
+1 │ @bad_annotation(bad_annotation)
   ╰╴                ━ expected `)`
 error: missing policy effect
   ╭▸ policy_annotations_bad_val_3:1:1
