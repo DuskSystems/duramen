@@ -123,8 +123,13 @@ impl<'src> Parser<'src> {
         let branch = self.builder.open(Syntax::Annotation);
 
         self.next();
-        if self.kind().is_identifier() {
+        while !self.at(&[TokenKind::OpenParenthesis, TokenKind::Eof]) {
+            let stop = self.lexer.peek().is_none_or(TokenKind::is_trivial);
+
             self.next();
+            if stop {
+                break;
+            }
         }
 
         if self.eat(TokenKind::OpenParenthesis) {

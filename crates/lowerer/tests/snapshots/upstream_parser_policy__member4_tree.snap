@@ -27,12 +27,12 @@ Policies 0..81
   │ ├─Record 48..78
   │ │ ├─OpenBrace "{" 48..49
   │ │ ├─RecordEntry 49..61
-  │ │ │ └─Error 49..61
-  │ │ │   ├─Integer "3" 49..50
-  │ │ │   ├─Less "<" 50..51
-  │ │ │   ├─Subtract "-" 51..52
-  │ │ │   ├─Integer "4" 52..53
-  │ │ │   ├─Colon ":" 53..54
+  │ │ │ ├─Integer "3" 49..50
+  │ │ │ ├─Less "<" 50..51
+  │ │ │ ├─Subtract "-" 51..52
+  │ │ │ ├─Integer "4" 52..53
+  │ │ │ ├─Colon ":" 53..54
+  │ │ │ └─Literal 54..61
   │ │ │   └─String "\"what?\"" 54..61
   │ │ ├─Comma "," 61..62
   │ │ ├─RecordEntry 62..76

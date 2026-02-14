@@ -146,8 +146,20 @@ impl<'src> PolicyParser<'src> {
             return;
         }
 
-        if self.parser.kind().is_identifier() {
+        while !self.parser.at(&[
+            TokenKind::Colon,
+            TokenKind::Comma,
+            TokenKind::CloseParenthesis,
+            TokenKind::Eof,
+        ]) && !self.parser.kind().is_comparison()
+            && !self.parser.at(&[TokenKind::Equals, TokenKind::IsKeyword])
+        {
+            let stop = self.parser.lexer.peek().is_none_or(TokenKind::is_trivial);
+
             self.parser.next();
+            if stop {
+                break;
+            }
         }
 
         if self.parser.eat(TokenKind::Colon) {
@@ -178,8 +190,17 @@ impl<'src> PolicyParser<'src> {
         let checkpoint = self.parser.builder.checkpoint();
 
         self.parser.next();
-        if self.parser.kind().is_identifier() {
+        while !self.parser.at(&[
+            TokenKind::Comma,
+            TokenKind::CloseParenthesis,
+            TokenKind::Eof,
+        ]) {
+            let stop = self.parser.lexer.peek().is_none_or(TokenKind::is_trivial);
+
             self.parser.next();
+            if stop {
+                break;
+            }
         }
 
         self.parser.builder.commit(&checkpoint, Syntax::Slot);
@@ -501,11 +522,36 @@ impl<'src> PolicyParser<'src> {
     fn record_entry(&mut self) {
         let branch = self.parser.builder.open(Syntax::RecordEntry);
 
-        if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
+        let has_key = if self.parser.at(&[TokenKind::String]) {
             self.parser.next();
-            if self.parser.eat(TokenKind::Colon) {
-                self.expression();
+            true
+        } else if !self.parser.at(&[
+            TokenKind::Colon,
+            TokenKind::CloseBrace,
+            TokenKind::Comma,
+            TokenKind::Eof,
+        ]) {
+            while !self.parser.at(&[
+                TokenKind::Colon,
+                TokenKind::CloseBrace,
+                TokenKind::Comma,
+                TokenKind::Eof,
+            ]) {
+                let stop = self.parser.lexer.peek().is_none_or(TokenKind::is_trivial);
+
+                self.parser.next();
+                if stop {
+                    break;
+                }
             }
+
+            true
+        } else {
+            false
+        };
+
+        if has_key && self.parser.eat(TokenKind::Colon) {
+            self.expression();
         }
 
         if !self
@@ -585,11 +631,26 @@ impl<'src> PolicyParser<'src> {
         let checkpoint = self.parser.builder.checkpoint();
         let branch = self.parser.builder.open(Syntax::Name);
 
-        if self.parser.kind().is_identifier() {
+        if !matches!(
+            self.parser.kind(),
+            TokenKind::Eof
+                | TokenKind::OpenParenthesis
+                | TokenKind::CloseParenthesis
+                | TokenKind::OpenBrace
+                | TokenKind::CloseBrace
+                | TokenKind::OpenBracket
+                | TokenKind::CloseBracket
+                | TokenKind::Semicolon
+                | TokenKind::Comma
+                | TokenKind::Colon
+                | TokenKind::Colon2
+                | TokenKind::At
+                | TokenKind::Equals
+        ) {
             self.parser.next();
             while self.parser.at(&[TokenKind::Colon2]) {
                 if matches!(
-                    self.parser.lexer.peek_kind(),
+                    self.parser.lexer.peek(),
                     Some(TokenKind::String | TokenKind::OpenBrace)
                 ) {
                     self.parser.builder.close(&branch);
@@ -623,13 +684,29 @@ impl<'src> PolicyParser<'src> {
 
                 self.parser.advance_push();
                 self.parser.next();
-                let ident = self.parser.kind().is_identifier();
-                if ident {
+                let is_segment = !matches!(
+                    self.parser.kind(),
+                    TokenKind::Eof
+                        | TokenKind::OpenParenthesis
+                        | TokenKind::CloseParenthesis
+                        | TokenKind::OpenBrace
+                        | TokenKind::CloseBrace
+                        | TokenKind::OpenBracket
+                        | TokenKind::CloseBracket
+                        | TokenKind::Semicolon
+                        | TokenKind::Comma
+                        | TokenKind::Colon
+                        | TokenKind::Colon2
+                        | TokenKind::At
+                        | TokenKind::Equals
+                );
+
+                if is_segment {
                     self.parser.next();
                 }
 
                 self.parser.advance_pop();
-                if !ident {
+                if !is_segment {
                     break;
                 }
             }

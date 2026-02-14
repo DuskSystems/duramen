@@ -3,25 +3,10 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `)`
-  ╭▸ unclosed_strings_2:1:47
-  │
-1 │ permit (principal, action, resource == Photo::"mine.jpg);
-  ╰╴                                              ━━━━━━━━━━━ expected `)`
-error: expected `;`
-  ╭▸ unclosed_strings_2:1:47
-  │
-1 │ permit (principal, action, resource == Photo::"mine.jpg);
-  ╰╴                                              ━━━━━━━━━━━ expected `;`
-error: unexpected token
-  ╭▸ unclosed_strings_2:1:47
-  │
-1 │ permit (principal, action, resource == Photo::"mine.jpg);
-  ╰╴                                              ━━━━━━━━━━━ unexpected token
-error: expected `permit`
   ╭▸ unclosed_strings_2:1:59
   │
 1 │ permit (principal, action, resource == Photo::"mine.jpg);
-  ╰╴                                                         ━ expected `permit`
+  ╰╴                                                         ━ expected `)`
 error: expected `;`
   ╭▸ unclosed_strings_2:1:59
   │
@@ -31,4 +16,4 @@ error: unexpected expression
   ╭▸ unclosed_strings_2:1:40
   │
 1 │ permit (principal, action, resource == Photo::"mine.jpg);
-  ╰╴                                       ━━━━━━━ expected an entity reference or slot
+  ╰╴                                       ━━━━━━━━━━━━━━━━━━ expected an entity reference or slot

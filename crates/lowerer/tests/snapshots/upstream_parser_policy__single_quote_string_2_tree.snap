@@ -3,7 +3,7 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 Policies 0..59
-├─Policy 0..46
+├─Policy 0..47
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
 │ ├─OpenParenthesis "(" 7..8
@@ -15,19 +15,19 @@ Policies 0..59
 │ │ └─ActionKeyword "action" 19..25
 │ ├─Comma "," 25..26
 │ ├─Whitespace " " 26..27
-│ ├─VariableDefinition 27..46
+│ ├─VariableDefinition 27..47
 │ │ ├─ResourceKeyword "resource" 27..35
 │ │ ├─Whitespace " " 35..36
 │ │ ├─Equal "==" 36..38
 │ │ ├─Whitespace " " 38..39
-│ │ └─Name 39..46
+│ │ └─Name 39..47
 │ │   ├─Identifier "Photo" 39..44
-│ │   └─PathSeparator "::" 44..46
-│ ├─CloseParenthesis "" 46..46
-│ └─Semicolon "" 46..46
-└─Policy 46..59
-  ├─Error 46..59
-  │ ├─Error "'" 46..47
+│ │   ├─PathSeparator "::" 44..46
+│ │   └─Error "'" 46..47
+│ ├─CloseParenthesis "" 47..47
+│ └─Semicolon "" 47..47
+└─Policy 47..59
+  ├─Error 47..59
   │ ├─Identifier "mine" 47..51
   │ ├─Dot "." 51..52
   │ ├─Identifier "jpg" 52..55

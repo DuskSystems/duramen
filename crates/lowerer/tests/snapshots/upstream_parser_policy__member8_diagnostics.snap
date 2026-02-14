@@ -2,16 +2,6 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: unexpected token
-  ╭▸ member8:3:6
-  │
-3 │     {2: true, 4: me}.with["pizza"]
-  ╰╴     ━━━━━━━ unexpected token
-error: unexpected token
-  ╭▸ member8:3:15
-  │
-3 │     {2: true, 4: me}.with["pizza"]
-  ╰╴              ━━━━━ unexpected token
 error: indexing is not supported
   ╭▸ member8:3:26
   │

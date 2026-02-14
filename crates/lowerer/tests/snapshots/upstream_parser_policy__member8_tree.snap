@@ -28,18 +28,18 @@ Policies 0..82
   │ │ ├─Record 48..64
   │ │ │ ├─OpenBrace "{" 48..49
   │ │ │ ├─RecordEntry 49..56
-  │ │ │ │ └─Error 49..56
-  │ │ │ │   ├─Integer "2" 49..50
-  │ │ │ │   ├─Colon ":" 50..51
-  │ │ │ │   ├─Whitespace " " 51..52
+  │ │ │ │ ├─Integer "2" 49..50
+  │ │ │ │ ├─Colon ":" 50..51
+  │ │ │ │ ├─Whitespace " " 51..52
+  │ │ │ │ └─Literal 52..56
   │ │ │ │   └─TrueKeyword "true" 52..56
   │ │ │ ├─Comma "," 56..57
   │ │ │ ├─Whitespace " " 57..58
   │ │ │ ├─RecordEntry 58..63
-  │ │ │ │ └─Error 58..63
-  │ │ │ │   ├─Integer "4" 58..59
-  │ │ │ │   ├─Colon ":" 59..60
-  │ │ │ │   ├─Whitespace " " 60..61
+  │ │ │ │ ├─Integer "4" 58..59
+  │ │ │ │ ├─Colon ":" 59..60
+  │ │ │ │ ├─Whitespace " " 60..61
+  │ │ │ │ └─Name 61..63
   │ │ │ │   └─Identifier "me" 61..63
   │ │ │ └─CloseBrace "}" 63..64
   │ │ ├─Field 64..69

@@ -15,22 +15,13 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Peeks at the kind of the next non-trivial token without consuming it.
+    /// Peeks at the kind of the next token without consuming it.
     #[must_use]
-    pub fn peek_kind(&mut self) -> Option<TokenKind> {
+    pub fn peek(&mut self) -> Option<TokenKind> {
         let checkpoint = self.cursor.checkpoint();
-
-        loop {
-            let Some(token) = self.next_token() else {
-                self.cursor.restore(checkpoint);
-                return None;
-            };
-
-            if !token.kind.is_trivial() {
-                self.cursor.restore(checkpoint);
-                return Some(token.kind);
-            }
-        }
+        let kind = self.next_token().map(|token| token.kind);
+        self.cursor.restore(checkpoint);
+        kind
     }
 
     /// Returns the next token.

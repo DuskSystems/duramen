@@ -482,11 +482,7 @@ impl<'src> SchemaParser<'src> {
     /// Parses the body of a type declaration after the `type` keyword.
     fn type_declaration_body(&mut self) {
         self.parser.next();
-
-        if self.parser.kind().is_identifier() {
-            self.name();
-        }
-
+        self.name();
         self.parser.expect(TokenKind::Equals);
         self.type_expression();
         self.parser.expect(TokenKind::Semicolon);
@@ -511,7 +507,7 @@ impl<'src> SchemaParser<'src> {
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::SetKeyword])
-            && self.parser.lexer.peek_kind() == Some(TokenKind::LessThan)
+            && self.parser.lexer.peek() == Some(TokenKind::LessThan)
         {
             self.parser.next();
             self.parser.next();
@@ -523,7 +519,7 @@ impl<'src> SchemaParser<'src> {
         }
 
         if self.parser.at(&[TokenKind::EnumKeyword])
-            && self.parser.lexer.peek_kind() == Some(TokenKind::OpenBracket)
+            && self.parser.lexer.peek() == Some(TokenKind::OpenBracket)
         {
             self.parser.next();
             self.parser.next();
@@ -560,8 +556,37 @@ impl<'src> SchemaParser<'src> {
             self.parser.advance_pop();
         }
 
-        if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
+        let has_key = if self.parser.at(&[TokenKind::String]) {
             self.parser.next();
+            true
+        } else if !self.parser.at(&[
+            TokenKind::QuestionMark,
+            TokenKind::Colon,
+            TokenKind::CloseBrace,
+            TokenKind::Comma,
+            TokenKind::Eof,
+        ]) {
+            while !self.parser.at(&[
+                TokenKind::QuestionMark,
+                TokenKind::Colon,
+                TokenKind::CloseBrace,
+                TokenKind::Comma,
+                TokenKind::Eof,
+            ]) {
+                let stop = self.parser.lexer.peek().is_none_or(TokenKind::is_trivial);
+
+                self.parser.next();
+                if stop {
+                    break;
+                }
+            }
+
+            true
+        } else {
+            false
+        };
+
+        if has_key {
             self.parser.eat(TokenKind::QuestionMark);
             if self.parser.eat(TokenKind::Colon) {
                 self.type_expression();
@@ -675,22 +700,53 @@ impl<'src> SchemaParser<'src> {
     fn name(&mut self) {
         let checkpoint = self.parser.builder.checkpoint();
 
-        if self.parser.kind().is_identifier() {
+        if !matches!(
+            self.parser.kind(),
+            TokenKind::Eof
+                | TokenKind::OpenParenthesis
+                | TokenKind::CloseParenthesis
+                | TokenKind::OpenBrace
+                | TokenKind::CloseBrace
+                | TokenKind::OpenBracket
+                | TokenKind::CloseBracket
+                | TokenKind::Semicolon
+                | TokenKind::Comma
+                | TokenKind::Colon
+                | TokenKind::Colon2
+                | TokenKind::At
+                | TokenKind::Equals
+        ) {
             self.parser.next();
             while self.parser.at(&[TokenKind::Colon2]) {
-                if self.parser.lexer.peek_kind() == Some(TokenKind::String) {
+                if self.parser.lexer.peek() == Some(TokenKind::String) {
                     break;
                 }
 
                 self.parser.advance_push();
                 self.parser.next();
-                let ident = self.parser.kind().is_identifier();
-                if ident {
+                let is_segment = !matches!(
+                    self.parser.kind(),
+                    TokenKind::Eof
+                        | TokenKind::OpenParenthesis
+                        | TokenKind::CloseParenthesis
+                        | TokenKind::OpenBrace
+                        | TokenKind::CloseBrace
+                        | TokenKind::OpenBracket
+                        | TokenKind::CloseBracket
+                        | TokenKind::Semicolon
+                        | TokenKind::Comma
+                        | TokenKind::Colon
+                        | TokenKind::Colon2
+                        | TokenKind::At
+                        | TokenKind::Equals
+                );
+
+                if is_segment {
                     self.parser.next();
                 }
 
                 self.parser.advance_pop();
-                if !ident {
+                if !is_segment {
                     break;
                 }
             }
@@ -748,8 +804,39 @@ impl<'src> SchemaParser<'src> {
     fn action_name(&mut self) {
         let checkpoint = self.parser.builder.checkpoint();
 
-        if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
+        if self.parser.at(&[TokenKind::String]) {
             self.parser.next();
+            self.parser.builder.commit(&checkpoint, Syntax::Name);
+
+            return;
+        }
+
+        if !matches!(
+            self.parser.kind(),
+            TokenKind::Eof
+                | TokenKind::Comma
+                | TokenKind::Semicolon
+                | TokenKind::InKeyword
+                | TokenKind::AppliesToKeyword
+                | TokenKind::AttributesKeyword
+        ) {
+            while !matches!(
+                self.parser.kind(),
+                TokenKind::Eof
+                    | TokenKind::Comma
+                    | TokenKind::Semicolon
+                    | TokenKind::InKeyword
+                    | TokenKind::AppliesToKeyword
+                    | TokenKind::AttributesKeyword
+            ) {
+                let stop = self.parser.lexer.peek().is_none_or(TokenKind::is_trivial);
+
+                self.parser.next();
+                if stop {
+                    break;
+                }
+            }
+
             self.parser.builder.commit(&checkpoint, Syntax::Name);
 
             return;

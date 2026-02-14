@@ -3,13 +3,10 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 Policies 0..61
-├─Policy 0..4
-│ ├─Annotation 0..4
-│ │ ├─At "@" 0..1
-│ │ └─Identifier "bad" 1..4
-│ └─Semicolon "" 4..4
-└─Policy 4..61
-  ├─Error 4..23
+└─Policy 0..61
+  ├─Annotation 0..23
+  │ ├─At "@" 0..1
+  │ ├─Identifier "bad" 1..4
   │ ├─Subtract "-" 4..5
   │ ├─Identifier "annotation" 5..15
   │ ├─OpenParenthesis "(" 15..16

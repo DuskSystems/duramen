@@ -2,20 +2,4 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `permit`
-  ╭▸ policy_annotations_bad_id_3:1:4
-  │
-1 │ @hi+mom("this should be invalid")
-  ╰╴   ━ expected `permit`
-error: expected `;`
-  ╭▸ policy_annotations_bad_id_3:1:4
-  │
-1 │ @hi+mom("this should be invalid")
-  ╰╴   ━ expected `;`
-error: unexpected token
-  ╭▸ policy_annotations_bad_id_3:1:4
-  │
-1 │   @hi+mom("this should be invalid")
-  │ ┏━━━━┛
-2 │ ┃ permit (principal, action, resource);
-  ╰╴┗━┛ unexpected token
+
