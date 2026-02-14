@@ -12,11 +12,11 @@ use crate::error::ParseError;
 const DEPTH_LIMIT: usize = 16;
 
 /// Shared parser infrastructure for policy and schema parsers.
-pub struct Parser<'src, 'diag> {
+pub struct Parser<'src> {
     pub source: &'src str,
     pub lexer: Lexer<'src>,
     pub builder: Builder,
-    pub diagnostics: &'diag mut Diagnostics,
+    pub diagnostics: Diagnostics,
 
     pub position: usize,
     pub current: Token,
@@ -26,15 +26,15 @@ pub struct Parser<'src, 'diag> {
     advances: Vec<usize>,
 }
 
-impl<'src, 'diag> Parser<'src, 'diag> {
+impl<'src> Parser<'src> {
     /// Creates a new parser.
     #[must_use]
-    pub const fn new(source: &'src str, diagnostics: &'diag mut Diagnostics) -> Self {
+    pub const fn new(source: &'src str) -> Self {
         Self {
             source,
             lexer: Lexer::new(source),
             builder: Builder::new(),
-            diagnostics,
+            diagnostics: Diagnostics::new(),
 
             position: 0,
             current: Token {

@@ -4,7 +4,6 @@ use core::hint::black_box;
 
 use divan::counter::ItemsCount;
 use divan::{AllocProfiler, Bencher};
-use duramen_diagnostic::Diagnostics;
 use duramen_parser::{PolicyParser, SchemaParser};
 use duramen_test::{CORPUS_POLICIES, CORPUS_SCHEMAS};
 
@@ -24,8 +23,7 @@ fn parser_policy(bencher: Bencher<'_, '_>) {
 
     bencher.counter(ItemsCount::new(sources.len())).bench(|| {
         for source in &sources {
-            let mut diagnostics = Diagnostics::new();
-            black_box(PolicyParser::new(source, &mut diagnostics).parse());
+            black_box(PolicyParser::parse(source));
         }
     });
 }
@@ -39,8 +37,7 @@ fn parser_schema(bencher: Bencher<'_, '_>) {
 
     bencher.counter(ItemsCount::new(sources.len())).bench(|| {
         for source in &sources {
-            let mut diagnostics = Diagnostics::new();
-            black_box(SchemaParser::new(source, &mut diagnostics).parse());
+            black_box(SchemaParser::parse(source));
         }
     });
 }

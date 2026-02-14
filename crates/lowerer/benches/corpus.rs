@@ -4,8 +4,6 @@ use core::hint::black_box;
 
 use divan::counter::ItemsCount;
 use divan::{AllocProfiler, Bencher};
-use duramen_cst::{CstNode as _, Policies, Schema};
-use duramen_diagnostic::Diagnostics;
 use duramen_lowerer::{PolicyLowerer, SchemaLowerer};
 use duramen_parser::{PolicyParser, SchemaParser};
 use duramen_test::{CORPUS_POLICIES, CORPUS_SCHEMAS};
@@ -24,22 +22,19 @@ fn lower_policy(bencher: Bencher<'_, '_>) {
         .map(|path| std::fs::read_to_string(path).unwrap())
         .collect();
 
-    let trees: Vec<_> = sources
-        .iter()
-        .map(|source| {
-            let mut diagnostics = Diagnostics::new();
-            PolicyParser::new(source, &mut diagnostics).parse()
+    bencher
+        .counter(ItemsCount::new(sources.len()))
+        .with_inputs(|| {
+            sources
+                .iter()
+                .map(|source| PolicyParser::parse(source))
+                .collect::<Vec<_>>()
         })
-        .collect();
-
-    bencher.counter(ItemsCount::new(sources.len())).bench(|| {
-        for tree in &trees {
-            let mut diagnostics = Diagnostics::new();
-            let root = tree.root().unwrap();
-            let cst = Policies::cast(root).unwrap();
-            black_box(PolicyLowerer::new(&mut diagnostics).lower(cst));
-        }
-    });
+        .bench_values(|parsed| {
+            for (tree, diagnostics) in parsed {
+                black_box(PolicyLowerer::lower(&tree, diagnostics));
+            }
+        });
 }
 
 #[divan::bench]
@@ -49,20 +44,17 @@ fn lower_schema(bencher: Bencher<'_, '_>) {
         .map(|path| std::fs::read_to_string(path).unwrap())
         .collect();
 
-    let trees: Vec<_> = sources
-        .iter()
-        .map(|source| {
-            let mut diagnostics = Diagnostics::new();
-            SchemaParser::new(source, &mut diagnostics).parse()
+    bencher
+        .counter(ItemsCount::new(sources.len()))
+        .with_inputs(|| {
+            sources
+                .iter()
+                .map(|source| SchemaParser::parse(source))
+                .collect::<Vec<_>>()
         })
-        .collect();
-
-    bencher.counter(ItemsCount::new(sources.len())).bench(|| {
-        for tree in &trees {
-            let mut diagnostics = Diagnostics::new();
-            let root = tree.root().unwrap();
-            let cst = Schema::cast(root).unwrap();
-            black_box(SchemaLowerer::new(&mut diagnostics).lower(cst));
-        }
-    });
+        .bench_values(|parsed| {
+            for (tree, diagnostics) in parsed {
+                black_box(SchemaLowerer::lower(&tree, diagnostics));
+            }
+        });
 }
