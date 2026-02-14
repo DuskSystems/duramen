@@ -2,30 +2,30 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-Policies [0, 70)
-├─Policy [0, 16)
-│ └─Annotation [0, 16)
-│   ├─At "@" [0, 1)
-│   ├─Identifier "bad_annotation" [1, 15)
-│   └─OpenParenthesis "(" [15, 16)
-└─Policy [16, 70)
-  ├─Error [16, 32)
-  │ ├─Identifier "bad_annotation" [16, 30)
-  │ ├─CloseParenthesis ")" [30, 31)
-  │ └─Whitespace "\n" [31, 32)
-  ├─PermitKeyword "permit" [32, 38)
-  ├─Whitespace " " [38, 39)
-  ├─OpenParenthesis "(" [39, 40)
-  ├─VariableDefinition [40, 49)
-  │ └─PrincipalKeyword "principal" [40, 49)
-  ├─Comma "," [49, 50)
-  ├─Whitespace " " [50, 51)
-  ├─VariableDefinition [51, 57)
-  │ └─ActionKeyword "action" [51, 57)
-  ├─Comma "," [57, 58)
-  ├─Whitespace " " [58, 59)
-  ├─VariableDefinition [59, 67)
-  │ └─ResourceKeyword "resource" [59, 67)
-  ├─CloseParenthesis ")" [67, 68)
-  ├─Semicolon ";" [68, 69)
-  └─Whitespace "\n" [69, 70)
+Policies 0..70
+├─Policy 0..16
+│ └─Annotation 0..16
+│   ├─At "@" 0..1
+│   ├─Identifier "bad_annotation" 1..15
+│   └─OpenParenthesis "(" 15..16
+└─Policy 16..70
+  ├─Error 16..32
+  │ ├─Identifier "bad_annotation" 16..30
+  │ ├─CloseParenthesis ")" 30..31
+  │ └─Whitespace "\n" 31..32
+  ├─PermitKeyword "permit" 32..38
+  ├─Whitespace " " 38..39
+  ├─OpenParenthesis "(" 39..40
+  ├─VariableDefinition 40..49
+  │ └─PrincipalKeyword "principal" 40..49
+  ├─Comma "," 49..50
+  ├─Whitespace " " 50..51
+  ├─VariableDefinition 51..57
+  │ └─ActionKeyword "action" 51..57
+  ├─Comma "," 57..58
+  ├─Whitespace " " 58..59
+  ├─VariableDefinition 59..67
+  │ └─ResourceKeyword "resource" 59..67
+  ├─CloseParenthesis ")" 67..68
+  ├─Semicolon ";" 68..69
+  └─Whitespace "\n" 69..70

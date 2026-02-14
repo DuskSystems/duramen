@@ -2,57 +2,57 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-Policies [0, 102)
-├─Policy [0, 27)
-│ ├─PermitKeyword "permit" [0, 6)
-│ ├─Whitespace " " [6, 7)
-│ ├─OpenParenthesis "(" [7, 8)
-│ ├─VariableDefinition [8, 17)
-│ │ └─PrincipalKeyword "principal" [8, 17)
-│ ├─Comma "," [17, 18)
-│ ├─Whitespace " " [18, 19)
-│ ├─VariableDefinition [19, 25)
-│ │ └─ActionKeyword "action" [19, 25)
-│ ├─Comma "," [25, 26)
-│ ├─Whitespace " " [26, 27)
-│ └─VariableDefinition "" [27, 27)
-├─Policy [27, 98)
-│ ├─Error [27, 71)
-│ │ ├─Not "!" [27, 28)
-│ │ ├─CloseParenthesis ")" [28, 29)
-│ │ ├─Whitespace "\n" [29, 30)
-│ │ ├─WhenKeyword "when" [30, 34)
-│ │ ├─Whitespace " " [34, 35)
-│ │ ├─OpenBrace "{" [35, 36)
-│ │ ├─Whitespace " " [36, 37)
-│ │ ├─PrincipalKeyword "principal" [37, 46)
-│ │ ├─Dot "." [46, 47)
-│ │ ├─Identifier "foo" [47, 50)
-│ │ ├─Whitespace " " [50, 51)
-│ │ ├─Equal "==" [51, 53)
-│ │ ├─Whitespace " " [53, 54)
-│ │ ├─ResourceKeyword "resource" [54, 62)
-│ │ ├─Dot "." [62, 63)
-│ │ ├─Identifier "bar" [63, 66)
-│ │ ├─Whitespace " " [66, 67)
-│ │ ├─CloseBrace "}" [67, 68)
-│ │ ├─Semicolon ";" [68, 69)
-│ │ └─Whitespace "\n\n" [69, 71)
-│ ├─PermitKeyword "permit" [71, 77)
-│ ├─Whitespace " " [77, 78)
-│ ├─OpenParenthesis "(" [78, 79)
-│ ├─VariableDefinition [79, 88)
-│ │ └─PrincipalKeyword "principal" [79, 88)
-│ ├─Comma "," [88, 89)
-│ ├─Whitespace " " [89, 90)
-│ ├─VariableDefinition [90, 96)
-│ │ └─ActionKeyword "action" [90, 96)
-│ ├─Comma "," [96, 97)
-│ ├─Whitespace " " [97, 98)
-│ └─VariableDefinition "" [98, 98)
-└─Policy [98, 102)
-  └─Error [98, 102)
-    ├─Add "+" [98, 99)
-    ├─CloseParenthesis ")" [99, 100)
-    ├─Semicolon ";" [100, 101)
-    └─Whitespace "\n" [101, 102)
+Policies 0..102
+├─Policy 0..27
+│ ├─PermitKeyword "permit" 0..6
+│ ├─Whitespace " " 6..7
+│ ├─OpenParenthesis "(" 7..8
+│ ├─VariableDefinition 8..17
+│ │ └─PrincipalKeyword "principal" 8..17
+│ ├─Comma "," 17..18
+│ ├─Whitespace " " 18..19
+│ ├─VariableDefinition 19..25
+│ │ └─ActionKeyword "action" 19..25
+│ ├─Comma "," 25..26
+│ ├─Whitespace " " 26..27
+│ └─VariableDefinition "" 27..27
+├─Policy 27..98
+│ ├─Error 27..71
+│ │ ├─Not "!" 27..28
+│ │ ├─CloseParenthesis ")" 28..29
+│ │ ├─Whitespace "\n" 29..30
+│ │ ├─WhenKeyword "when" 30..34
+│ │ ├─Whitespace " " 34..35
+│ │ ├─OpenBrace "{" 35..36
+│ │ ├─Whitespace " " 36..37
+│ │ ├─PrincipalKeyword "principal" 37..46
+│ │ ├─Dot "." 46..47
+│ │ ├─Identifier "foo" 47..50
+│ │ ├─Whitespace " " 50..51
+│ │ ├─Equal "==" 51..53
+│ │ ├─Whitespace " " 53..54
+│ │ ├─ResourceKeyword "resource" 54..62
+│ │ ├─Dot "." 62..63
+│ │ ├─Identifier "bar" 63..66
+│ │ ├─Whitespace " " 66..67
+│ │ ├─CloseBrace "}" 67..68
+│ │ ├─Semicolon ";" 68..69
+│ │ └─Whitespace "\n\n" 69..71
+│ ├─PermitKeyword "permit" 71..77
+│ ├─Whitespace " " 77..78
+│ ├─OpenParenthesis "(" 78..79
+│ ├─VariableDefinition 79..88
+│ │ └─PrincipalKeyword "principal" 79..88
+│ ├─Comma "," 88..89
+│ ├─Whitespace " " 89..90
+│ ├─VariableDefinition 90..96
+│ │ └─ActionKeyword "action" 90..96
+│ ├─Comma "," 96..97
+│ ├─Whitespace " " 97..98
+│ └─VariableDefinition "" 98..98
+└─Policy 98..102
+  └─Error 98..102
+    ├─Add "+" 98..99
+    ├─CloseParenthesis ")" 99..100
+    ├─Semicolon ";" 100..101
+    └─Whitespace "\n" 101..102

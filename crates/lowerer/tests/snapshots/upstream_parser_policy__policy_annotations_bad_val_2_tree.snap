@@ -2,27 +2,27 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-Policies [0, 56)
-└─Policy [0, 56)
-  ├─Annotation [0, 18)
-  │ ├─At "@" [0, 1)
-  │ ├─Identifier "bad_annotation" [1, 15)
-  │ ├─OpenParenthesis "(" [15, 16)
-  │ ├─CloseParenthesis ")" [16, 17)
-  │ └─Whitespace "\n" [17, 18)
-  ├─PermitKeyword "permit" [18, 24)
-  ├─Whitespace " " [24, 25)
-  ├─OpenParenthesis "(" [25, 26)
-  ├─VariableDefinition [26, 35)
-  │ └─PrincipalKeyword "principal" [26, 35)
-  ├─Comma "," [35, 36)
-  ├─Whitespace " " [36, 37)
-  ├─VariableDefinition [37, 43)
-  │ └─ActionKeyword "action" [37, 43)
-  ├─Comma "," [43, 44)
-  ├─Whitespace " " [44, 45)
-  ├─VariableDefinition [45, 53)
-  │ └─ResourceKeyword "resource" [45, 53)
-  ├─CloseParenthesis ")" [53, 54)
-  ├─Semicolon ";" [54, 55)
-  └─Whitespace "\n" [55, 56)
+Policies 0..56
+└─Policy 0..56
+  ├─Annotation 0..18
+  │ ├─At "@" 0..1
+  │ ├─Identifier "bad_annotation" 1..15
+  │ ├─OpenParenthesis "(" 15..16
+  │ ├─CloseParenthesis ")" 16..17
+  │ └─Whitespace "\n" 17..18
+  ├─PermitKeyword "permit" 18..24
+  ├─Whitespace " " 24..25
+  ├─OpenParenthesis "(" 25..26
+  ├─VariableDefinition 26..35
+  │ └─PrincipalKeyword "principal" 26..35
+  ├─Comma "," 35..36
+  ├─Whitespace " " 36..37
+  ├─VariableDefinition 37..43
+  │ └─ActionKeyword "action" 37..43
+  ├─Comma "," 43..44
+  ├─Whitespace " " 44..45
+  ├─VariableDefinition 45..53
+  │ └─ResourceKeyword "resource" 45..53
+  ├─CloseParenthesis ")" 53..54
+  ├─Semicolon ";" 54..55
+  └─Whitespace "\n" 55..56

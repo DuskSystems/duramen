@@ -315,9 +315,9 @@ impl fmt::Display for Node<'_> {
 
             let mut children = node.children().peekable();
             if children.peek().is_none() {
-                writeln!(f, "{:?} [{}, {})", node.text(), range.start, range.end)?;
+                writeln!(f, "{:?} {}..{}", node.text(), range.start, range.end)?;
             } else {
-                writeln!(f, "[{}, {})", range.start, range.end)?;
+                writeln!(f, "{}..{}", range.start, range.end)?;
 
                 let len = prefix.len();
 
@@ -340,9 +340,9 @@ impl fmt::Display for Node<'_> {
 
         write!(f, "{:?} ", self.kind())?;
         if children.peek().is_none() {
-            writeln!(f, "{:?} [{}, {})", self.text(), range.start, range.end)?;
+            writeln!(f, "{:?} {}..{}", self.text(), range.start, range.end)?;
         } else {
-            writeln!(f, "[{}, {})", range.start, range.end)?;
+            writeln!(f, "{}..{}", range.start, range.end)?;
 
             let mut prefix = String::new();
             while let Some(child) = children.next() {

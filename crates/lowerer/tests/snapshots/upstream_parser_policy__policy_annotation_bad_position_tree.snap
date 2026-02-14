@@ -2,29 +2,29 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-Policies [0, 65)
-├─Policy [0, 8)
-│ ├─PermitKeyword "permit" [0, 6)
-│ ├─Whitespace " " [6, 7)
-│ ├─OpenParenthesis "(" [7, 8)
-│ └─VariableDefinition "" [8, 8)
-├─Policy [8, 35)
-│ └─Annotation [8, 35)
-│   ├─At "@" [8, 9)
-│   ├─Identifier "comment" [9, 16)
-│   ├─OpenParenthesis "(" [16, 17)
-│   ├─String "\"your name here\"" [17, 33)
-│   ├─CloseParenthesis ")" [33, 34)
-│   └─Whitespace " " [34, 35)
-└─Policy [35, 65)
-  └─Error [35, 65)
-    ├─PrincipalKeyword "principal" [35, 44)
-    ├─Comma "," [44, 45)
-    ├─Whitespace " " [45, 46)
-    ├─ActionKeyword "action" [46, 52)
-    ├─Comma "," [52, 53)
-    ├─Whitespace " " [53, 54)
-    ├─ResourceKeyword "resource" [54, 62)
-    ├─CloseParenthesis ")" [62, 63)
-    ├─Semicolon ";" [63, 64)
-    └─Whitespace "\n" [64, 65)
+Policies 0..65
+├─Policy 0..8
+│ ├─PermitKeyword "permit" 0..6
+│ ├─Whitespace " " 6..7
+│ ├─OpenParenthesis "(" 7..8
+│ └─VariableDefinition "" 8..8
+├─Policy 8..35
+│ └─Annotation 8..35
+│   ├─At "@" 8..9
+│   ├─Identifier "comment" 9..16
+│   ├─OpenParenthesis "(" 16..17
+│   ├─String "\"your name here\"" 17..33
+│   ├─CloseParenthesis ")" 33..34
+│   └─Whitespace " " 34..35
+└─Policy 35..65
+  └─Error 35..65
+    ├─PrincipalKeyword "principal" 35..44
+    ├─Comma "," 44..45
+    ├─Whitespace " " 45..46
+    ├─ActionKeyword "action" 46..52
+    ├─Comma "," 52..53
+    ├─Whitespace " " 53..54
+    ├─ResourceKeyword "resource" 54..62
+    ├─CloseParenthesis ")" 62..63
+    ├─Semicolon ";" 63..64
+    └─Whitespace "\n" 64..65

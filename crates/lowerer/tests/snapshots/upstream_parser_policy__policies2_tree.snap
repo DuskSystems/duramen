@@ -2,67 +2,67 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-Policies [0, 174)
-├─Policy [0, 157)
-│ ├─PermitKeyword "permit" [0, 6)
-│ ├─Whitespace " " [6, 7)
-│ ├─OpenParenthesis "(" [7, 8)
-│ ├─Whitespace "\n    " [8, 13)
-│ ├─VariableDefinition [13, 47)
-│ │ ├─PrincipalKeyword "principal" [13, 22)
-│ │ ├─Whitespace " " [22, 23)
-│ │ ├─InKeyword "in" [23, 25)
-│ │ ├─Whitespace " " [25, 26)
-│ │ └─EntityReference [26, 47)
-│ │   ├─Name [26, 31)
-│ │   │ └─Identifier "Group" [26, 31)
-│ │   ├─PathSeparator "::" [31, 33)
-│ │   └─String "\"jane_friends\"" [33, 47)
-│ ├─Comma "," [47, 48)
-│ ├─Whitespace "  " [48, 50)
-│ ├─Comment "// Policy c1" [50, 62)
-│ ├─Whitespace "\n    " [62, 67)
-│ ├─VariableDefinition [67, 114)
-│ │ ├─ActionKeyword "action" [67, 73)
-│ │ ├─Whitespace " " [73, 74)
-│ │ ├─InKeyword "in" [74, 76)
-│ │ ├─Whitespace " " [76, 77)
-│ │ └─List [77, 114)
-│ │   ├─OpenBracket "[" [77, 78)
-│ │   ├─Arguments [78, 113)
-│ │   │ ├─EntityReference [78, 93)
-│ │   │ │ ├─Name [78, 85)
-│ │   │ │ │ └─Identifier "PhotoOp" [78, 85)
-│ │   │ │ ├─PathSeparator "::" [85, 87)
-│ │   │ │ └─String "\"view\"" [87, 93)
-│ │   │ ├─Comma "," [93, 94)
-│ │   │ ├─Whitespace " " [94, 95)
-│ │   │ └─EntityReference [95, 113)
-│ │   │   ├─Name [95, 102)
-│ │   │   │ └─Identifier "PhotoOp" [95, 102)
-│ │   │   ├─PathSeparator "::" [102, 104)
-│ │   │   └─String "\"comment\"" [104, 113)
-│ │   └─CloseBracket "]" [113, 114)
-│ ├─Comma "," [114, 115)
-│ ├─Whitespace "\n    " [115, 120)
-│ ├─VariableDefinition [120, 151)
-│ │ ├─ResourceKeyword "resource" [120, 128)
-│ │ ├─Whitespace " " [128, 129)
-│ │ ├─InKeyword "in" [129, 131)
-│ │ ├─Whitespace " " [131, 132)
-│ │ └─EntityReference [132, 151)
-│ │   ├─Name [132, 137)
-│ │   │ └─Identifier "Album" [132, 137)
-│ │   ├─PathSeparator "::" [137, 139)
-│ │   └─String "\"jane_trips\"" [139, 151)
-│ ├─Comma "," [151, 152)
-│ └─Whitespace "\n    " [152, 157)
-└─Policy [157, 174)
-  └─Error [157, 174)
-    ├─ContextKeyword "context" [157, 164)
-    ├─Colon ":" [164, 165)
-    ├─Identifier "Group" [165, 170)
-    ├─Whitespace "\n" [170, 171)
-    ├─CloseParenthesis ")" [171, 172)
-    ├─Semicolon ";" [172, 173)
-    └─Whitespace "\n" [173, 174)
+Policies 0..174
+├─Policy 0..157
+│ ├─PermitKeyword "permit" 0..6
+│ ├─Whitespace " " 6..7
+│ ├─OpenParenthesis "(" 7..8
+│ ├─Whitespace "\n    " 8..13
+│ ├─VariableDefinition 13..47
+│ │ ├─PrincipalKeyword "principal" 13..22
+│ │ ├─Whitespace " " 22..23
+│ │ ├─InKeyword "in" 23..25
+│ │ ├─Whitespace " " 25..26
+│ │ └─EntityReference 26..47
+│ │   ├─Name 26..31
+│ │   │ └─Identifier "Group" 26..31
+│ │   ├─PathSeparator "::" 31..33
+│ │   └─String "\"jane_friends\"" 33..47
+│ ├─Comma "," 47..48
+│ ├─Whitespace "  " 48..50
+│ ├─Comment "// Policy c1" 50..62
+│ ├─Whitespace "\n    " 62..67
+│ ├─VariableDefinition 67..114
+│ │ ├─ActionKeyword "action" 67..73
+│ │ ├─Whitespace " " 73..74
+│ │ ├─InKeyword "in" 74..76
+│ │ ├─Whitespace " " 76..77
+│ │ └─List 77..114
+│ │   ├─OpenBracket "[" 77..78
+│ │   ├─Arguments 78..113
+│ │   │ ├─EntityReference 78..93
+│ │   │ │ ├─Name 78..85
+│ │   │ │ │ └─Identifier "PhotoOp" 78..85
+│ │   │ │ ├─PathSeparator "::" 85..87
+│ │   │ │ └─String "\"view\"" 87..93
+│ │   │ ├─Comma "," 93..94
+│ │   │ ├─Whitespace " " 94..95
+│ │   │ └─EntityReference 95..113
+│ │   │   ├─Name 95..102
+│ │   │   │ └─Identifier "PhotoOp" 95..102
+│ │   │   ├─PathSeparator "::" 102..104
+│ │   │   └─String "\"comment\"" 104..113
+│ │   └─CloseBracket "]" 113..114
+│ ├─Comma "," 114..115
+│ ├─Whitespace "\n    " 115..120
+│ ├─VariableDefinition 120..151
+│ │ ├─ResourceKeyword "resource" 120..128
+│ │ ├─Whitespace " " 128..129
+│ │ ├─InKeyword "in" 129..131
+│ │ ├─Whitespace " " 131..132
+│ │ └─EntityReference 132..151
+│ │   ├─Name 132..137
+│ │   │ └─Identifier "Album" 132..137
+│ │   ├─PathSeparator "::" 137..139
+│ │   └─String "\"jane_trips\"" 139..151
+│ ├─Comma "," 151..152
+│ └─Whitespace "\n    " 152..157
+└─Policy 157..174
+  └─Error 157..174
+    ├─ContextKeyword "context" 157..164
+    ├─Colon ":" 164..165
+    ├─Identifier "Group" 165..170
+    ├─Whitespace "\n" 170..171
+    ├─CloseParenthesis ")" 171..172
+    ├─Semicolon ";" 172..173
+    └─Whitespace "\n" 173..174
