@@ -18,12 +18,13 @@ Policies 0..71
   ├─VariableDefinition 27..35
   │ └─ResourceKeyword "resource" 27..35
   ├─CloseParenthesis ")" 35..36
-  ├─Whitespace "\n" 36..37
+  ├─Newline "\n" 36..37
   ├─Condition 37..69
   │ ├─WhenKeyword "when" 37..41
   │ ├─Whitespace " " 41..42
   │ ├─OpenBrace "{" 42..43
-  │ ├─Whitespace "\n    " 43..48
+  │ ├─Newline "\n" 43..44
+  │ ├─Whitespace "    " 44..48
   │ ├─HasExpression 48..68
   │ │ ├─Name 48..58
   │ │ │ ├─PrincipalKeyword "principal" 48..57
@@ -40,7 +41,7 @@ Policies 0..71
   │ │     │ └─Name 65..66
   │ │     │   └─Identifier "b" 65..66
   │ │     ├─CloseParenthesis ")" 66..67
-  │ │     └─Whitespace "\n" 67..68
+  │ │     └─Newline "\n" 67..68
   │ └─CloseBrace "}" 68..69
   ├─Semicolon ";" 69..70
-  └─Whitespace "\n" 70..71
+  └─Newline "\n" 70..71

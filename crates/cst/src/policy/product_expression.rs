@@ -41,8 +41,6 @@ impl<'a> ProductExpression<'a> {
             .children()
             .find_map(|child| match child.kind().token()? {
                 Token::Multiply => Some(ProductOperator::Multiply),
-                Token::Divide => Some(ProductOperator::Divide),
-                Token::Modulo => Some(ProductOperator::Modulo),
                 _ => None,
             })
     }
@@ -50,11 +48,8 @@ impl<'a> ProductExpression<'a> {
     /// Returns the operator token.
     #[must_use]
     pub fn operator_token(&self) -> Option<Node<'a>> {
-        self.node.children().find(|child| {
-            matches!(
-                child.kind().token(),
-                Some(Token::Multiply | Token::Divide | Token::Modulo)
-            )
-        })
+        self.node
+            .children()
+            .find(|child| matches!(child.kind().token(), Some(Token::Multiply)))
     }
 }

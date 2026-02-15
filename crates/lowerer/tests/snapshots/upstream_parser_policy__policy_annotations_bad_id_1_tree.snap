@@ -14,7 +14,7 @@ Policies 0..61
   │ ├─OpenParenthesis "(" 15..16
   │ ├─String "\"bad\"" 16..21
   │ ├─CloseParenthesis ")" 21..22
-  │ └─Whitespace "\n" 22..23
+  │ └─Newline "\n" 22..23
   ├─PermitKeyword "permit" 23..29
   ├─Whitespace " " 29..30
   ├─OpenParenthesis "(" 30..31
@@ -30,4 +30,4 @@ Policies 0..61
   │ └─ResourceKeyword "resource" 50..58
   ├─CloseParenthesis ")" 58..59
   ├─Semicolon ";" 59..60
-  └─Whitespace "\n" 60..61
+  └─Newline "\n" 60..61

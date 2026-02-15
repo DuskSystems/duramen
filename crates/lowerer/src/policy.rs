@@ -600,13 +600,6 @@ impl PolicyLowerer {
                     right,
                 ))
             }
-            cst::ProductOperator::Divide | cst::ProductOperator::Modulo => {
-                self.ctx.diagnostics.push(LowerError::UnsupportedDivision {
-                    span: expression.range(),
-                });
-
-                None
-            }
         }
     }
 

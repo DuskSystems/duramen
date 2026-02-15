@@ -119,17 +119,15 @@ pub enum Token {
     NotEqual,
     /// Logical or: `||`.
     Or,
-    /// Modulo: `%`.
-    Modulo,
     /// Add: `+`.
     Add,
-    /// Divide: `/`.
-    Divide,
     /// Multiply: `*`.
     Multiply,
 
     /// Line comment: `// ...`.
     Comment,
+    /// Newline.
+    Newline,
     /// Whitespace.
     Whitespace,
 
@@ -141,7 +139,7 @@ impl Token {
     /// Checks if this is a trivial token.
     #[must_use]
     pub const fn is_trivial(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Comment)
+        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
 
     /// Checks if this is a keyword token.
@@ -270,11 +268,7 @@ impl From<TokenKind> for Token {
             TokenKind::QuestionMark => Self::QuestionMark,
             TokenKind::Semicolon => Self::Semicolon,
 
-            TokenKind::Ampersand
-            | TokenKind::Pipe
-            | TokenKind::StringUnterminated
-            | TokenKind::Unknown
-            | TokenKind::Eof => Self::Unknown,
+            TokenKind::StringUnterminated | TokenKind::Unknown | TokenKind::Eof => Self::Unknown,
             TokenKind::Ampersand2 => Self::And,
             TokenKind::Bang => Self::Not,
             TokenKind::BangEquals => Self::NotEqual,
@@ -285,13 +279,12 @@ impl From<TokenKind> for Token {
             TokenKind::LessThan => Self::Less,
             TokenKind::LessThanEquals => Self::LessEqual,
             TokenKind::Minus => Self::Subtract,
-            TokenKind::Percent => Self::Modulo,
             TokenKind::Pipe2 => Self::Or,
             TokenKind::Plus => Self::Add,
-            TokenKind::Slash => Self::Divide,
             TokenKind::Asterisk => Self::Multiply,
 
             TokenKind::Comment => Self::Comment,
+            TokenKind::Newline => Self::Newline,
             TokenKind::Whitespace => Self::Whitespace,
         }
     }
@@ -359,12 +352,11 @@ impl fmt::Display for Token {
             Self::Not => "!",
             Self::NotEqual => "!=",
             Self::Or => "||",
-            Self::Modulo => "%",
             Self::Add => "+",
-            Self::Divide => "/",
             Self::Multiply => "*",
 
             Self::Comment => "comment",
+            Self::Newline => "newline",
             Self::Whitespace => "whitespace",
 
             Self::Unknown => "unknown",

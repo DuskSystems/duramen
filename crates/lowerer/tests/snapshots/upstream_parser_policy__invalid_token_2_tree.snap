@@ -18,7 +18,7 @@ Policies 0..52
   ├─VariableDefinition 27..35
   │ └─ResourceKeyword "resource" 27..35
   ├─CloseParenthesis ")" 35..36
-  ├─Whitespace "\n" 36..37
+  ├─Newline "\n" 36..37
   ├─Condition 37..50
   │ ├─WhenKeyword "when" 37..41
   │ ├─Whitespace " " 41..42
@@ -29,4 +29,4 @@ Policies 0..52
   │ │ └─Whitespace " " 48..49
   │ └─CloseBrace "}" 49..50
   ├─Semicolon ";" 50..51
-  └─Whitespace "\n" 51..52
+  └─Newline "\n" 51..52

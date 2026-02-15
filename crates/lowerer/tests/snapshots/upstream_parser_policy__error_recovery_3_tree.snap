@@ -20,7 +20,7 @@ Policies 0..69
   └─Error 27..69
     ├─Not "!" 27..28
     ├─CloseParenthesis ")" 28..29
-    ├─Whitespace "\n" 29..30
+    ├─Newline "\n" 29..30
     ├─WhenKeyword "when" 30..34
     ├─Whitespace " " 34..35
     ├─OpenBrace "{" 35..36
@@ -36,4 +36,4 @@ Policies 0..69
     ├─Identifier "bar" 63..66
     ├─Whitespace " " 66..67
     ├─CloseBrace "}" 67..68
-    └─Whitespace "\n" 68..69
+    └─Newline "\n" 68..69

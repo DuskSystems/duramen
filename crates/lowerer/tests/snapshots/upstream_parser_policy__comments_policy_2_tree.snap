@@ -5,18 +5,18 @@ expression: value
 Policies 0..84
 └─Policy 0..84
   ├─Error 0..25
-  │ ├─Divide "/" 0..1
+  │ ├─Unknown "/" 0..1
   │ ├─Multiply "*" 1..2
   │ ├─Whitespace " " 2..3
   │ ├─Identifier "multi" 3..8
   │ ├─Subtract "-" 8..9
   │ ├─Identifier "line" 9..13
-  │ ├─Whitespace "\n" 13..14
+  │ ├─Newline "\n" 13..14
   │ ├─Identifier "comment" 14..21
   │ ├─Whitespace " " 21..22
   │ ├─Multiply "*" 22..23
-  │ ├─Divide "/" 23..24
-  │ └─Whitespace "\n" 24..25
+  │ ├─Unknown "/" 23..24
+  │ └─Newline "\n" 24..25
   ├─PermitKeyword "permit" 25..31
   ├─Whitespace " " 31..32
   ├─OpenParenthesis "(" 32..33
@@ -31,19 +31,20 @@ Policies 0..84
   ├─VariableDefinition 52..60
   │ └─ResourceKeyword "resource" 52..60
   ├─CloseParenthesis ")" 60..61
-  ├─Whitespace "\n" 61..62
+  ├─Newline "\n" 61..62
   ├─Condition 62..82
   │ ├─WhenKeyword "when" 62..66
   │ ├─Whitespace " " 66..67
   │ ├─OpenBrace "{" 67..68
-  │ ├─Whitespace "\n    " 68..73
+  │ ├─Newline "\n" 68..69
+  │ ├─Whitespace "    " 69..73
   │ ├─MemberExpression 73..81
   │ │ ├─Name 73..76
   │ │ │ └─Identifier "one" 73..76
   │ │ └─Field 76..81
   │ │   ├─Dot "." 76..77
   │ │   ├─Identifier "two" 77..80
-  │ │   └─Whitespace "\n" 80..81
+  │ │   └─Newline "\n" 80..81
   │ └─CloseBrace "}" 81..82
   ├─Semicolon ";" 82..83
-  └─Whitespace "\n" 83..84
+  └─Newline "\n" 83..84

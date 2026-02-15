@@ -117,6 +117,22 @@ impl<'a> Cursor<'a> {
         position > start
     }
 
+    /// Skips newline sequences.
+    pub fn skip_newline(&mut self) {
+        loop {
+            match self.current() {
+                Some(b'\n') => self.bump(),
+                Some(b'\r') => {
+                    self.bump();
+                    if self.current() == Some(b'\n') {
+                        self.bump();
+                    }
+                }
+                _ => break,
+            }
+        }
+    }
+
     /// Skips to end of line.
     pub fn skip_line(&mut self) {
         if let Some(remaining) = self.bytes().get(self.position..) {
@@ -205,12 +221,19 @@ mod tests {
 
     #[test]
     fn skip_whitespace() {
-        let mut cursor = Cursor::new("  \t\n\r\x0B\x0Cx");
+        let mut cursor = Cursor::new("  \t\x0B\x0Cx");
         cursor.skip_whitespace();
         assert_eq!(cursor.current(), Some(b'x'));
 
         let mut cursor = Cursor::new("\u{00A0}\u{2003}\u{3000}x");
         cursor.skip_whitespace();
+        assert_eq!(cursor.current(), Some(b'x'));
+    }
+
+    #[test]
+    fn skip_newline() {
+        let mut cursor = Cursor::new("\n\r\n\rx");
+        cursor.skip_newline();
         assert_eq!(cursor.current(), Some(b'x'));
     }
 

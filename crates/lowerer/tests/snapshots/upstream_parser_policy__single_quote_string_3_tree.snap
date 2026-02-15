@@ -14,7 +14,7 @@ Policies 0..47
   │ ├─Integer "0" 5..6
   │ ├─Unknown "'" 6..7
   │ ├─CloseParenthesis ")" 7..8
-  │ └─Whitespace "\n" 8..9
+  │ └─Newline "\n" 8..9
   ├─PermitKeyword "permit" 9..15
   ├─Whitespace " " 15..16
   ├─OpenParenthesis "(" 16..17
@@ -30,4 +30,4 @@ Policies 0..47
   │ └─ResourceKeyword "resource" 36..44
   ├─CloseParenthesis ")" 44..45
   ├─Semicolon ";" 45..46
-  └─Whitespace "\n" 46..47
+  └─Newline "\n" 46..47
