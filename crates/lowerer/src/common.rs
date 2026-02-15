@@ -7,8 +7,6 @@ use duramen_escape::Escaper;
 use duramen_syntax::{Node, Token};
 use {duramen_ast as ast, duramen_cst as cst};
 
-use crate::error::LowerError;
-
 /// Shared context for lowering CST to AST.
 pub struct LowerContext {
     pub diagnostics: Diagnostics,
@@ -97,24 +95,7 @@ impl LowerContext {
                         continue;
                     }
                 }
-            } else if node.child(Token::OpenParenthesis).is_some()
-                && node.child(Token::CloseParenthesis).is_some()
-            {
-                let span = if let Some(child) = node
-                    .after(Token::OpenParenthesis)
-                    .find(|child| !child.kind().is_trivial())
-                {
-                    child.first().range()
-                } else {
-                    let end = node.range().end;
-                    end..end
-                };
-
-                self.diagnostics.push(LowerError::ExpectedToken {
-                    span,
-                    expected: "a string literal",
-                });
-
+            } else if node.has(Token::OpenParenthesis) {
                 continue;
             } else {
                 ast::AnnotationValue::Empty

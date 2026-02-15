@@ -134,7 +134,7 @@ impl<'src> Parser<'src> {
         }
 
         if self.eat(TokenKind::OpenParenthesis) {
-            self.eat(TokenKind::String);
+            self.expect(TokenKind::String);
             self.expect(TokenKind::CloseParenthesis);
         }
 

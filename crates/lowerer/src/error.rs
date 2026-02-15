@@ -64,10 +64,6 @@ pub enum LowerError {
     InvalidEquals {
         span: Range<usize>,
     },
-    ExpectedToken {
-        span: Range<usize>,
-        expected: &'static str,
-    },
 }
 
 impl From<LowerError> for Diagnostic {
@@ -147,10 +143,6 @@ impl From<LowerError> for Diagnostic {
                 Self::error("invalid operator `=`")
                     .with_label(span, "not a valid operator")
                     .with_suggestion(suggestion)
-            }
-            LowerError::ExpectedToken { span, expected } => {
-                Self::error(format!("expected {expected}"))
-                    .with_label(span, format!("expected {expected}"))
             }
         }
     }

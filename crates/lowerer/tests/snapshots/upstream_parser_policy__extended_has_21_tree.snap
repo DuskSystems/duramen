@@ -6,19 +6,20 @@ Policies 0..69
 ├─Policy 0..64
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
-│ ├─OpenParenthesis "(" 7..8
-│ ├─VariableDefinition 8..17
-│ │ └─PrincipalKeyword "principal" 8..17
-│ ├─Comma "," 17..18
-│ ├─Whitespace " " 18..19
-│ ├─VariableDefinition 19..25
-│ │ └─ActionKeyword "action" 19..25
-│ ├─Comma "," 25..26
-│ ├─Whitespace " " 26..27
-│ ├─VariableDefinition 27..35
-│ │ └─ResourceKeyword "resource" 27..35
-│ ├─CloseParenthesis ")" 35..36
-│ ├─Newline "\n" 36..37
+│ ├─Scope 7..37
+│ │ ├─OpenParenthesis "(" 7..8
+│ │ ├─VariableDefinition 8..17
+│ │ │ └─PrincipalKeyword "principal" 8..17
+│ │ ├─Comma "," 17..18
+│ │ ├─Whitespace " " 18..19
+│ │ ├─VariableDefinition 19..25
+│ │ │ └─ActionKeyword "action" 19..25
+│ │ ├─Comma "," 25..26
+│ │ ├─Whitespace " " 26..27
+│ │ ├─VariableDefinition 27..35
+│ │ │ └─ResourceKeyword "resource" 27..35
+│ │ ├─CloseParenthesis ")" 35..36
+│ │ └─Newline "\n" 36..37
 │ ├─Condition 37..64
 │ │ ├─WhenKeyword "when" 37..41
 │ │ ├─Whitespace " " 41..42

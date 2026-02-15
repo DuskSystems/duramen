@@ -99,6 +99,7 @@ impl<'src> PolicyParser<'src> {
             self.parser.next();
         }
 
+        let checkpoint = self.parser.builder.checkpoint();
         if self.parser.eat(TokenKind::OpenParenthesis) {
             self.variable_declaration();
             if self.parser.eat(TokenKind::Comma) {
@@ -111,6 +112,7 @@ impl<'src> PolicyParser<'src> {
 
             self.parser.eat(TokenKind::Comma);
             self.parser.expect(TokenKind::CloseParenthesis);
+            self.parser.builder.commit(&checkpoint, Group::Scope);
         }
 
         while self
@@ -215,11 +217,11 @@ impl<'src> PolicyParser<'src> {
         if self.parser.at(&[TokenKind::IfKeyword]) {
             self.parser.next();
             self.expression();
-            if self.parser.eat(TokenKind::ThenKeyword) {
+            if self.parser.expect(TokenKind::ThenKeyword) {
                 self.expression();
             }
 
-            if self.parser.eat(TokenKind::ElseKeyword) {
+            if self.parser.expect(TokenKind::ElseKeyword) {
                 self.expression();
             }
 

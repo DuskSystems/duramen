@@ -38,7 +38,9 @@ impl<'a> Annotation<'a> {
     /// Returns the annotation value string token.
     #[must_use]
     pub fn value(&self) -> Option<Node<'a>> {
-        self.node.child(Token::String)
+        self.node
+            .children()
+            .find(|child| child.kind() == Token::String && !child.range().is_empty())
     }
 
     /// Returns the opening parenthesis token.

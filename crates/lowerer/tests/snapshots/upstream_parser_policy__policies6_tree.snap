@@ -52,31 +52,32 @@ Policies 0..263
 │ │ └─Newline "\n\n" 82..84
 │ ├─PermitKeyword "permit" 84..90
 │ ├─Whitespace " " 90..91
-│ ├─OpenParenthesis "(" 91..92
-│ ├─VariableDefinition 92..104
-│ │ ├─PrincipalKeyword "principal" 92..101
-│ │ ├─Colon ":" 101..102
-│ │ ├─Whitespace " " 102..103
-│ │ └─Name 103..104
-│ │   └─Identifier "p" 103..104
-│ ├─Comma "," 104..105
-│ ├─Whitespace " " 105..106
-│ ├─VariableDefinition 106..115
-│ │ ├─ActionKeyword "action" 106..112
-│ │ ├─Colon ":" 112..113
-│ │ ├─Whitespace " " 113..114
-│ │ └─Name 114..115
-│ │   └─Identifier "a" 114..115
-│ ├─Comma "," 115..116
-│ ├─Whitespace " " 116..117
-│ ├─VariableDefinition 117..128
-│ │ ├─ResourceKeyword "resource" 117..125
-│ │ ├─Colon ":" 125..126
-│ │ ├─Whitespace " " 126..127
-│ │ └─Name 127..128
-│ │   └─Identifier "r" 127..128
-│ ├─CloseParenthesis ")" 128..129
-│ ├─Newline "\n" 129..130
+│ ├─Scope 91..130
+│ │ ├─OpenParenthesis "(" 91..92
+│ │ ├─VariableDefinition 92..104
+│ │ │ ├─PrincipalKeyword "principal" 92..101
+│ │ │ ├─Colon ":" 101..102
+│ │ │ ├─Whitespace " " 102..103
+│ │ │ └─Name 103..104
+│ │ │   └─Identifier "p" 103..104
+│ │ ├─Comma "," 104..105
+│ │ ├─Whitespace " " 105..106
+│ │ ├─VariableDefinition 106..115
+│ │ │ ├─ActionKeyword "action" 106..112
+│ │ │ ├─Colon ":" 112..113
+│ │ │ ├─Whitespace " " 113..114
+│ │ │ └─Name 114..115
+│ │ │   └─Identifier "a" 114..115
+│ │ ├─Comma "," 115..116
+│ │ ├─Whitespace " " 116..117
+│ │ ├─VariableDefinition 117..128
+│ │ │ ├─ResourceKeyword "resource" 117..125
+│ │ │ ├─Colon ":" 125..126
+│ │ │ ├─Whitespace " " 126..127
+│ │ │ └─Name 127..128
+│ │ │   └─Identifier "r" 127..128
+│ │ ├─CloseParenthesis ")" 128..129
+│ │ └─Newline "\n" 129..130
 │ ├─Condition 130..141
 │ │ ├─WhenKeyword "when" 130..134
 │ │ ├─Whitespace " " 134..135
@@ -111,31 +112,32 @@ Policies 0..263
 │ │ └─Newline "\n\n" 172..174
 │ ├─PermitKeyword "permit" 174..180
 │ ├─Whitespace " " 180..181
-│ ├─OpenParenthesis "(" 181..182
-│ ├─VariableDefinition 182..194
-│ │ ├─PrincipalKeyword "principal" 182..191
-│ │ ├─Colon ":" 191..192
-│ │ ├─Whitespace " " 192..193
-│ │ └─Name 193..194
-│ │   └─Identifier "p" 193..194
-│ ├─Comma "," 194..195
-│ ├─Whitespace " " 195..196
-│ ├─VariableDefinition 196..205
-│ │ ├─ActionKeyword "action" 196..202
-│ │ ├─Colon ":" 202..203
-│ │ ├─Whitespace " " 203..204
-│ │ └─Name 204..205
-│ │   └─Identifier "a" 204..205
-│ ├─Comma "," 205..206
-│ ├─Whitespace " " 206..207
-│ ├─VariableDefinition 207..218
-│ │ ├─ResourceKeyword "resource" 207..215
-│ │ ├─Colon ":" 215..216
-│ │ ├─Whitespace " " 216..217
-│ │ └─Name 217..218
-│ │   └─Identifier "r" 217..218
-│ ├─CloseParenthesis ")" 218..219
-│ ├─Newline "\n" 219..220
+│ ├─Scope 181..220
+│ │ ├─OpenParenthesis "(" 181..182
+│ │ ├─VariableDefinition 182..194
+│ │ │ ├─PrincipalKeyword "principal" 182..191
+│ │ │ ├─Colon ":" 191..192
+│ │ │ ├─Whitespace " " 192..193
+│ │ │ └─Name 193..194
+│ │ │   └─Identifier "p" 193..194
+│ │ ├─Comma "," 194..195
+│ │ ├─Whitespace " " 195..196
+│ │ ├─VariableDefinition 196..205
+│ │ │ ├─ActionKeyword "action" 196..202
+│ │ │ ├─Colon ":" 202..203
+│ │ │ ├─Whitespace " " 203..204
+│ │ │ └─Name 204..205
+│ │ │   └─Identifier "a" 204..205
+│ │ ├─Comma "," 205..206
+│ │ ├─Whitespace " " 206..207
+│ │ ├─VariableDefinition 207..218
+│ │ │ ├─ResourceKeyword "resource" 207..215
+│ │ │ ├─Colon ":" 215..216
+│ │ │ ├─Whitespace " " 216..217
+│ │ │ └─Name 217..218
+│ │ │   └─Identifier "r" 217..218
+│ │ ├─CloseParenthesis ")" 218..219
+│ │ └─Newline "\n" 219..220
 │ ├─Condition 220..231
 │ │ ├─WhenKeyword "when" 220..224
 │ │ ├─Whitespace " " 224..225

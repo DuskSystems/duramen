@@ -2,6 +2,11 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
+error: expected string
+  ╭▸ unclosed_strings_3:1:5
+  │
+1 │ @id("0)
+  ╰╴    ━ expected string
 error: expected `)`
   ╭▸ unclosed_strings_3:1:5
   │
@@ -24,11 +29,6 @@ error: expected `;`
   │
 2 │ permit (principal, action, resource);
   ╰╴                                     ━ expected `;`
-error: expected a string literal
-  ╭▸ unclosed_strings_3:1:5
-  │
-1 │ @id("0)
-  ╰╴    ━ expected a string literal
 error: missing policy effect
   ╭▸ unclosed_strings_3:1:1
   │

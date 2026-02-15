@@ -405,29 +405,7 @@ impl PolicyLowerer {
         expression: &cst::IfExpression<'src>,
     ) -> Option<ast::Expression<'src>> {
         let test = expression.test()?;
-
-        if expression.then_token().is_none() {
-            let end = expression.range().end;
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span: end..end,
-                expected: "`then`",
-            });
-
-            return None;
-        }
-
         let consequent = expression.consequent()?;
-
-        if expression.else_token().is_none() {
-            let end = expression.range().end;
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span: end..end,
-                expected: "`else`",
-            });
-
-            return None;
-        }
-
         let alternate = expression.alternate()?;
 
         let test = self.lower_expression(&test)?;

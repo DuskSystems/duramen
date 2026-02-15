@@ -2,8 +2,8 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected a string literal
+error: expected string
   ╭▸ policy_annotations_bad_val_2:1:17
   │
 1 │ @bad_annotation()
-  ╰╴                ━ expected a string literal
+  ╰╴                ━ expected string

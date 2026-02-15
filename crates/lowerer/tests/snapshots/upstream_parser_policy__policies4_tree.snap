@@ -6,31 +6,32 @@ Policies 0..405
 ├─Policy 0..70
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
-│ ├─OpenParenthesis "(" 7..8
-│ ├─VariableDefinition 8..20
-│ │ ├─PrincipalKeyword "principal" 8..17
-│ │ ├─Colon ":" 17..18
-│ │ ├─Whitespace " " 18..19
-│ │ └─Name 19..20
-│ │   └─Identifier "p" 19..20
-│ ├─Comma "," 20..21
-│ ├─Whitespace " " 21..22
-│ ├─VariableDefinition 22..31
-│ │ ├─ActionKeyword "action" 22..28
-│ │ ├─Colon ":" 28..29
-│ │ ├─Whitespace " " 29..30
-│ │ └─Name 30..31
-│ │   └─Identifier "a" 30..31
-│ ├─Comma "," 31..32
-│ ├─Whitespace " " 32..33
-│ ├─VariableDefinition 33..44
-│ │ ├─ResourceKeyword "resource" 33..41
-│ │ ├─Colon ":" 41..42
-│ │ ├─Whitespace " " 42..43
-│ │ └─Name 43..44
-│ │   └─Identifier "r" 43..44
-│ ├─CloseParenthesis ")" 44..45
-│ ├─Newline "\n" 45..46
+│ ├─Scope 7..46
+│ │ ├─OpenParenthesis "(" 7..8
+│ │ ├─VariableDefinition 8..20
+│ │ │ ├─PrincipalKeyword "principal" 8..17
+│ │ │ ├─Colon ":" 17..18
+│ │ │ ├─Whitespace " " 18..19
+│ │ │ └─Name 19..20
+│ │ │   └─Identifier "p" 19..20
+│ │ ├─Comma "," 20..21
+│ │ ├─Whitespace " " 21..22
+│ │ ├─VariableDefinition 22..31
+│ │ │ ├─ActionKeyword "action" 22..28
+│ │ │ ├─Colon ":" 28..29
+│ │ │ ├─Whitespace " " 29..30
+│ │ │ └─Name 30..31
+│ │ │   └─Identifier "a" 30..31
+│ │ ├─Comma "," 31..32
+│ │ ├─Whitespace " " 32..33
+│ │ ├─VariableDefinition 33..44
+│ │ │ ├─ResourceKeyword "resource" 33..41
+│ │ │ ├─Colon ":" 41..42
+│ │ │ ├─Whitespace " " 42..43
+│ │ │ └─Name 43..44
+│ │ │   └─Identifier "r" 43..44
+│ │ ├─CloseParenthesis ")" 44..45
+│ │ └─Newline "\n" 45..46
 │ ├─Condition 46..57
 │ │ ├─WhenKeyword "when" 46..50
 │ │ ├─Whitespace " " 50..51
@@ -65,75 +66,77 @@ Policies 0..405
 │ │ └─Newline "\n\n" 88..90
 │ ├─PermitKeyword "permit" 90..96
 │ ├─Whitespace " " 96..97
-│ ├─OpenParenthesis "(" 97..98
-│ ├─VariableDefinition 98..132
-│ │ ├─PrincipalKeyword "principal" 98..107
-│ │ ├─Whitespace " " 107..108
-│ │ ├─InKeyword "in" 108..110
-│ │ ├─Whitespace " " 110..111
-│ │ └─EntityReference 111..132
-│ │   ├─Name 111..116
-│ │   │ └─Identifier "Group" 111..116
-│ │   ├─PathSeparator "::" 116..118
-│ │   └─String "\"jane_friends\"" 118..132
-│ ├─Comma "," 132..133
-│ ├─Whitespace "  " 133..135
-│ ├─Comment "// Policy c1" 135..147
-│ ├─Newline "\n" 147..148
-│ ├─VariableDefinition 148..195
-│ │ ├─ActionKeyword "action" 148..154
-│ │ ├─Whitespace " " 154..155
-│ │ ├─InKeyword "in" 155..157
-│ │ ├─Whitespace " " 157..158
-│ │ └─List 158..195
-│ │   ├─OpenBracket "[" 158..159
-│ │   ├─Arguments 159..194
-│ │   │ ├─EntityReference 159..174
-│ │   │ │ ├─Name 159..166
-│ │   │ │ │ └─Identifier "PhotoOp" 159..166
-│ │   │ │ ├─PathSeparator "::" 166..168
-│ │   │ │ └─String "\"view\"" 168..174
-│ │   │ ├─Comma "," 174..175
-│ │   │ ├─Whitespace " " 175..176
-│ │   │ └─EntityReference 176..194
-│ │   │   ├─Name 176..183
-│ │   │   │ └─Identifier "PhotoOp" 176..183
-│ │   │   ├─PathSeparator "::" 183..185
-│ │   │   └─String "\"comment\"" 185..194
-│ │   └─CloseBracket "]" 194..195
-│ ├─Comma "," 195..196
-│ ├─Newline "\n" 196..197
-│ ├─VariableDefinition 197..228
-│ │ ├─ResourceKeyword "resource" 197..205
-│ │ ├─Whitespace " " 205..206
-│ │ ├─InKeyword "in" 206..208
-│ │ ├─Whitespace " " 208..209
-│ │ └─EntityReference 209..228
-│ │   ├─Name 209..214
-│ │   │ └─Identifier "Album" 209..214
-│ │   ├─PathSeparator "::" 214..216
-│ │   └─String "\"jane_trips\"" 216..228
-│ ├─CloseParenthesis ")" 228..229
+│ ├─Scope 97..229
+│ │ ├─OpenParenthesis "(" 97..98
+│ │ ├─VariableDefinition 98..132
+│ │ │ ├─PrincipalKeyword "principal" 98..107
+│ │ │ ├─Whitespace " " 107..108
+│ │ │ ├─InKeyword "in" 108..110
+│ │ │ ├─Whitespace " " 110..111
+│ │ │ └─EntityReference 111..132
+│ │ │   ├─Name 111..116
+│ │ │   │ └─Identifier "Group" 111..116
+│ │ │   ├─PathSeparator "::" 116..118
+│ │ │   └─String "\"jane_friends\"" 118..132
+│ │ ├─Comma "," 132..133
+│ │ ├─Whitespace "  " 133..135
+│ │ ├─Comment "// Policy c1" 135..147
+│ │ ├─Newline "\n" 147..148
+│ │ ├─VariableDefinition 148..195
+│ │ │ ├─ActionKeyword "action" 148..154
+│ │ │ ├─Whitespace " " 154..155
+│ │ │ ├─InKeyword "in" 155..157
+│ │ │ ├─Whitespace " " 157..158
+│ │ │ └─List 158..195
+│ │ │   ├─OpenBracket "[" 158..159
+│ │ │   ├─Arguments 159..194
+│ │ │   │ ├─EntityReference 159..174
+│ │ │   │ │ ├─Name 159..166
+│ │ │   │ │ │ └─Identifier "PhotoOp" 159..166
+│ │ │   │ │ ├─PathSeparator "::" 166..168
+│ │ │   │ │ └─String "\"view\"" 168..174
+│ │ │   │ ├─Comma "," 174..175
+│ │ │   │ ├─Whitespace " " 175..176
+│ │ │   │ └─EntityReference 176..194
+│ │ │   │   ├─Name 176..183
+│ │ │   │   │ └─Identifier "PhotoOp" 176..183
+│ │ │   │   ├─PathSeparator "::" 183..185
+│ │ │   │   └─String "\"comment\"" 185..194
+│ │ │   └─CloseBracket "]" 194..195
+│ │ ├─Comma "," 195..196
+│ │ ├─Newline "\n" 196..197
+│ │ ├─VariableDefinition 197..228
+│ │ │ ├─ResourceKeyword "resource" 197..205
+│ │ │ ├─Whitespace " " 205..206
+│ │ │ ├─InKeyword "in" 206..208
+│ │ │ ├─Whitespace " " 208..209
+│ │ │ └─EntityReference 209..228
+│ │ │   ├─Name 209..214
+│ │ │   │ └─Identifier "Album" 209..214
+│ │ │   ├─PathSeparator "::" 214..216
+│ │ │   └─String "\"jane_trips\"" 216..228
+│ │ └─CloseParenthesis ")" 228..229
 │ ├─Semicolon ";" 229..230
 │ └─Newline "\n\n" 230..232
 └─Policy 232..405
   ├─ForbidKeyword "forbid" 232..238
   ├─Whitespace " " 238..239
-  ├─OpenParenthesis "(" 239..240
-  ├─VariableDefinition 240..249
-  │ └─PrincipalKeyword "principal" 240..249
-  ├─Comma "," 249..250
-  ├─Whitespace " " 250..251
-  ├─VariableDefinition 251..257
-  │ └─ActionKeyword "action" 251..257
-  ├─Comma "," 257..258
-  ├─Whitespace " " 258..259
-  ├─VariableDefinition 259..267
-  │ └─ResourceKeyword "resource" 259..267
-  ├─CloseParenthesis ")" 267..268
-  ├─Whitespace "           " 268..279
-  ├─Comment "// Policy c2" 279..291
-  ├─Newline "\n" 291..292
+  ├─Scope 239..292
+  │ ├─OpenParenthesis "(" 239..240
+  │ ├─VariableDefinition 240..249
+  │ │ └─PrincipalKeyword "principal" 240..249
+  │ ├─Comma "," 249..250
+  │ ├─Whitespace " " 250..251
+  │ ├─VariableDefinition 251..257
+  │ │ └─ActionKeyword "action" 251..257
+  │ ├─Comma "," 257..258
+  │ ├─Whitespace " " 258..259
+  │ ├─VariableDefinition 259..267
+  │ │ └─ResourceKeyword "resource" 259..267
+  │ ├─CloseParenthesis ")" 267..268
+  │ ├─Whitespace "           " 268..279
+  │ ├─Comment "// Policy c2" 279..291
+  │ └─Newline "\n" 291..292
   ├─Condition 292..368
   │ ├─WhenKeyword "when" 292..296
   │ ├─Whitespace "   " 296..299

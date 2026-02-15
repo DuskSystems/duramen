@@ -6,31 +6,32 @@ Policies 0..89
 ├─Policy 0..70
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
-│ ├─OpenParenthesis "(" 7..8
-│ ├─VariableDefinition 8..20
-│ │ ├─PrincipalKeyword "principal" 8..17
-│ │ ├─Colon ":" 17..18
-│ │ ├─Whitespace " " 18..19
-│ │ └─Name 19..20
-│ │   └─Identifier "p" 19..20
-│ ├─Comma "," 20..21
-│ ├─Whitespace " " 21..22
-│ ├─VariableDefinition 22..31
-│ │ ├─ActionKeyword "action" 22..28
-│ │ ├─Colon ":" 28..29
-│ │ ├─Whitespace " " 29..30
-│ │ └─Name 30..31
-│ │   └─Identifier "a" 30..31
-│ ├─Comma "," 31..32
-│ ├─Whitespace " " 32..33
-│ ├─VariableDefinition 33..44
-│ │ ├─ResourceKeyword "resource" 33..41
-│ │ ├─Colon ":" 41..42
-│ │ ├─Whitespace " " 42..43
-│ │ └─Name 43..44
-│ │   └─Identifier "r" 43..44
-│ ├─CloseParenthesis ")" 44..45
-│ ├─Newline "\n" 45..46
+│ ├─Scope 7..46
+│ │ ├─OpenParenthesis "(" 7..8
+│ │ ├─VariableDefinition 8..20
+│ │ │ ├─PrincipalKeyword "principal" 8..17
+│ │ │ ├─Colon ":" 17..18
+│ │ │ ├─Whitespace " " 18..19
+│ │ │ └─Name 19..20
+│ │ │   └─Identifier "p" 19..20
+│ │ ├─Comma "," 20..21
+│ │ ├─Whitespace " " 21..22
+│ │ ├─VariableDefinition 22..31
+│ │ │ ├─ActionKeyword "action" 22..28
+│ │ │ ├─Colon ":" 28..29
+│ │ │ ├─Whitespace " " 29..30
+│ │ │ └─Name 30..31
+│ │ │   └─Identifier "a" 30..31
+│ │ ├─Comma "," 31..32
+│ │ ├─Whitespace " " 32..33
+│ │ ├─VariableDefinition 33..44
+│ │ │ ├─ResourceKeyword "resource" 33..41
+│ │ │ ├─Colon ":" 41..42
+│ │ │ ├─Whitespace " " 42..43
+│ │ │ └─Name 43..44
+│ │ │   └─Identifier "r" 43..44
+│ │ ├─CloseParenthesis ")" 44..45
+│ │ └─Newline "\n" 45..46
 │ ├─Condition 46..57
 │ │ ├─WhenKeyword "when" 46..50
 │ │ ├─Whitespace " " 50..51

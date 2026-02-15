@@ -8,6 +8,7 @@ Policies 0..47
 │ │ ├─At "@" 0..1
 │ │ ├─Identifier "id" 1..3
 │ │ ├─OpenParenthesis "(" 3..4
+│ │ ├─String "" 4..4
 │ │ └─CloseParenthesis "" 4..4
 │ └─Semicolon "" 4..4
 └─Policy 4..47
@@ -19,17 +20,18 @@ Policies 0..47
   │ └─Newline "\n" 8..9
   ├─PermitKeyword "permit" 9..15
   ├─Whitespace " " 15..16
-  ├─OpenParenthesis "(" 16..17
-  ├─VariableDefinition 17..26
-  │ └─PrincipalKeyword "principal" 17..26
-  ├─Comma "," 26..27
-  ├─Whitespace " " 27..28
-  ├─VariableDefinition 28..34
-  │ └─ActionKeyword "action" 28..34
-  ├─Comma "," 34..35
-  ├─Whitespace " " 35..36
-  ├─VariableDefinition 36..44
-  │ └─ResourceKeyword "resource" 36..44
-  ├─CloseParenthesis ")" 44..45
+  ├─Scope 16..45
+  │ ├─OpenParenthesis "(" 16..17
+  │ ├─VariableDefinition 17..26
+  │ │ └─PrincipalKeyword "principal" 17..26
+  │ ├─Comma "," 26..27
+  │ ├─Whitespace " " 27..28
+  │ ├─VariableDefinition 28..34
+  │ │ └─ActionKeyword "action" 28..34
+  │ ├─Comma "," 34..35
+  │ ├─Whitespace " " 35..36
+  │ ├─VariableDefinition 36..44
+  │ │ └─ResourceKeyword "resource" 36..44
+  │ └─CloseParenthesis ")" 44..45
   ├─Semicolon ";" 45..46
   └─Newline "\n" 46..47
