@@ -24,16 +24,17 @@ Policies 0..62
   │ ├─Whitespace " " 41..42
   │ ├─OpenBrace "{" 42..43
   │ ├─Whitespace " " 43..44
-  │ └─IfExpression 44..60
-  │   ├─IfKeyword "if" 44..46
-  │   ├─Error 46..48
-  │   │ └─PathSeparator "::" 46..48
-  │   ├─ThenKeyword "then" 48..52
-  │   ├─Error 52..54
-  │   │ └─PathSeparator "::" 52..54
-  │   ├─ElseKeyword "else" 54..58
-  │   ├─Whitespace " " 58..59
-  │   └─Error 59..60
-  │     └─CloseBrace "}" 59..60
+  │ ├─IfExpression 44..60
+  │ │ ├─IfKeyword "if" 44..46
+  │ │ ├─Error 46..48
+  │ │ │ └─PathSeparator "::" 46..48
+  │ │ ├─ThenKeyword "then" 48..52
+  │ │ ├─Error 52..54
+  │ │ │ └─PathSeparator "::" 52..54
+  │ │ ├─ElseKeyword "else" 54..58
+  │ │ ├─Whitespace " " 58..59
+  │ │ └─Error 59..60
+  │ │   └─CloseBrace "}" 59..60
+  │ └─CloseBrace "" 60..60
   ├─Semicolon ";" 60..61
   └─Newline "\n" 61..62

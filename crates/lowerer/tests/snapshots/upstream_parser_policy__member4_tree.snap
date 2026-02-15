@@ -1,0 +1,54 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+Policies 0..81
+└─Policy 0..81
+  ├─PermitKeyword "permit" 0..6
+  ├─Whitespace " " 6..7
+  ├─OpenParenthesis "(" 7..8
+  ├─VariableDefinition 8..17
+  │ └─PrincipalKeyword "principal" 8..17
+  ├─Comma "," 17..18
+  ├─Whitespace " " 18..19
+  ├─VariableDefinition 19..25
+  │ └─ActionKeyword "action" 19..25
+  ├─Comma "," 25..26
+  ├─Whitespace " " 26..27
+  ├─VariableDefinition 27..35
+  │ └─ResourceKeyword "resource" 27..35
+  ├─CloseParenthesis ")" 35..36
+  ├─Newline "\n" 36..37
+  ├─Condition 37..79
+  │ ├─WhenKeyword "when" 37..41
+  │ ├─Whitespace " " 41..42
+  │ ├─OpenBrace "{" 42..43
+  │ ├─Newline "\n" 43..44
+  │ ├─Whitespace "    " 44..48
+  │ ├─Record 48..78
+  │ │ ├─OpenBrace "{" 48..49
+  │ │ ├─RecordEntry 49..61
+  │ │ │ └─Error 49..61
+  │ │ │   ├─Integer "3" 49..50
+  │ │ │   ├─Less "<" 50..51
+  │ │ │   ├─Subtract "-" 51..52
+  │ │ │   ├─Integer "4" 52..53
+  │ │ │   ├─Colon ":" 53..54
+  │ │ │   └─String "\"what?\"" 54..61
+  │ │ ├─Comma "," 61..62
+  │ │ ├─RecordEntry 62..76
+  │ │ │ ├─String "\"ok then\"" 62..71
+  │ │ │ ├─Colon ":" 71..72
+  │ │ │ └─RelationExpression 72..76
+  │ │ │   ├─UnaryExpression 72..74
+  │ │ │   │ ├─Subtract "-" 72..73
+  │ │ │   │ └─Literal 73..74
+  │ │ │   │   └─Integer "5" 73..74
+  │ │ │   ├─Greater ">" 74..75
+  │ │ │   └─Literal 75..76
+  │ │ │     └─Integer "4" 75..76
+  │ │ ├─CloseBrace "}" 76..77
+  │ │ └─Newline "\n" 77..78
+  │ └─CloseBrace "}" 78..79
+  ├─Semicolon ";" 79..80
+  └─Newline "\n" 80..81

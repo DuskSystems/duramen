@@ -19,27 +19,30 @@ Policies 0..69
 │ │ └─ResourceKeyword "resource" 27..35
 │ ├─CloseParenthesis ")" 35..36
 │ ├─Newline "\n" 36..37
-│ └─Condition 37..64
-│   ├─WhenKeyword "when" 37..41
-│   ├─Whitespace " " 41..42
-│   ├─OpenBrace "{" 42..43
-│   ├─Newline "\n" 43..44
-│   ├─Whitespace "    " 44..48
-│   └─HasExpression 48..64
-│     ├─Name 48..58
-│     │ ├─PrincipalKeyword "principal" 48..57
-│     │ └─Whitespace " " 57..58
-│     ├─HasKeyword "has" 58..61
-│     ├─Whitespace " " 61..62
-│     └─MemberExpression 62..64
-│       ├─Name 62..63
-│       │ └─Identifier "a" 62..63
-│       └─Field 63..64
-│         └─Dot "." 63..64
+│ ├─Condition 37..64
+│ │ ├─WhenKeyword "when" 37..41
+│ │ ├─Whitespace " " 41..42
+│ │ ├─OpenBrace "{" 42..43
+│ │ ├─Newline "\n" 43..44
+│ │ ├─Whitespace "    " 44..48
+│ │ ├─HasExpression 48..64
+│ │ │ ├─Name 48..58
+│ │ │ │ ├─PrincipalKeyword "principal" 48..57
+│ │ │ │ └─Whitespace " " 57..58
+│ │ │ ├─HasKeyword "has" 58..61
+│ │ │ ├─Whitespace " " 61..62
+│ │ │ └─MemberExpression 62..64
+│ │ │   ├─Name 62..63
+│ │ │   │ └─Identifier "a" 62..63
+│ │ │   └─Field 63..64
+│ │ │     └─Dot "." 63..64
+│ │ └─CloseBrace "" 64..64
+│ └─Semicolon "" 64..64
 └─Policy 64..69
-  └─Error 64..69
-    ├─Integer "1" 64..65
-    ├─Newline "\n" 65..66
-    ├─CloseBrace "}" 66..67
-    ├─Semicolon ";" 67..68
-    └─Newline "\n" 68..69
+  ├─Error 64..69
+  │ ├─Integer "1" 64..65
+  │ ├─Newline "\n" 65..66
+  │ ├─CloseBrace "}" 66..67
+  │ ├─Semicolon ";" 67..68
+  │ └─Newline "\n" 68..69
+  └─Semicolon "" 69..69

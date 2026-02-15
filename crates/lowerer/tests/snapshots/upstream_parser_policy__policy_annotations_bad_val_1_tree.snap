@@ -4,11 +4,13 @@ expression: value
 ---
 Policies 0..75
 ├─Policy 0..21
-│ └─Annotation 0..21
-│   ├─At "@" 0..1
-│   ├─Identifier "bad_annotation" 1..15
-│   ├─OpenParenthesis "(" 15..16
-│   └─String "\"bad\"" 16..21
+│ ├─Annotation 0..21
+│ │ ├─At "@" 0..1
+│ │ ├─Identifier "bad_annotation" 1..15
+│ │ ├─OpenParenthesis "(" 15..16
+│ │ ├─String "\"bad\"" 16..21
+│ │ └─CloseParenthesis "" 21..21
+│ └─Semicolon "" 21..21
 └─Policy 21..75
   ├─Error 21..37
   │ ├─Comma "," 21..22

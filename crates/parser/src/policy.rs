@@ -3,6 +3,7 @@ use duramen_lexer::TokenKind;
 use duramen_syntax::{Group, Tree};
 
 use crate::common::Parser;
+use crate::error::ParseError;
 
 /// Binding power and syntax kind for an infix operator.
 struct InfixOperator {
@@ -66,6 +67,7 @@ impl<'src> PolicyParser<'src> {
             TokenKind::PermitKeyword,
             TokenKind::ForbidKeyword,
         ]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Group::Error);
             while !self.parser.at(&[
                 TokenKind::Eof,
@@ -79,6 +81,9 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
 
         while self.parser.at(&[TokenKind::At]) {
@@ -105,7 +110,7 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.eat(TokenKind::Comma);
-            self.parser.eat(TokenKind::CloseParenthesis);
+            self.parser.expect(TokenKind::CloseParenthesis);
         }
 
         while self
@@ -117,7 +122,7 @@ impl<'src> PolicyParser<'src> {
             self.parser.advance_pop();
         }
 
-        self.parser.eat(TokenKind::Semicolon);
+        self.parser.expect(TokenKind::Semicolon);
         self.parser.builder.close(&branch);
     }
 
@@ -189,7 +194,7 @@ impl<'src> PolicyParser<'src> {
                 self.expression();
             }
 
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
         }
 
         self.parser.builder.close(&branch);
@@ -365,7 +370,7 @@ impl<'src> PolicyParser<'src> {
                             self.argument_list();
                         }
 
-                        self.parser.eat(TokenKind::CloseParenthesis);
+                        self.parser.expect(TokenKind::CloseParenthesis);
                         self.parser.builder.commit(&inner, Group::Call);
                     } else {
                         self.parser.builder.commit(&inner, Group::Field);
@@ -379,7 +384,7 @@ impl<'src> PolicyParser<'src> {
                         self.argument_list();
                     }
 
-                    self.parser.eat(TokenKind::CloseParenthesis);
+                    self.parser.expect(TokenKind::CloseParenthesis);
                     self.parser.builder.commit(&inner, Group::Call);
                 }
                 _ => {
@@ -387,7 +392,7 @@ impl<'src> PolicyParser<'src> {
 
                     self.parser.next();
                     self.expression();
-                    self.parser.eat(TokenKind::CloseBracket);
+                    self.parser.expect(TokenKind::CloseBracket);
 
                     self.parser.builder.commit(&inner, Group::Index);
                 }
@@ -426,7 +431,7 @@ impl<'src> PolicyParser<'src> {
         if self.parser.at(&[TokenKind::OpenParenthesis]) {
             self.parser.next();
             self.expression();
-            self.parser.eat(TokenKind::CloseParenthesis);
+            self.parser.expect(TokenKind::CloseParenthesis);
             self.parser
                 .builder
                 .commit(&checkpoint, Group::Parenthesized);
@@ -440,7 +445,7 @@ impl<'src> PolicyParser<'src> {
                 self.argument_list();
             }
 
-            self.parser.eat(TokenKind::CloseBracket);
+            self.parser.expect(TokenKind::CloseBracket);
             self.parser.builder.commit(&checkpoint, Group::List);
 
             return;
@@ -449,7 +454,7 @@ impl<'src> PolicyParser<'src> {
         if self.parser.at(&[TokenKind::OpenBrace]) {
             self.parser.next();
             self.record_entries();
-            self.parser.eat(TokenKind::CloseBrace);
+            self.parser.expect(TokenKind::CloseBrace);
             self.parser.builder.commit(&checkpoint, Group::Record);
 
             return;
@@ -461,9 +466,13 @@ impl<'src> PolicyParser<'src> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
     }
 
@@ -486,6 +495,7 @@ impl<'src> PolicyParser<'src> {
             .parser
             .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
         {
+            let start = self.parser.position;
             let err = self.parser.builder.open(Group::Error);
             while !self
                 .parser
@@ -497,6 +507,9 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
         }
 
         self.parser.builder.close(&branch);
@@ -605,9 +618,13 @@ impl<'src> PolicyParser<'src> {
             }
         } else if !self.parser.at(&[TokenKind::Eof]) {
             self.parser.builder.close(&branch);
+            let start = self.parser.position;
             let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
+            self.parser.diagnostics.push(ParseError::Unexpected {
+                span: start..self.parser.position,
+            });
 
             return;
         }

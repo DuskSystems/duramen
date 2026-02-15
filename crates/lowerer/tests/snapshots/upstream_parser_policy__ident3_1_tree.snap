@@ -24,10 +24,11 @@ Policies 0..50
   │ ├─Whitespace " " 41..42
   │ ├─OpenBrace "{" 42..43
   │ ├─Whitespace " " 43..44
-  │ └─IfExpression 44..48
-  │   ├─IfKeyword "if" 44..46
-  │   ├─Whitespace " " 46..47
-  │   └─Error 47..48
-  │     └─CloseBrace "}" 47..48
+  │ ├─IfExpression 44..48
+  │ │ ├─IfKeyword "if" 44..46
+  │ │ ├─Whitespace " " 46..47
+  │ │ └─Error 47..48
+  │ │   └─CloseBrace "}" 47..48
+  │ └─CloseBrace "" 48..48
   ├─Semicolon ";" 48..49
   └─Newline "\n" 49..50

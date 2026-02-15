@@ -1,0 +1,28 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: expected `;`
+  ╭▸ policies5:6:1
+  │
+6 │ advice {
+  ╰╴━ expected `;`
+error: unexpected token
+  ╭▸ policies5:6:1
+  │
+6 │ ┏ advice {
+7 │ ┃     "{\"type\":\"PhotoFilterInstruction\", \"anonymize\":true}"
+8 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `;`
+  ╭▸ policies5:8:4
+  │
+8 │ };
+  ╰╴  ━ expected `;`
+error: missing policy effect
+  ╭▸ policies5:6:1
+  │
+6 │ ┏ advice {
+7 │ ┃     "{\"type\":\"PhotoFilterInstruction\", \"anonymize\":true}"
+8 │ ┃ };
+  ╰╴┗━━━┛ expected `permit` or `forbid`

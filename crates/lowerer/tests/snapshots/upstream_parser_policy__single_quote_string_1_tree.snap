@@ -19,29 +19,32 @@ Policies 0..73
 │ │ └─ResourceKeyword "resource" 27..35
 │ ├─CloseParenthesis ")" 35..36
 │ ├─Newline "\n" 36..37
-│ └─Condition 37..65
-│   ├─WhenKeyword "when" 37..41
-│   ├─Whitespace " " 41..42
-│   ├─OpenBrace "{" 42..43
-│   ├─Newline "\n" 43..44
-│   ├─Whitespace "    " 44..48
-│   └─RelationExpression 48..65
-│     ├─MemberExpression 48..62
-│     │ ├─Name 48..57
-│     │ │ └─PrincipalKeyword "principal" 48..57
-│     │ └─Field 57..62
-│     │   ├─Dot "." 57..58
-│     │   ├─Identifier "foo" 58..61
-│     │   └─Whitespace " " 61..62
-│     ├─Assign "=" 62..63
-│     ├─Whitespace " " 63..64
-│     └─Error 64..65
-│       └─Unknown "'" 64..65
+│ ├─Condition 37..65
+│ │ ├─WhenKeyword "when" 37..41
+│ │ ├─Whitespace " " 41..42
+│ │ ├─OpenBrace "{" 42..43
+│ │ ├─Newline "\n" 43..44
+│ │ ├─Whitespace "    " 44..48
+│ │ ├─RelationExpression 48..65
+│ │ │ ├─MemberExpression 48..62
+│ │ │ │ ├─Name 48..57
+│ │ │ │ │ └─PrincipalKeyword "principal" 48..57
+│ │ │ │ └─Field 57..62
+│ │ │ │   ├─Dot "." 57..58
+│ │ │ │   ├─Identifier "foo" 58..61
+│ │ │ │   └─Whitespace " " 61..62
+│ │ │ ├─Assign "=" 62..63
+│ │ │ ├─Whitespace " " 63..64
+│ │ │ └─Error 64..65
+│ │ │   └─Unknown "'" 64..65
+│ │ └─CloseBrace "" 65..65
+│ └─Semicolon "" 65..65
 └─Policy 65..73
-  └─Error 65..73
-    ├─Identifier "bar" 65..68
-    ├─Unknown "'" 68..69
-    ├─Newline "\n" 69..70
-    ├─CloseBrace "}" 70..71
-    ├─Semicolon ";" 71..72
-    └─Newline "\n" 72..73
+  ├─Error 65..73
+  │ ├─Identifier "bar" 65..68
+  │ ├─Unknown "'" 68..69
+  │ ├─Newline "\n" 69..70
+  │ ├─CloseBrace "}" 70..71
+  │ ├─Semicolon ";" 71..72
+  │ └─Newline "\n" 72..73
+  └─Semicolon "" 73..73

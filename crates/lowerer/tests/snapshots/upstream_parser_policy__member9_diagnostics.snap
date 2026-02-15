@@ -1,0 +1,14 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+error: unexpected token
+  ╭▸ member9:3:35
+  │
+3 │     AllRects({two: 2, four: 3 + 5 / 5})
+  ╰╴                                  ━━━ unexpected token
+error: `AllRects` is not a known function
+  ╭▸ member9:3:5
+  │
+3 │     AllRects({two: 2, four: 3 + 5 / 5})
+  ╰╴    ━━━━━━━━ unknown function

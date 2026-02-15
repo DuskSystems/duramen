@@ -4,12 +4,15 @@ expression: value
 ---
 Policies 0..81
 ├─Policy 0..73
-│ └─Annotation 0..73
-│   ├─At "@" 0..1
-│   ├─Identifier "id" 1..3
-│   ├─OpenParenthesis "(" 3..4
-│   └─String "\"0)\npermit (principal, action, resource)\nwhen {\n    principal.foo = \"" 4..73
+│ ├─Annotation 0..73
+│ │ ├─At "@" 0..1
+│ │ ├─Identifier "id" 1..3
+│ │ ├─OpenParenthesis "(" 3..4
+│ │ ├─String "\"0)\npermit (principal, action, resource)\nwhen {\n    principal.foo = \"" 4..73
+│ │ └─CloseParenthesis "" 73..73
+│ └─Semicolon "" 73..73
 └─Policy 73..81
-  └─Error 73..81
-    ├─Identifier "bar" 73..76
-    └─Unknown "\"\n};\n" 76..81
+  ├─Error 73..81
+  │ ├─Identifier "bar" 73..76
+  │ └─Unknown "\"\n};\n" 76..81
+  └─Semicolon "" 81..81

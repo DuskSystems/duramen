@@ -3,14 +3,27 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `)`
-  ╭▸ unclosed_strings_4:1:5
+  ╭▸ unclosed_strings_4:4:22
   │
-1 │   @id("0)
-  │ ┏━━━━━┛
-2 │ ┃ permit (principal, action, resource)
-3 │ ┃ when {
-4 │ ┃     principal.foo = "bar"
-  ╰╴┗━━━━━━━━━━━━━━━━━━━━━┛ expected `)`
+4 │     principal.foo = "bar"
+  ╰╴                     ━ expected `)`
+error: expected `;`
+  ╭▸ unclosed_strings_4:4:22
+  │
+4 │     principal.foo = "bar"
+  ╰╴                     ━ expected `;`
+error: unexpected token
+  ╭▸ unclosed_strings_4:4:22
+  │
+4 │       principal.foo = "bar"
+  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+5 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `;`
+  ╭▸ unclosed_strings_4:5:4
+  │
+5 │ };
+  ╰╴  ━ expected `;`
 error: missing policy effect
   ╭▸ unclosed_strings_4:1:1
   │

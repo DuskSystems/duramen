@@ -73,13 +73,16 @@ impl<'src> Parser<'src> {
         }
     }
 
-    /// Consumes the current token and moves to the next non-trivial token.
-    pub fn next(&mut self) {
+    /// Emits the current token to the tree without advancing.
+    pub fn emit(&mut self) {
         if self.current.kind != TokenKind::Eof {
             self.builder.token(self.current.kind, self.current.len);
             self.position += self.current.len;
         }
+    }
 
+    /// Skips trivia and sets current to the next non-trivial token.
+    pub fn advance(&mut self) {
         loop {
             let token = self.lexer.next().unwrap_or(Token {
                 kind: TokenKind::Eof,
@@ -93,6 +96,27 @@ impl<'src> Parser<'src> {
                 self.current = token;
                 break;
             }
+        }
+    }
+
+    /// Emits the current token and advances to the next non-trivial token.
+    pub fn next(&mut self) {
+        self.emit();
+        self.advance();
+    }
+
+    /// Consumes the token if it matches, otherwise emits a zero-width placeholder and a `Missing` diagnostic.
+    pub fn expect(&mut self, kind: TokenKind) -> bool {
+        if self.current.kind == kind {
+            self.next();
+            true
+        } else {
+            self.diagnostics.push(ParseError::Missing {
+                span: self.position..self.position,
+                expected: kind,
+            });
+            self.builder.token(kind, 0);
+            false
         }
     }
 
@@ -111,7 +135,7 @@ impl<'src> Parser<'src> {
 
         if self.eat(TokenKind::OpenParenthesis) {
             self.eat(TokenKind::String);
-            self.eat(TokenKind::CloseParenthesis);
+            self.expect(TokenKind::CloseParenthesis);
         }
 
         self.builder.close(&branch);

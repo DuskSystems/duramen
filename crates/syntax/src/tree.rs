@@ -148,6 +148,14 @@ impl<'a> Node<'a> {
         self.children().find(|child| child.kind() == kind)
     }
 
+    /// Returns `true` if a non-zero-width child of this kind exists.
+    #[must_use]
+    pub fn has<S: Into<Syntax>>(&self, kind: S) -> bool {
+        let kind = kind.into();
+        self.children()
+            .any(|child| child.kind() == kind && child.range().start != child.range().end)
+    }
+
     /// Returns children after the first occurrence of a child with the given kind.
     ///
     /// Skips all children up to and including the marker, then yields the rest.

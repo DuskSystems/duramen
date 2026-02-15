@@ -19,29 +19,32 @@ Policies 0..75
 │ │ └─ResourceKeyword "resource" 27..35
 │ ├─CloseParenthesis ")" 35..36
 │ ├─Newline "\n" 36..37
-│ └─Condition 37..46
-│   ├─WhenKeyword "when" 37..41
-│   ├─Whitespace " " 41..42
-│   ├─OpenBrace "{" 42..43
-│   ├─Whitespace " " 43..44
-│   └─Literal 44..46
-│     ├─Integer "1" 44..45
-│     └─Whitespace " " 45..46
+│ ├─Condition 37..46
+│ │ ├─WhenKeyword "when" 37..41
+│ │ ├─Whitespace " " 41..42
+│ │ ├─OpenBrace "{" 42..43
+│ │ ├─Whitespace " " 43..44
+│ │ ├─Literal 44..46
+│ │ │ ├─Integer "1" 44..45
+│ │ │ └─Whitespace " " 45..46
+│ │ └─CloseBrace "" 46..46
+│ └─Semicolon "" 46..46
 └─Policy 46..75
-  └─Error 46..75
-    ├─Unknown "/" 46..47
-    ├─Multiply "*" 47..48
-    ├─Whitespace " " 48..49
-    ├─Identifier "multi" 49..54
-    ├─Subtract "-" 54..55
-    ├─Identifier "line" 55..59
-    ├─Newline "\n" 59..60
-    ├─Identifier "comment" 60..67
-    ├─Whitespace " " 67..68
-    ├─Multiply "*" 68..69
-    ├─Unknown "/" 69..70
-    ├─Identifier "d" 70..71
-    ├─Whitespace " " 71..72
-    ├─CloseBrace "}" 72..73
-    ├─Semicolon ";" 73..74
-    └─Newline "\n" 74..75
+  ├─Error 46..75
+  │ ├─Unknown "/" 46..47
+  │ ├─Multiply "*" 47..48
+  │ ├─Whitespace " " 48..49
+  │ ├─Identifier "multi" 49..54
+  │ ├─Subtract "-" 54..55
+  │ ├─Identifier "line" 55..59
+  │ ├─Newline "\n" 59..60
+  │ ├─Identifier "comment" 60..67
+  │ ├─Whitespace " " 67..68
+  │ ├─Multiply "*" 68..69
+  │ ├─Unknown "/" 69..70
+  │ ├─Identifier "d" 70..71
+  │ ├─Whitespace " " 71..72
+  │ ├─CloseBrace "}" 72..73
+  │ ├─Semicolon ";" 73..74
+  │ └─Newline "\n" 74..75
+  └─Semicolon "" 75..75
