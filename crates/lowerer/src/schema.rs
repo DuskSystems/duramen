@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::{Group, Syntax, Token, Tree};
 
@@ -66,7 +66,10 @@ impl SchemaLowerer {
             {
                 match ast::Namespace::new(annotations, None, top_declarations) {
                     Ok(namespace) => namespaces.push(namespace),
-                    Err(error) => this.ctx.diagnostics.push(error),
+                    Err(error) => this
+                        .ctx
+                        .diagnostics
+                        .push(Diagnostic::from(error).with_label(schema.range(), "in this schema")),
                 }
             }
 
@@ -127,7 +130,10 @@ impl SchemaLowerer {
         match ast::Namespace::new(annotations, name, declarations) {
             Ok(namespace) => Some(namespace),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error).with_label(namespace.range(), "in this namespace"),
+                );
+
                 None
             }
         }
@@ -166,7 +172,11 @@ impl SchemaLowerer {
             return match ast::EntityDeclaration::new(annotations, names, kind) {
                 Ok(declaration) => Some(declaration),
                 Err(error) => {
-                    self.ctx.diagnostics.push(error);
+                    self.ctx.diagnostics.push(
+                        Diagnostic::from(error)
+                            .with_label(entity.range(), "in this entity declaration"),
+                    );
+
                     None
                 }
             };
@@ -192,7 +202,11 @@ impl SchemaLowerer {
         let standard = match ast::StandardEntity::new(parents, attributes, tags) {
             Ok(standard) => standard,
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error)
+                        .with_label(entity.range(), "in this entity declaration"),
+                );
+
                 return None;
             }
         };
@@ -202,7 +216,11 @@ impl SchemaLowerer {
         match ast::EntityDeclaration::new(annotations, names, kind) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error)
+                        .with_label(entity.range(), "in this entity declaration"),
+                );
+
                 None
             }
         }
@@ -244,7 +262,11 @@ impl SchemaLowerer {
         match ast::ActionDeclaration::new(annotations, names, parents, applies_to, attributes) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error)
+                        .with_label(action.range(), "in this action declaration"),
+                );
+
                 None
             }
         }
@@ -305,7 +327,11 @@ impl SchemaLowerer {
         match ast::AppliesTo::new(principals, resources, context) {
             Ok(applies_to) => Some(applies_to),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error)
+                        .with_label(applies_to.range(), "in this `appliesTo` clause"),
+                );
+
                 None
             }
         }
@@ -362,7 +388,11 @@ impl SchemaLowerer {
         match ast::TypeDeclaration::new(annotations, identifier, definition) {
             Ok(declaration) => Some(declaration),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error)
+                        .with_label(type_declaration.range(), "in this type declaration"),
+                );
+
                 None
             }
         }
@@ -412,7 +442,10 @@ impl SchemaLowerer {
         match ast::RecordType::new(attributes) {
             Ok(record_type) => Some(record_type),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error).with_label(record.range(), "in this record type"),
+                );
+
                 None
             }
         }
@@ -465,7 +498,10 @@ impl SchemaLowerer {
         match ast::EnumType::new(variants) {
             Ok(enum_type) => Some(enum_type),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx.diagnostics.push(
+                    Diagnostic::from(error).with_label(enum_type.range(), "in this enum type"),
+                );
+
                 None
             }
         }
