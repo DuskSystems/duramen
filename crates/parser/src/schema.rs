@@ -1,6 +1,6 @@
 use duramen_diagnostic::Diagnostics;
 use duramen_lexer::TokenKind;
-use duramen_syntax::{Syntax, Tree};
+use duramen_syntax::{Group, Tree};
 
 use crate::common::Parser;
 
@@ -30,7 +30,7 @@ impl<'src> SchemaParser<'src> {
     /// namespace Acme { entity User; }
     /// ```
     fn schema(&mut self) {
-        let branch = self.parser.builder.open(Syntax::Schema);
+        let branch = self.parser.builder.open(Group::Schema);
         self.parser.next();
 
         while !self.parser.at(&[TokenKind::Eof]) {
@@ -51,7 +51,7 @@ impl<'src> SchemaParser<'src> {
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::CloseBrace]) {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
 
@@ -64,7 +64,7 @@ impl<'src> SchemaParser<'src> {
             self.namespace_body();
             self.parser
                 .builder
-                .commit(&checkpoint, Syntax::NamespaceDeclaration);
+                .commit(&checkpoint, Group::NamespaceDeclaration);
 
             return;
         }
@@ -78,7 +78,7 @@ impl<'src> SchemaParser<'src> {
     /// namespace Inner { entity Foo; }
     /// ```
     fn nested_namespace(&mut self) {
-        let branch = self.parser.builder.open(Syntax::NamespaceDeclaration);
+        let branch = self.parser.builder.open(Group::NamespaceDeclaration);
 
         self.nested_namespace_body();
 
@@ -99,7 +99,7 @@ impl<'src> SchemaParser<'src> {
     /// ```
     fn namespace_body(&mut self) {
         if !self.parser.at(&[TokenKind::OpenBrace]) {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
 
@@ -156,35 +156,35 @@ impl<'src> SchemaParser<'src> {
                     self.entity_declaration_body();
                     self.parser
                         .builder
-                        .commit(&checkpoint, Syntax::EntityDeclaration);
+                        .commit(&checkpoint, Group::EntityDeclaration);
                 }
                 TokenKind::ActionKeyword => {
                     self.action_declaration_body();
                     self.parser
                         .builder
-                        .commit(&checkpoint, Syntax::ActionDeclaration);
+                        .commit(&checkpoint, Group::ActionDeclaration);
                 }
                 TokenKind::TypeKeyword => {
                     self.type_declaration_body();
                     self.parser
                         .builder
-                        .commit(&checkpoint, Syntax::TypeDeclaration);
+                        .commit(&checkpoint, Group::TypeDeclaration);
                 }
                 TokenKind::NamespaceKeyword => {
                     self.nested_namespace_body();
                     self.parser
                         .builder
-                        .commit(&checkpoint, Syntax::NamespaceDeclaration);
+                        .commit(&checkpoint, Group::NamespaceDeclaration);
                 }
                 _ => {
-                    self.parser.builder.commit(&checkpoint, Syntax::Error);
+                    self.parser.builder.commit(&checkpoint, Group::Error);
                 }
             }
 
             return;
         }
 
-        let err = self.parser.builder.open(Syntax::Error);
+        let err = self.parser.builder.open(Group::Error);
         while !self.parser.at(&[
             TokenKind::Eof,
             TokenKind::EntityKeyword,
@@ -208,7 +208,7 @@ impl<'src> SchemaParser<'src> {
     /// entity User in [UserGroup] { department: String, jobLevel: Long };
     /// ```
     fn entity_declaration(&mut self) {
-        let branch = self.parser.builder.open(Syntax::EntityDeclaration);
+        let branch = self.parser.builder.open(Group::EntityDeclaration);
 
         self.entity_declaration_body();
 
@@ -225,7 +225,7 @@ impl<'src> SchemaParser<'src> {
 
         if self.parser.eat(TokenKind::EnumKeyword) {
             if self.parser.at(&[TokenKind::OpenBracket]) {
-                let branch = self.parser.builder.open(Syntax::EnumType);
+                let branch = self.parser.builder.open(Group::EnumType);
 
                 self.parser.next();
                 self.enum_variants();
@@ -253,7 +253,7 @@ impl<'src> SchemaParser<'src> {
     /// in [UserGroup, Team]
     /// ```
     fn entity_parents(&mut self) {
-        let branch = self.parser.builder.open(Syntax::EntityParents);
+        let branch = self.parser.builder.open(Group::EntityParents);
 
         self.parser.next();
         self.type_list();
@@ -267,7 +267,7 @@ impl<'src> SchemaParser<'src> {
     /// { department: String, jobLevel: Long }
     /// ```
     fn entity_attributes(&mut self) {
-        let branch = self.parser.builder.open(Syntax::EntityAttributes);
+        let branch = self.parser.builder.open(Group::EntityAttributes);
 
         self.parser.next();
         self.attribute_entries();
@@ -299,7 +299,7 @@ impl<'src> SchemaParser<'src> {
     /// tags String
     /// ```
     fn entity_tags(&mut self) {
-        let branch = self.parser.builder.open(Syntax::EntityTags);
+        let branch = self.parser.builder.open(Group::EntityTags);
 
         self.parser.next();
         self.type_expression();
@@ -313,7 +313,7 @@ impl<'src> SchemaParser<'src> {
     /// action view appliesTo { principal: [User], resource: [Photo] };
     /// ```
     fn action_declaration(&mut self) {
-        let branch = self.parser.builder.open(Syntax::ActionDeclaration);
+        let branch = self.parser.builder.open(Group::ActionDeclaration);
 
         self.action_declaration_body();
 
@@ -346,7 +346,7 @@ impl<'src> SchemaParser<'src> {
     /// in [Action::"read", Action::"write"]
     /// ```
     fn action_parents(&mut self) {
-        let branch = self.parser.builder.open(Syntax::ActionParents);
+        let branch = self.parser.builder.open(Group::ActionParents);
 
         self.parser.next();
         if !self.parser.at(&[TokenKind::OpenBracket]) {
@@ -377,7 +377,7 @@ impl<'src> SchemaParser<'src> {
     /// appliesTo { principal: [User], resource: [Photo] }
     /// ```
     fn applies_to_clause(&mut self) {
-        let branch = self.parser.builder.open(Syntax::AppliesToClause);
+        let branch = self.parser.builder.open(Group::AppliesToClause);
         self.parser.next();
 
         if self.parser.eat(TokenKind::OpenBrace) {
@@ -404,11 +404,11 @@ impl<'src> SchemaParser<'src> {
     /// ```
     fn applies_to_entry(&mut self) {
         let (syntax, is_context) = match self.parser.kind() {
-            TokenKind::PrincipalKeyword => (Syntax::PrincipalTypes, false),
-            TokenKind::ResourceKeyword => (Syntax::ResourceTypes, false),
-            TokenKind::ContextKeyword => (Syntax::ContextType, true),
+            TokenKind::PrincipalKeyword => (Group::PrincipalTypes, false),
+            TokenKind::ResourceKeyword => (Group::ResourceTypes, false),
+            TokenKind::ContextKeyword => (Group::ContextType, true),
             _ => {
-                let err = self.parser.builder.open(Syntax::Error);
+                let err = self.parser.builder.open(Group::Error);
                 self.parser.next();
                 self.parser.builder.close(&err);
 
@@ -436,7 +436,7 @@ impl<'src> SchemaParser<'src> {
     /// attributes { name: String }
     /// ```
     fn action_attributes(&mut self) {
-        let branch = self.parser.builder.open(Syntax::ActionAttributes);
+        let branch = self.parser.builder.open(Group::ActionAttributes);
 
         self.parser.next();
         if self.parser.eat(TokenKind::OpenBrace) {
@@ -453,7 +453,7 @@ impl<'src> SchemaParser<'src> {
     /// type Email = String;
     /// ```
     fn type_declaration(&mut self) {
-        let branch = self.parser.builder.open(Syntax::TypeDeclaration);
+        let branch = self.parser.builder.open(Group::TypeDeclaration);
         self.type_declaration_body();
         self.parser.builder.close(&branch);
     }
@@ -496,7 +496,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.next();
             self.type_expression();
             self.parser.eat(TokenKind::GreaterThan);
-            self.parser.builder.commit(&checkpoint, Syntax::SetType);
+            self.parser.builder.commit(&checkpoint, Group::SetType);
 
             return;
         }
@@ -508,7 +508,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.next();
             self.enum_variants();
             self.parser.eat(TokenKind::CloseBracket);
-            self.parser.builder.commit(&checkpoint, Syntax::EnumType);
+            self.parser.builder.commit(&checkpoint, Group::EnumType);
 
             return;
         }
@@ -517,7 +517,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.next();
             self.attribute_entries();
             self.parser.eat(TokenKind::CloseBrace);
-            self.parser.builder.commit(&checkpoint, Syntax::RecordType);
+            self.parser.builder.commit(&checkpoint, Group::RecordType);
 
             return;
         }
@@ -551,7 +551,7 @@ impl<'src> SchemaParser<'src> {
             .parser
             .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
         {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             while !self
                 .parser
                 .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
@@ -566,7 +566,7 @@ impl<'src> SchemaParser<'src> {
 
         self.parser
             .builder
-            .commit(&checkpoint, Syntax::AttributeDeclaration);
+            .commit(&checkpoint, Group::AttributeDeclaration);
     }
 
     /// Parses a type list.
@@ -580,7 +580,7 @@ impl<'src> SchemaParser<'src> {
             return;
         }
 
-        let branch = self.parser.builder.open(Syntax::Types);
+        let branch = self.parser.builder.open(Group::Types);
 
         self.parser.next();
         while !self.parser.at(&[TokenKind::CloseBracket, TokenKind::Eof]) {
@@ -638,7 +638,7 @@ impl<'src> SchemaParser<'src> {
             self.parser.eat(TokenKind::String);
             self.parser
                 .builder
-                .commit(&checkpoint, Syntax::EntityReference);
+                .commit(&checkpoint, Group::EntityReference);
         }
     }
 
@@ -670,12 +670,12 @@ impl<'src> SchemaParser<'src> {
                 }
             }
 
-            self.parser.builder.commit(&checkpoint, Syntax::Name);
+            self.parser.builder.commit(&checkpoint, Group::Name);
             return;
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
         }
@@ -721,13 +721,13 @@ impl<'src> SchemaParser<'src> {
 
         if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
             self.parser.next();
-            self.parser.builder.commit(&checkpoint, Syntax::Name);
+            self.parser.builder.commit(&checkpoint, Group::Name);
 
             return;
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
         }

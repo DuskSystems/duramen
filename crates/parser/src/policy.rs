@@ -1,6 +1,6 @@
 use duramen_diagnostic::Diagnostics;
 use duramen_lexer::TokenKind;
-use duramen_syntax::{Syntax, Tree};
+use duramen_syntax::{Group, Tree};
 
 use crate::common::Parser;
 
@@ -8,7 +8,7 @@ use crate::common::Parser;
 struct InfixOperator {
     left: u8,
     right: u8,
-    kind: Syntax,
+    kind: Group,
 }
 
 /// Parses Cedar policy source text into a concrete syntax tree.
@@ -38,7 +38,7 @@ impl<'src> PolicyParser<'src> {
     /// forbid(principal == User::"tim", action, resource);
     /// ```
     fn policies(&mut self) {
-        let branch = self.parser.builder.open(Syntax::Policies);
+        let branch = self.parser.builder.open(Group::Policies);
         self.parser.next();
 
         while !self.parser.at(&[TokenKind::Eof]) {
@@ -58,7 +58,7 @@ impl<'src> PolicyParser<'src> {
     /// when { principal.department == "HardwareEngineering" && principal.jobLevel >= 5 };
     /// ```
     fn policy(&mut self) {
-        let branch = self.parser.builder.open(Syntax::Policy);
+        let branch = self.parser.builder.open(Group::Policy);
 
         if !self.parser.at(&[
             TokenKind::Eof,
@@ -66,7 +66,7 @@ impl<'src> PolicyParser<'src> {
             TokenKind::PermitKeyword,
             TokenKind::ForbidKeyword,
         ]) {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             while !self.parser.at(&[
                 TokenKind::Eof,
                 TokenKind::At,
@@ -127,7 +127,7 @@ impl<'src> PolicyParser<'src> {
     /// principal in UserGroup::"jane_friends"
     /// ```
     fn variable_declaration(&mut self) {
-        let branch = self.parser.builder.open(Syntax::VariableDefinition);
+        let branch = self.parser.builder.open(Group::VariableDefinition);
 
         if self.parser.at(&[TokenKind::QuestionMark]) {
             self.slot();
@@ -172,7 +172,7 @@ impl<'src> PolicyParser<'src> {
             self.parser.next();
         }
 
-        self.parser.builder.commit(&checkpoint, Syntax::Slot);
+        self.parser.builder.commit(&checkpoint, Group::Slot);
     }
 
     /// Parses a condition.
@@ -181,7 +181,7 @@ impl<'src> PolicyParser<'src> {
     /// when { resource.owner == principal }
     /// ```
     fn condition(&mut self) {
-        let branch = self.parser.builder.open(Syntax::Condition);
+        let branch = self.parser.builder.open(Group::Condition);
 
         self.parser.next();
         if self.parser.eat(TokenKind::OpenBrace) {
@@ -218,9 +218,7 @@ impl<'src> PolicyParser<'src> {
                 self.expression();
             }
 
-            self.parser
-                .builder
-                .commit(&checkpoint, Syntax::IfExpression);
+            self.parser.builder.commit(&checkpoint, Group::IfExpression);
         } else {
             self.pratt_expression(0);
         }
@@ -234,12 +232,12 @@ impl<'src> PolicyParser<'src> {
             TokenKind::Pipe2 | TokenKind::Pipe => Some(InfixOperator {
                 left: 1,
                 right: 2,
-                kind: Syntax::OrExpression,
+                kind: Group::OrExpression,
             }),
             TokenKind::Ampersand2 | TokenKind::Ampersand => Some(InfixOperator {
                 left: 3,
                 right: 4,
-                kind: Syntax::AndExpression,
+                kind: Group::AndExpression,
             }),
             TokenKind::LessThan
             | TokenKind::LessThanEquals
@@ -251,32 +249,32 @@ impl<'src> PolicyParser<'src> {
             | TokenKind::Equals => Some(InfixOperator {
                 left: 5,
                 right: 6,
-                kind: Syntax::RelationExpression,
+                kind: Group::RelationExpression,
             }),
             TokenKind::HasKeyword => Some(InfixOperator {
                 left: 5,
                 right: 6,
-                kind: Syntax::HasExpression,
+                kind: Group::HasExpression,
             }),
             TokenKind::LikeKeyword => Some(InfixOperator {
                 left: 5,
                 right: 6,
-                kind: Syntax::LikeExpression,
+                kind: Group::LikeExpression,
             }),
             TokenKind::IsKeyword => Some(InfixOperator {
                 left: 5,
                 right: 6,
-                kind: Syntax::IsExpression,
+                kind: Group::IsExpression,
             }),
             TokenKind::Plus | TokenKind::Minus => Some(InfixOperator {
                 left: 7,
                 right: 8,
-                kind: Syntax::SumExpression,
+                kind: Group::SumExpression,
             }),
             TokenKind::Asterisk | TokenKind::Slash | TokenKind::Percent => Some(InfixOperator {
                 left: 9,
                 right: 10,
-                kind: Syntax::ProductExpression,
+                kind: Group::ProductExpression,
             }),
             _ => None,
         }
@@ -332,7 +330,7 @@ impl<'src> PolicyParser<'src> {
         if unary {
             self.parser
                 .builder
-                .commit(&checkpoint, Syntax::UnaryExpression);
+                .commit(&checkpoint, Group::UnaryExpression);
         }
     }
 
@@ -368,9 +366,9 @@ impl<'src> PolicyParser<'src> {
                         }
 
                         self.parser.eat(TokenKind::CloseParenthesis);
-                        self.parser.builder.commit(&inner, Syntax::Call);
+                        self.parser.builder.commit(&inner, Group::Call);
                     } else {
-                        self.parser.builder.commit(&inner, Syntax::Field);
+                        self.parser.builder.commit(&inner, Group::Field);
                     }
                 }
                 TokenKind::OpenParenthesis => {
@@ -382,7 +380,7 @@ impl<'src> PolicyParser<'src> {
                     }
 
                     self.parser.eat(TokenKind::CloseParenthesis);
-                    self.parser.builder.commit(&inner, Syntax::Call);
+                    self.parser.builder.commit(&inner, Group::Call);
                 }
                 _ => {
                     let inner = self.parser.builder.checkpoint();
@@ -391,7 +389,7 @@ impl<'src> PolicyParser<'src> {
                     self.expression();
                     self.parser.eat(TokenKind::CloseBracket);
 
-                    self.parser.builder.commit(&inner, Syntax::Index);
+                    self.parser.builder.commit(&inner, Group::Index);
                 }
             }
             access = true;
@@ -401,7 +399,7 @@ impl<'src> PolicyParser<'src> {
         if access {
             self.parser
                 .builder
-                .commit(&checkpoint, Syntax::MemberExpression);
+                .commit(&checkpoint, Group::MemberExpression);
         }
     }
 
@@ -415,7 +413,7 @@ impl<'src> PolicyParser<'src> {
 
         if self.parser.kind().is_literal() {
             self.parser.next();
-            self.parser.builder.commit(&checkpoint, Syntax::Literal);
+            self.parser.builder.commit(&checkpoint, Group::Literal);
 
             return;
         }
@@ -431,7 +429,7 @@ impl<'src> PolicyParser<'src> {
             self.parser.eat(TokenKind::CloseParenthesis);
             self.parser
                 .builder
-                .commit(&checkpoint, Syntax::Parenthesized);
+                .commit(&checkpoint, Group::Parenthesized);
 
             return;
         }
@@ -443,7 +441,7 @@ impl<'src> PolicyParser<'src> {
             }
 
             self.parser.eat(TokenKind::CloseBracket);
-            self.parser.builder.commit(&checkpoint, Syntax::List);
+            self.parser.builder.commit(&checkpoint, Group::List);
 
             return;
         }
@@ -452,7 +450,7 @@ impl<'src> PolicyParser<'src> {
             self.parser.next();
             self.record_entries();
             self.parser.eat(TokenKind::CloseBrace);
-            self.parser.builder.commit(&checkpoint, Syntax::Record);
+            self.parser.builder.commit(&checkpoint, Group::Record);
 
             return;
         }
@@ -463,7 +461,7 @@ impl<'src> PolicyParser<'src> {
         }
 
         if !self.parser.at(&[TokenKind::Eof]) {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
         }
@@ -475,7 +473,7 @@ impl<'src> PolicyParser<'src> {
     /// "field": value
     /// ```
     fn record_entry(&mut self) {
-        let branch = self.parser.builder.open(Syntax::RecordEntry);
+        let branch = self.parser.builder.open(Group::RecordEntry);
 
         if self.parser.at(&[TokenKind::String]) || self.parser.kind().is_identifier() {
             self.parser.next();
@@ -488,7 +486,7 @@ impl<'src> PolicyParser<'src> {
             .parser
             .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
         {
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             while !self
                 .parser
                 .at(&[TokenKind::Eof, TokenKind::CloseBrace, TokenKind::Comma])
@@ -527,7 +525,7 @@ impl<'src> PolicyParser<'src> {
     /// ip("192.168.0.1"), ip("10.0.0.0/8")
     /// ```
     fn argument_list(&mut self) {
-        let branch = self.parser.builder.open(Syntax::Arguments);
+        let branch = self.parser.builder.open(Group::Arguments);
         self.expression();
 
         while self.parser.at(&[TokenKind::Comma]) {
@@ -555,7 +553,7 @@ impl<'src> PolicyParser<'src> {
     /// ```
     fn name(&mut self) {
         let checkpoint = self.parser.builder.checkpoint();
-        let branch = self.parser.builder.open(Syntax::Name);
+        let branch = self.parser.builder.open(Group::Name);
 
         if self.parser.kind().is_identifier() {
             self.parser.next();
@@ -572,7 +570,7 @@ impl<'src> PolicyParser<'src> {
                         self.parser.advance_pop();
                         self.parser
                             .builder
-                            .commit(&checkpoint, Syntax::EntityReference);
+                            .commit(&checkpoint, Group::EntityReference);
 
                         return;
                     }
@@ -584,7 +582,7 @@ impl<'src> PolicyParser<'src> {
                         self.parser.advance_pop();
                         self.parser
                             .builder
-                            .commit(&checkpoint, Syntax::EntityReference);
+                            .commit(&checkpoint, Group::EntityReference);
 
                         return;
                     }
@@ -607,7 +605,7 @@ impl<'src> PolicyParser<'src> {
             }
         } else if !self.parser.at(&[TokenKind::Eof]) {
             self.parser.builder.close(&branch);
-            let err = self.parser.builder.open(Syntax::Error);
+            let err = self.parser.builder.open(Group::Error);
             self.parser.next();
             self.parser.builder.close(&err);
 

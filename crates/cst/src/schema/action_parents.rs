@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -11,8 +11,8 @@ pub struct ActionParents<'a> {
 
 impl<'a> CstNode<'a> for ActionParents<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::ActionParents => Some(Self { node }),
+        match node.kind().group()? {
+            Group::ActionParents => Some(Self { node }),
             _ => None,
         }
     }
@@ -36,18 +36,18 @@ impl<'a> ActionParents<'a> {
     /// Returns the `in` keyword token.
     #[must_use]
     pub fn in_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::InKeyword)
+        self.node.child(Token::InKeyword)
     }
 
     /// Returns the opening bracket token.
     #[must_use]
     pub fn open_bracket(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenBracket)
+        self.node.child(Token::OpenBracket)
     }
 
     /// Returns the closing bracket token.
     #[must_use]
     pub fn close_bracket(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseBracket)
+        self.node.child(Token::CloseBracket)
     }
 }

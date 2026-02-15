@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::schema::TypeExpression;
@@ -10,8 +10,8 @@ pub struct SetType<'a> {
 
 impl<'a> CstNode<'a> for SetType<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::SetType => Some(Self { node }),
+        match node.kind().group()? {
+            Group::SetType => Some(Self { node }),
             _ => None,
         }
     }
@@ -31,18 +31,18 @@ impl<'a> SetType<'a> {
     /// Returns the `Set` keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::SetKeyword)
+        self.node.child(Token::SetKeyword)
     }
 
     /// Returns the opening angle bracket token.
     #[must_use]
     pub fn open_angle(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Less)
+        self.node.child(Token::Less)
     }
 
     /// Returns the closing angle bracket token.
     #[must_use]
     pub fn close_angle(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Greater)
+        self.node.child(Token::Greater)
     }
 }

@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::{ConditionKind, Expression};
@@ -10,8 +10,8 @@ pub struct Condition<'a> {
 
 impl<'a> CstNode<'a> for Condition<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Condition => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Condition => Some(Self { node }),
             _ => None,
         }
     }
@@ -25,19 +25,24 @@ impl<'a> Condition<'a> {
     /// Returns the condition kind (`when` or `unless`).
     #[must_use]
     pub fn kind(&self) -> Option<ConditionKind> {
-        self.node.children().find_map(|child| match child.kind() {
-            Syntax::WhenKeyword => Some(ConditionKind::When),
-            Syntax::UnlessKeyword => Some(ConditionKind::Unless),
-            _ => None,
-        })
+        self.node
+            .children()
+            .find_map(|child| match child.kind().token()? {
+                Token::WhenKeyword => Some(ConditionKind::When),
+                Token::UnlessKeyword => Some(ConditionKind::Unless),
+                _ => None,
+            })
     }
 
     /// Returns the condition keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node
-            .children()
-            .find(|child| matches!(child.kind(), Syntax::WhenKeyword | Syntax::UnlessKeyword))
+        self.node.children().find(|child| {
+            matches!(
+                child.kind().token(),
+                Some(Token::WhenKeyword | Token::UnlessKeyword)
+            )
+        })
     }
 
     /// Returns the body expression.
@@ -49,12 +54,12 @@ impl<'a> Condition<'a> {
     /// Returns the opening brace token.
     #[must_use]
     pub fn open_brace(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenBrace)
+        self.node.child(Token::OpenBrace)
     }
 
     /// Returns the closing brace token.
     #[must_use]
     pub fn close_brace(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseBrace)
+        self.node.child(Token::CloseBrace)
     }
 }

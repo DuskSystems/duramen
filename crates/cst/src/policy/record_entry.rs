@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Expression;
@@ -10,8 +10,8 @@ pub struct RecordEntry<'a> {
 
 impl<'a> CstNode<'a> for RecordEntry<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::RecordEntry => Some(Self { node }),
+        match node.kind().group()? {
+            Group::RecordEntry => Some(Self { node }),
             _ => None,
         }
     }
@@ -27,7 +27,7 @@ impl<'a> RecordEntry<'a> {
     pub fn key(&self) -> Option<Node<'a>> {
         self.node
             .children()
-            .find(|child| child.kind() == Syntax::String || child.kind().is_identifier())
+            .find(|child| child.kind() == Token::String || child.kind().is_identifier())
     }
 
     /// Returns the value expression.
@@ -39,6 +39,6 @@ impl<'a> RecordEntry<'a> {
     /// Returns the colon token.
     #[must_use]
     pub fn colon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Colon)
+        self.node.child(Token::Colon)
     }
 }

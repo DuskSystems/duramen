@@ -6,7 +6,7 @@ use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
 use duramen_diagnostic::Diagnostics;
 use duramen_escape::Escaper;
-use duramen_syntax::{Syntax, Tree};
+use duramen_syntax::{Group, Syntax, Token, Tree};
 
 use crate::common::LowerContext;
 use crate::error::LowerError;
@@ -35,21 +35,21 @@ impl SchemaLowerer {
         {
             for child in schema.syntax().children() {
                 match child.kind() {
-                    Syntax::EntityDeclaration => {
+                    Syntax::Group(Group::EntityDeclaration) => {
                         if let Some(entity) = cst::EntityDeclaration::cast(child)
                             && let Some(declaration) = this.lower_entity_declaration(&entity)
                         {
                             top_declarations.push(ast::Declaration::Entity(declaration));
                         }
                     }
-                    Syntax::ActionDeclaration => {
+                    Syntax::Group(Group::ActionDeclaration) => {
                         if let Some(action) = cst::ActionDeclaration::cast(child)
                             && let Some(declaration) = this.lower_action_declaration(&action)
                         {
                             top_declarations.push(ast::Declaration::Action(declaration));
                         }
                     }
-                    Syntax::TypeDeclaration => {
+                    Syntax::Group(Group::TypeDeclaration) => {
                         if let Some(type_declaration) = cst::TypeDeclaration::cast(child)
                             && let Some(declaration) =
                                 this.lower_type_declaration(&type_declaration)
@@ -89,28 +89,28 @@ impl SchemaLowerer {
 
         for child in namespace.syntax().children() {
             match child.kind() {
-                Syntax::EntityDeclaration => {
+                Syntax::Group(Group::EntityDeclaration) => {
                     if let Some(entity) = cst::EntityDeclaration::cast(child)
                         && let Some(declaration) = self.lower_entity_declaration(&entity)
                     {
                         declarations.push(ast::Declaration::Entity(declaration));
                     }
                 }
-                Syntax::ActionDeclaration => {
+                Syntax::Group(Group::ActionDeclaration) => {
                     if let Some(action) = cst::ActionDeclaration::cast(child)
                         && let Some(declaration) = self.lower_action_declaration(&action)
                     {
                         declarations.push(ast::Declaration::Action(declaration));
                     }
                 }
-                Syntax::TypeDeclaration => {
+                Syntax::Group(Group::TypeDeclaration) => {
                     if let Some(type_declaration) = cst::TypeDeclaration::cast(child)
                         && let Some(declaration) = self.lower_type_declaration(&type_declaration)
                     {
                         declarations.push(ast::Declaration::Type(declaration));
                     }
                 }
-                Syntax::NamespaceDeclaration => {
+                Syntax::Group(Group::NamespaceDeclaration) => {
                     if let Some(nested) = cst::Namespace::cast(child) {
                         self.ctx.diagnostics.push(LowerError::NestedNamespace {
                             span: nested.range(),
@@ -483,7 +483,7 @@ impl SchemaLowerer {
                 continue;
             };
 
-            let key = if name_node.kind() == Syntax::String {
+            let key = if name_node.kind() == Token::String {
                 match self.ctx.lower_string(name_node) {
                     Some(unescaped) => unescaped,
                     None => continue,

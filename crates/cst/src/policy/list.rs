@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Arguments;
@@ -10,8 +10,8 @@ pub struct List<'a> {
 
 impl<'a> CstNode<'a> for List<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::List => Some(Self { node }),
+        match node.kind().group()? {
+            Group::List => Some(Self { node }),
             _ => None,
         }
     }
@@ -31,12 +31,12 @@ impl<'a> List<'a> {
     /// Returns the opening bracket token.
     #[must_use]
     pub fn open_bracket(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenBracket)
+        self.node.child(Token::OpenBracket)
     }
 
     /// Returns the closing bracket token.
     #[must_use]
     pub fn close_bracket(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseBracket)
+        self.node.child(Token::CloseBracket)
     }
 }

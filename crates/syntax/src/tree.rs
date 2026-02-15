@@ -143,7 +143,8 @@ impl<'a> Node<'a> {
 
     /// Finds the first child with the given syntax kind.
     #[must_use]
-    pub fn child(&self, kind: Syntax) -> Option<Self> {
+    pub fn child<S: Into<Syntax>>(&self, kind: S) -> Option<Self> {
+        let kind = kind.into();
         self.children().find(|child| child.kind() == kind)
     }
 
@@ -151,7 +152,8 @@ impl<'a> Node<'a> {
     ///
     /// Skips all children up to and including the marker, then yields the rest.
     #[must_use]
-    pub fn after(&self, kind: Syntax) -> Children<'a> {
+    pub fn after<S: Into<Syntax>>(&self, kind: S) -> Children<'a> {
+        let kind = kind.into();
         let mut iter = self.children();
 
         loop {

@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 
@@ -9,8 +9,8 @@ pub struct Annotation<'a> {
 
 impl<'a> CstNode<'a> for Annotation<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Annotation => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Annotation => Some(Self { node }),
             _ => None,
         }
     }
@@ -24,7 +24,7 @@ impl<'a> Annotation<'a> {
     /// Returns the `@` token.
     #[must_use]
     pub fn at_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::At)
+        self.node.child(Token::At)
     }
 
     /// Returns the annotation name token (identifier).
@@ -38,18 +38,18 @@ impl<'a> Annotation<'a> {
     /// Returns the annotation value string token.
     #[must_use]
     pub fn value(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::String)
+        self.node.child(Token::String)
     }
 
     /// Returns the opening parenthesis token.
     #[must_use]
     pub fn open_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenParenthesis)
+        self.node.child(Token::OpenParenthesis)
     }
 
     /// Returns the closing parenthesis token.
     #[must_use]
     pub fn close_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseParenthesis)
+        self.node.child(Token::CloseParenthesis)
     }
 }

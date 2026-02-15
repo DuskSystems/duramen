@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Expression;
@@ -10,8 +10,8 @@ pub struct HasExpression<'a> {
 
 impl<'a> CstNode<'a> for HasExpression<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::HasExpression => Some(Self { node }),
+        match node.kind().group()? {
+            Group::HasExpression => Some(Self { node }),
             _ => None,
         }
     }
@@ -37,6 +37,6 @@ impl<'a> HasExpression<'a> {
     /// Returns the `has` keyword token.
     #[must_use]
     pub fn has_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::HasKeyword)
+        self.node.child(Token::HasKeyword)
     }
 }

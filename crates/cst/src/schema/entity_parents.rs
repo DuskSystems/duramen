@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -11,8 +11,8 @@ pub struct EntityParents<'a> {
 
 impl<'a> CstNode<'a> for EntityParents<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::EntityParents => Some(Self { node }),
+        match node.kind().group()? {
+            Group::EntityParents => Some(Self { node }),
             _ => None,
         }
     }
@@ -38,6 +38,6 @@ impl<'a> EntityParents<'a> {
     /// Returns the `in` keyword token.
     #[must_use]
     pub fn in_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::InKeyword)
+        self.node.child(Token::InKeyword)
     }
 }

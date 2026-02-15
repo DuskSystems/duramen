@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Annotation;
@@ -11,8 +11,8 @@ pub struct AttributeDeclaration<'a> {
 
 impl<'a> CstNode<'a> for AttributeDeclaration<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::AttributeDeclaration => Some(Self { node }),
+        match node.kind().group()? {
+            Group::AttributeDeclaration => Some(Self { node }),
             _ => None,
         }
     }
@@ -33,7 +33,7 @@ impl<'a> AttributeDeclaration<'a> {
     pub fn name(&self) -> Option<Node<'a>> {
         self.node
             .children()
-            .find(|child| matches!(child.kind(), Syntax::String) || child.kind().is_identifier())
+            .find(|child| child.kind() == Token::String || child.kind().is_identifier())
     }
 
     /// Returns whether the attribute is optional (has a `?` token).
@@ -45,7 +45,7 @@ impl<'a> AttributeDeclaration<'a> {
     /// Returns the `?` token.
     #[must_use]
     pub fn question_mark(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::QuestionMark)
+        self.node.child(Token::QuestionMark)
     }
 
     /// Returns the attribute type definition.
@@ -57,6 +57,6 @@ impl<'a> AttributeDeclaration<'a> {
     /// Returns the colon token.
     #[must_use]
     pub fn colon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Colon)
+        self.node.child(Token::Colon)
     }
 }

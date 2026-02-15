@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 use duramen_cst::CstNode as _;
 use duramen_diagnostic::Diagnostics;
 use duramen_escape::Escaper;
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Node, Token};
 use {duramen_ast as ast, duramen_cst as cst};
 
 use crate::error::LowerError;
@@ -71,11 +71,11 @@ impl LowerContext {
 
         for annotation in annotations {
             let node = annotation.syntax();
-            if node.child(Syntax::OpenParenthesis).is_some()
-                && node.child(Syntax::CloseParenthesis).is_none()
+            if node.child(Token::OpenParenthesis).is_some()
+                && node.child(Token::CloseParenthesis).is_none()
             {
                 let span = if let Some(child) = node
-                    .after(Syntax::OpenParenthesis)
+                    .after(Token::OpenParenthesis)
                     .find(|child| !child.kind().is_trivial())
                 {
                     child.first().range()
@@ -115,11 +115,11 @@ impl LowerContext {
                         continue;
                     }
                 }
-            } else if node.child(Syntax::OpenParenthesis).is_some()
-                && node.child(Syntax::CloseParenthesis).is_some()
+            } else if node.child(Token::OpenParenthesis).is_some()
+                && node.child(Token::CloseParenthesis).is_some()
             {
                 let span = if let Some(child) = node
-                    .after(Syntax::OpenParenthesis)
+                    .after(Token::OpenParenthesis)
                     .find(|child| !child.kind().is_trivial())
                 {
                     child.first().range()

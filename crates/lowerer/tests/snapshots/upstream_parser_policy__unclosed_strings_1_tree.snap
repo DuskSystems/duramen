@@ -35,4 +35,4 @@ Policies 0..72
       ├─Assign "=" 62..63
       ├─Whitespace " " 63..64
       └─Error 64..72
-        └─Error "\"bar\n};\n" 64..72
+        └─Unknown "\"bar\n};\n" 64..72

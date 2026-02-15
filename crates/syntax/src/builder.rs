@@ -1,6 +1,10 @@
 use alloc::vec::Vec;
 
+use duramen_lexer::TokenKind;
+
+use crate::group::Group;
 use crate::syntax::Syntax;
+use crate::token::Token;
 use crate::tree::{NodeData, Tree};
 
 /// Branch for walking nodes.
@@ -42,10 +46,10 @@ impl Builder {
     }
 
     /// Opens a new branch.
-    pub fn open(&mut self, kind: Syntax) -> Branch {
+    pub fn open(&mut self, kind: Group) -> Branch {
         let index = self.nodes.len();
         let node = NodeData {
-            kind,
+            kind: Syntax::Group(kind),
             start: self.cursor,
             end: self.cursor,
             parent: self.parent(),
@@ -76,7 +80,7 @@ impl Builder {
     }
 
     /// Commits nodes since the checkpoint into a new parent.
-    pub fn commit(&mut self, checkpoint: &Checkpoint, kind: Syntax) {
+    pub fn commit(&mut self, checkpoint: &Checkpoint, kind: Group) {
         let first = match checkpoint.0 {
             Some(previous) => {
                 let node = &self.nodes[previous];
@@ -103,7 +107,7 @@ impl Builder {
 
         let wrapper = self.nodes.len();
         let node = NodeData {
-            kind,
+            kind: Syntax::Group(kind),
             start,
             end,
             parent: self.parent(),
@@ -139,14 +143,14 @@ impl Builder {
     }
 
     /// Adds a new token node.
-    pub fn token(&mut self, kind: Syntax, len: usize) {
+    pub fn token(&mut self, kind: TokenKind, len: usize) {
         let index = self.nodes.len();
         let start = self.cursor;
         let end = start + len;
         self.cursor = end;
 
         let node = NodeData {
-            kind,
+            kind: Syntax::Token(Token::from(kind)),
             start,
             end,
             parent: self.parent(),

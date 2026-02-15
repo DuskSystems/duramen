@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -11,8 +11,8 @@ pub struct EntityReference<'a> {
 
 impl<'a> CstNode<'a> for EntityReference<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::EntityReference => Some(Self { node }),
+        match node.kind().group()? {
+            Group::EntityReference => Some(Self { node }),
             _ => None,
         }
     }
@@ -32,7 +32,7 @@ impl<'a> EntityReference<'a> {
     /// Returns the entity identifier string token.
     #[must_use]
     pub fn id(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::String)
+        self.node.child(Token::String)
     }
 
     /// Returns an iterator over the record entries (for record-style references).
@@ -43,6 +43,6 @@ impl<'a> EntityReference<'a> {
     /// Returns the `::` path separator token.
     #[must_use]
     pub fn path_separator(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::PathSeparator)
+        self.node.child(Token::PathSeparator)
     }
 }
