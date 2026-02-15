@@ -115,8 +115,6 @@ pub enum TokenKind {
     /// Semicolon: `;`.
     Semicolon,
 
-    /// Ampersand: `&`.
-    Ampersand,
     /// Two ampersands: `&&`.
     Ampersand2,
     /// Asterisk: `*`.
@@ -139,19 +137,15 @@ pub enum TokenKind {
     LessThanEquals,
     /// Minus: `-`.
     Minus,
-    /// Percent: `%`.
-    Percent,
-    /// Pipe: `|`.
-    Pipe,
     /// Two pipes: `||`.
     Pipe2,
     /// Plus: `+`.
     Plus,
-    /// Slash: `/`.
-    Slash,
 
     /// Comment: `// ...`.
     Comment,
+    /// Newline.
+    Newline,
     /// Whitespace.
     Whitespace,
 
@@ -165,7 +159,7 @@ impl TokenKind {
     /// Checks if this is a trivial token.
     #[must_use]
     pub const fn is_trivial(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Comment)
+        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
     }
 
     /// Checks if this is a keyword token.
@@ -362,7 +356,6 @@ impl fmt::Display for TokenKind {
             Self::QuestionMark => "`?`",
             Self::Semicolon => "`;`",
 
-            Self::Ampersand => "`&`",
             Self::Ampersand2 => "`&&`",
             Self::Asterisk => "`*`",
             Self::Bang => "`!`",
@@ -374,13 +367,11 @@ impl fmt::Display for TokenKind {
             Self::LessThan => "`<`",
             Self::LessThanEquals => "`<=`",
             Self::Minus => "`-`",
-            Self::Percent => "`%`",
-            Self::Pipe => "`|`",
             Self::Pipe2 => "`||`",
             Self::Plus => "`+`",
-            Self::Slash => "`/`",
 
             Self::Comment => "comment",
+            Self::Newline => "newline",
             Self::Whitespace => "whitespace",
 
             Self::Unknown => "unknown",

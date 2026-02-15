@@ -33,6 +33,15 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// Peeks at the next token (including trivial) without consuming it.
+    #[must_use]
+    pub fn peek_token(&mut self) -> Option<Token> {
+        let checkpoint = self.cursor.checkpoint();
+        let token = self.next_token();
+        self.cursor.restore(checkpoint);
+        token
+    }
+
     /// Returns the next token.
     pub fn next_token(&mut self) -> Option<Token> {
         self.cursor.current()?;
@@ -51,8 +60,13 @@ impl<'a> Lexer<'a> {
         };
 
         match current {
+            // Newline
+            b'\n' | b'\r' => {
+                self.cursor.skip_newline();
+                TokenKind::Newline
+            }
             // Whitespace
-            b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C => {
+            b' ' | b'\t' | 0x0B | 0x0C => {
                 self.cursor.skip_whitespace();
                 TokenKind::Whitespace
             }
@@ -83,7 +97,7 @@ impl<'a> Lexer<'a> {
                     TokenKind::Comment
                 } else {
                     self.cursor.bump();
-                    TokenKind::Slash
+                    TokenKind::Unknown
                 }
             }
             b'(' => {
@@ -142,10 +156,6 @@ impl<'a> Lexer<'a> {
                 self.cursor.bump();
                 TokenKind::Asterisk
             }
-            b'%' => {
-                self.cursor.bump();
-                TokenKind::Percent
-            }
             b':' => {
                 if self.cursor.peek() == Some(b':') {
                     self.cursor.bump_n(2);
@@ -161,7 +171,7 @@ impl<'a> Lexer<'a> {
                     TokenKind::Ampersand2
                 } else {
                     self.cursor.bump();
-                    TokenKind::Ampersand
+                    TokenKind::Unknown
                 }
             }
             b'|' => {
@@ -170,7 +180,7 @@ impl<'a> Lexer<'a> {
                     TokenKind::Pipe2
                 } else {
                     self.cursor.bump();
-                    TokenKind::Pipe
+                    TokenKind::Unknown
                 }
             }
             b'!' => {
@@ -247,7 +257,8 @@ mod tests {
     #[test]
     fn whitespace() {
         let mut lexer = Lexer::new("  \t\n");
-        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Whitespace, 4)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Whitespace, 3)));
+        assert_eq!(lexer.next(), Some(Token::new(TokenKind::Newline, 1)));
         assert_eq!(lexer.next(), None);
     }
 

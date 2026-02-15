@@ -7,7 +7,8 @@ Policies 0..174
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
 │ ├─OpenParenthesis "(" 7..8
-│ ├─Whitespace "\n    " 8..13
+│ ├─Newline "\n" 8..9
+│ ├─Whitespace "    " 9..13
 │ ├─VariableDefinition 13..47
 │ │ ├─PrincipalKeyword "principal" 13..22
 │ │ ├─Whitespace " " 22..23
@@ -21,7 +22,8 @@ Policies 0..174
 │ ├─Comma "," 47..48
 │ ├─Whitespace "  " 48..50
 │ ├─Comment "// Policy c1" 50..62
-│ ├─Whitespace "\n    " 62..67
+│ ├─Newline "\n" 62..63
+│ ├─Whitespace "    " 63..67
 │ ├─VariableDefinition 67..114
 │ │ ├─ActionKeyword "action" 67..73
 │ │ ├─Whitespace " " 73..74
@@ -44,7 +46,8 @@ Policies 0..174
 │ │   │   └─String "\"comment\"" 104..113
 │ │   └─CloseBracket "]" 113..114
 │ ├─Comma "," 114..115
-│ ├─Whitespace "\n    " 115..120
+│ ├─Newline "\n" 115..116
+│ ├─Whitespace "    " 116..120
 │ ├─VariableDefinition 120..151
 │ │ ├─ResourceKeyword "resource" 120..128
 │ │ ├─Whitespace " " 128..129
@@ -56,13 +59,14 @@ Policies 0..174
 │ │   ├─PathSeparator "::" 137..139
 │ │   └─String "\"jane_trips\"" 139..151
 │ ├─Comma "," 151..152
-│ └─Whitespace "\n    " 152..157
+│ ├─Newline "\n" 152..153
+│ └─Whitespace "    " 153..157
 └─Policy 157..174
   └─Error 157..174
     ├─ContextKeyword "context" 157..164
     ├─Colon ":" 164..165
     ├─Identifier "Group" 165..170
-    ├─Whitespace "\n" 170..171
+    ├─Newline "\n" 170..171
     ├─CloseParenthesis ")" 171..172
     ├─Semicolon ";" 172..173
-    └─Whitespace "\n" 173..174
+    └─Newline "\n" 173..174

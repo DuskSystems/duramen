@@ -23,9 +23,6 @@ pub enum LowerError {
         span: Range<usize>,
         count: usize,
     },
-    UnsupportedDivision {
-        span: Range<usize>,
-    },
     UnsupportedIndex {
         span: Range<usize>,
     },
@@ -100,11 +97,6 @@ impl From<LowerError> for Diagnostic {
             LowerError::UnaryOpLimit { span, count } => {
                 Self::error(format!("found {count} chained unary operators"))
                     .with_label(span, "at most 4 allowed")
-            }
-            LowerError::UnsupportedDivision { span } => {
-                Self::error("division and remainder are not supported")
-                    .with_label(span, "not supported")
-                    .with_note("only `*` with an integer literal is allowed")
             }
             LowerError::UnsupportedIndex { span } => Self::error("indexing is not supported")
                 .with_label(span, "not supported")

@@ -15,7 +15,7 @@ Policies 0..75
   │ ├─Whitespace " " 22..23
   │ ├─String "\"annotation\"" 23..35
   │ ├─CloseParenthesis ")" 35..36
-  │ └─Whitespace "\n" 36..37
+  │ └─Newline "\n" 36..37
   ├─PermitKeyword "permit" 37..43
   ├─Whitespace " " 43..44
   ├─OpenParenthesis "(" 44..45
@@ -31,4 +31,4 @@ Policies 0..75
   │ └─ResourceKeyword "resource" 64..72
   ├─CloseParenthesis ")" 72..73
   ├─Semicolon ";" 73..74
-  └─Whitespace "\n" 74..75
+  └─Newline "\n" 74..75

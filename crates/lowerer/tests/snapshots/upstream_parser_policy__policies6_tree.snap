@@ -24,7 +24,7 @@ Policies 0..263
 │ │ ├─Whitespace " " 36..37
 │ │ ├─Identifier "r" 37..38
 │ │ ├─CloseParenthesis ")" 38..39
-│ │ ├─Whitespace "\n" 39..40
+│ │ ├─Newline "\n" 39..40
 │ │ ├─WhenKeyword "when" 40..44
 │ │ ├─Whitespace " " 44..45
 │ │ ├─OpenBrace "{" 45..46
@@ -32,7 +32,7 @@ Policies 0..263
 │ │ ├─Identifier "w" 47..48
 │ │ ├─Whitespace " " 48..49
 │ │ ├─CloseBrace "}" 49..50
-│ │ ├─Whitespace "\n" 50..51
+│ │ ├─Newline "\n" 50..51
 │ │ ├─UnlessKeyword "unless" 51..57
 │ │ ├─Whitespace " " 57..58
 │ │ ├─OpenBrace "{" 58..59
@@ -40,7 +40,7 @@ Policies 0..263
 │ │ ├─Identifier "u" 60..61
 │ │ ├─Whitespace " " 61..62
 │ │ ├─CloseBrace "}" 62..63
-│ │ ├─Whitespace "\n" 63..64
+│ │ ├─Newline "\n" 63..64
 │ │ ├─Identifier "advice" 64..70
 │ │ ├─Whitespace " " 70..71
 │ │ ├─OpenBrace "{" 71..72
@@ -49,7 +49,7 @@ Policies 0..263
 │ │ ├─Whitespace " " 79..80
 │ │ ├─CloseBrace "}" 80..81
 │ │ ├─Semicolon ";" 81..82
-│ │ └─Whitespace "\n\n" 82..84
+│ │ └─Newline "\n\n" 82..84
 │ ├─PermitKeyword "permit" 84..90
 │ ├─Whitespace " " 90..91
 │ ├─OpenParenthesis "(" 91..92
@@ -76,7 +76,7 @@ Policies 0..263
 │ │ └─Name 127..128
 │ │   └─Identifier "r" 127..128
 │ ├─CloseParenthesis ")" 128..129
-│ ├─Whitespace "\n" 129..130
+│ ├─Newline "\n" 129..130
 │ ├─Condition 130..141
 │ │ ├─WhenKeyword "when" 130..134
 │ │ ├─Whitespace " " 134..135
@@ -86,7 +86,7 @@ Policies 0..263
 │ │ │ ├─Identifier "w" 137..138
 │ │ │ └─Whitespace " " 138..139
 │ │ ├─CloseBrace "}" 139..140
-│ │ └─Whitespace "\n" 140..141
+│ │ └─Newline "\n" 140..141
 │ └─Condition 141..154
 │   ├─UnlessKeyword "unless" 141..147
 │   ├─Whitespace " " 147..148
@@ -96,7 +96,7 @@ Policies 0..263
 │   │ ├─Identifier "u" 150..151
 │   │ └─Whitespace " " 151..152
 │   ├─CloseBrace "}" 152..153
-│   └─Whitespace "\n" 153..154
+│   └─Newline "\n" 153..154
 ├─Policy 154..244
 │ ├─Error 154..174
 │ │ ├─Identifier "advice" 154..160
@@ -107,7 +107,7 @@ Policies 0..263
 │ │ ├─Whitespace " " 169..170
 │ │ ├─CloseBrace "}" 170..171
 │ │ ├─Semicolon ";" 171..172
-│ │ └─Whitespace "\n\n" 172..174
+│ │ └─Newline "\n\n" 172..174
 │ ├─PermitKeyword "permit" 174..180
 │ ├─Whitespace " " 180..181
 │ ├─OpenParenthesis "(" 181..182
@@ -134,7 +134,7 @@ Policies 0..263
 │ │ └─Name 217..218
 │ │   └─Identifier "r" 217..218
 │ ├─CloseParenthesis ")" 218..219
-│ ├─Whitespace "\n" 219..220
+│ ├─Newline "\n" 219..220
 │ ├─Condition 220..231
 │ │ ├─WhenKeyword "when" 220..224
 │ │ ├─Whitespace " " 224..225
@@ -144,7 +144,7 @@ Policies 0..263
 │ │ │ ├─Identifier "w" 227..228
 │ │ │ └─Whitespace " " 228..229
 │ │ ├─CloseBrace "}" 229..230
-│ │ └─Whitespace "\n" 230..231
+│ │ └─Newline "\n" 230..231
 │ └─Condition 231..244
 │   ├─UnlessKeyword "unless" 231..237
 │   ├─Whitespace " " 237..238
@@ -154,7 +154,7 @@ Policies 0..263
 │   │ ├─Identifier "u" 240..241
 │   │ └─Whitespace " " 241..242
 │   ├─CloseBrace "}" 242..243
-│   └─Whitespace "\n" 243..244
+│   └─Newline "\n" 243..244
 └─Policy 244..263
   └─Error 244..263
     ├─Identifier "advice" 244..250
@@ -165,4 +165,4 @@ Policies 0..263
     ├─Whitespace " " 259..260
     ├─CloseBrace "}" 260..261
     ├─Semicolon ";" 261..262
-    └─Whitespace "\n" 262..263
+    └─Newline "\n" 262..263

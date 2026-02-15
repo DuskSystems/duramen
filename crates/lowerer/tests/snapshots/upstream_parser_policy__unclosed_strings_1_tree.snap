@@ -18,12 +18,13 @@ Policies 0..72
   ├─VariableDefinition 27..35
   │ └─ResourceKeyword "resource" 27..35
   ├─CloseParenthesis ")" 35..36
-  ├─Whitespace "\n" 36..37
+  ├─Newline "\n" 36..37
   └─Condition 37..72
     ├─WhenKeyword "when" 37..41
     ├─Whitespace " " 41..42
     ├─OpenBrace "{" 42..43
-    ├─Whitespace "\n    " 43..48
+    ├─Newline "\n" 43..44
+    ├─Whitespace "    " 44..48
     └─RelationExpression 48..72
       ├─MemberExpression 48..62
       │ ├─Name 48..57

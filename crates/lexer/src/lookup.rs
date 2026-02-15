@@ -19,7 +19,7 @@ pub const WHITESPACE_TABLE: [bool; 128] = {
 
     let mut index = 0;
     while index < 128 {
-        table[index] = matches!(index as u8, b' ' | b'\t' | b'\n' | b'\r' | 0x0B | 0x0C);
+        table[index] = matches!(index as u8, b' ' | b'\t' | 0x0B | 0x0C);
         index += 1;
     }
 

@@ -20,7 +20,7 @@ Policies 0..102
 │ ├─Error 27..71
 │ │ ├─Not "!" 27..28
 │ │ ├─CloseParenthesis ")" 28..29
-│ │ ├─Whitespace "\n" 29..30
+│ │ ├─Newline "\n" 29..30
 │ │ ├─WhenKeyword "when" 30..34
 │ │ ├─Whitespace " " 34..35
 │ │ ├─OpenBrace "{" 35..36
@@ -37,7 +37,7 @@ Policies 0..102
 │ │ ├─Whitespace " " 66..67
 │ │ ├─CloseBrace "}" 67..68
 │ │ ├─Semicolon ";" 68..69
-│ │ └─Whitespace "\n\n" 69..71
+│ │ └─Newline "\n\n" 69..71
 │ ├─PermitKeyword "permit" 71..77
 │ ├─Whitespace " " 77..78
 │ ├─OpenParenthesis "(" 78..79
@@ -55,4 +55,4 @@ Policies 0..102
     ├─Add "+" 98..99
     ├─CloseParenthesis ")" 99..100
     ├─Semicolon ";" 100..101
-    └─Whitespace "\n" 101..102
+    └─Newline "\n" 101..102

@@ -32,4 +32,4 @@ Policies 0..59
     ├─Unknown "'" 55..56
     ├─CloseParenthesis ")" 56..57
     ├─Semicolon ";" 57..58
-    └─Whitespace "\n" 58..59
+    └─Newline "\n" 58..59

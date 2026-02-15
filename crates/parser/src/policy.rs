@@ -229,12 +229,12 @@ impl<'src> PolicyParser<'src> {
     /// Returns the binding power and syntax node kind for the current infix operator.
     const fn infix_operator(&self) -> Option<InfixOperator> {
         match self.parser.kind() {
-            TokenKind::Pipe2 | TokenKind::Pipe => Some(InfixOperator {
+            TokenKind::Pipe2 => Some(InfixOperator {
                 left: 1,
                 right: 2,
                 kind: Group::OrExpression,
             }),
-            TokenKind::Ampersand2 | TokenKind::Ampersand => Some(InfixOperator {
+            TokenKind::Ampersand2 => Some(InfixOperator {
                 left: 3,
                 right: 4,
                 kind: Group::AndExpression,
@@ -271,7 +271,7 @@ impl<'src> PolicyParser<'src> {
                 right: 8,
                 kind: Group::SumExpression,
             }),
-            TokenKind::Asterisk | TokenKind::Slash | TokenKind::Percent => Some(InfixOperator {
+            TokenKind::Asterisk => Some(InfixOperator {
                 left: 9,
                 right: 10,
                 kind: Group::ProductExpression,
