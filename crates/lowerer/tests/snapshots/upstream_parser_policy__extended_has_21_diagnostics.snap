@@ -24,7 +24,7 @@ error: expected `;`
   │
 4 │ };
   ╰╴  ━ expected `;`
-error: missing expression
+error: unexpected expression
   ╭▸ extended_has_21:3:19
   │
 3 │     principal has a.1

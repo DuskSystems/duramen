@@ -15,7 +15,7 @@ pub enum LowerError {
     ContextInScope {
         span: Range<usize>,
     },
-    MissingExpression {
+    UnexpectedExpression {
         span: Range<usize>,
         expected: &'static str,
     },
@@ -57,7 +57,7 @@ pub enum LowerError {
     InvalidContextType {
         span: Range<usize>,
     },
-    MissingTypeExpression {
+    UnexpectedTypeExpression {
         span: Range<usize>,
     },
 
@@ -84,8 +84,8 @@ impl From<LowerError> for Diagnostic {
             LowerError::ContextInScope { span } => Self::error("`context` is not a scope variable")
                 .with_label(span, "not valid in policy scope")
                 .with_note("`context` can only be used in policy conditions, not in scope"),
-            LowerError::MissingExpression { span, expected } => {
-                Self::error("missing expression").with_label(span, expected)
+            LowerError::UnexpectedExpression { span, expected } => {
+                Self::error("unexpected expression").with_label(span, expected)
             }
             LowerError::UnaryOpLimit { span, count } => {
                 Self::error(format!("found {count} chained unary operators"))
@@ -132,8 +132,8 @@ impl From<LowerError> for Diagnostic {
             }
             LowerError::InvalidContextType { span } => Self::error("invalid context type")
                 .with_label(span, "expected a record type or type reference"),
-            LowerError::MissingTypeExpression { span } => {
-                Self::error("missing type expression").with_label(span, "expected a type")
+            LowerError::UnexpectedTypeExpression { span } => {
+                Self::error("unexpected type expression").with_label(span, "expected a type")
             }
 
             LowerError::InvalidEquals { span } => {

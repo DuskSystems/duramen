@@ -247,7 +247,7 @@ impl PolicyLowerer {
                 Some(ast::EntityOrSlot::Entity(reference))
             }
             _ => {
-                self.ctx.diagnostics.push(LowerError::MissingExpression {
+                self.ctx.diagnostics.push(LowerError::UnexpectedExpression {
                     span: expression.range(),
                     expected: "expected an entity reference or slot",
                 });
@@ -328,7 +328,7 @@ impl PolicyLowerer {
         if let cst::Expression::EntityReference(entity_reference) = expression {
             self.lower_entity_reference(entity_reference)
         } else {
-            self.ctx.diagnostics.push(LowerError::MissingExpression {
+            self.ctx.diagnostics.push(LowerError::UnexpectedExpression {
                 span: expression.range(),
                 expected: "expected an entity reference",
             });
@@ -555,7 +555,7 @@ impl PolicyLowerer {
                 Some(Cow::Borrowed(text))
             }
             _ => {
-                self.ctx.diagnostics.push(LowerError::MissingExpression {
+                self.ctx.diagnostics.push(LowerError::UnexpectedExpression {
                     span: expression.range(),
                     expected: "expected an attribute name",
                 });

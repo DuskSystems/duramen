@@ -22,7 +22,7 @@ error: expected `;`
   │
 1 │ permit (principal, action, resource == Photo::'mine.jpg');
   ╰╴                                                          ━ expected `;`
-error: missing expression
+error: unexpected expression
   ╭▸ single_quote_string_2:1:40
   │
 1 │ permit (principal, action, resource == Photo::'mine.jpg');

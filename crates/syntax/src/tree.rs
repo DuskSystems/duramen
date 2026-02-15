@@ -283,7 +283,7 @@ impl<'a> Node<'a> {
         }
     }
 
-    /// Returns `true` if this node or any descendant is a [`Syntax::Error`].
+    /// Returns `true` if this node or any descendant onf an error.
     #[must_use]
     pub fn has_errors(&self) -> bool {
         self.descendants().any(|node| node.kind().is_error())
