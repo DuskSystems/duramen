@@ -42,10 +42,10 @@ impl<'a> Name<'a> {
 impl fmt::Display for Name<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for segment in &self.path {
-            fmt::Display::fmt(segment, f)?;
+            segment.fmt(f)?;
             f.write_str("::")?;
         }
 
-        fmt::Display::fmt(&self.basename, f)
+        self.basename.fmt(f)
     }
 }

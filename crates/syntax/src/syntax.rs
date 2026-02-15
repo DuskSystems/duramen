@@ -33,10 +33,22 @@ impl Syntax {
         }
     }
 
-    /// Checks if this is a trivial token.
+    /// Checks if this is a whitespace token.
     #[must_use]
-    pub fn is_trivial(self) -> bool {
-        self.token().is_some_and(Token::is_trivial)
+    pub fn is_whitespace(self) -> bool {
+        self.token().is_some_and(Token::is_whitespace)
+    }
+
+    /// Checks if this is a newline token.
+    #[must_use]
+    pub fn is_newline(self) -> bool {
+        self.token().is_some_and(Token::is_newline)
+    }
+
+    /// Checks if this is a comment token.
+    #[must_use]
+    pub fn is_comment(self) -> bool {
+        self.token().is_some_and(Token::is_comment)
     }
 
     /// Checks if this is an error (unknown token or error group).
@@ -94,8 +106,8 @@ impl Syntax {
 impl fmt::Debug for Syntax {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Token(token) => fmt::Debug::fmt(token, f),
-            Self::Group(group) => fmt::Debug::fmt(group, f),
+            Self::Token(token) => token.fmt(f),
+            Self::Group(group) => group.fmt(f),
         }
     }
 }
@@ -103,8 +115,8 @@ impl fmt::Debug for Syntax {
 impl fmt::Display for Syntax {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Token(token) => fmt::Display::fmt(token, f),
-            Self::Group(group) => fmt::Display::fmt(group, f),
+            Self::Token(token) => token.fmt(f),
+            Self::Group(group) => group.fmt(f),
         }
     }
 }

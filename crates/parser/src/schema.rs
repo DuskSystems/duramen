@@ -511,7 +511,11 @@ impl<'src> SchemaParser<'src> {
         let checkpoint = self.parser.builder.checkpoint();
 
         if self.parser.at(&[TokenKind::SetKeyword])
-            && self.parser.lexer.peek_kind() == Some(TokenKind::LessThan)
+            && self
+                .parser
+                .lexer
+                .peek(|kind| kind.is_whitespace() || kind.is_newline() || kind.is_comment())
+                == Some(TokenKind::LessThan)
         {
             self.parser.next();
             self.parser.next();
@@ -523,7 +527,11 @@ impl<'src> SchemaParser<'src> {
         }
 
         if self.parser.at(&[TokenKind::EnumKeyword])
-            && self.parser.lexer.peek_kind() == Some(TokenKind::OpenBracket)
+            && self
+                .parser
+                .lexer
+                .peek(|kind| kind.is_whitespace() || kind.is_newline() || kind.is_comment())
+                == Some(TokenKind::OpenBracket)
         {
             self.parser.next();
             self.parser.next();
@@ -678,7 +686,12 @@ impl<'src> SchemaParser<'src> {
         if self.parser.kind().is_identifier() {
             self.parser.next();
             while self.parser.at(&[TokenKind::Colon2]) {
-                if self.parser.lexer.peek_kind() == Some(TokenKind::String) {
+                if self
+                    .parser
+                    .lexer
+                    .peek(|kind| kind.is_whitespace() || kind.is_newline() || kind.is_comment())
+                    == Some(TokenKind::String)
+                {
                     break;
                 }
 

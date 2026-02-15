@@ -574,7 +574,9 @@ impl<'src> PolicyParser<'src> {
             self.parser.next();
             while self.parser.at(&[TokenKind::Colon2]) {
                 if matches!(
-                    self.parser.lexer.peek_kind(),
+                    self.parser.lexer.peek(|kind| kind.is_whitespace()
+                        || kind.is_newline()
+                        || kind.is_comment()),
                     Some(TokenKind::String | TokenKind::OpenBrace)
                 ) {
                     self.parser.builder.close(&branch);

@@ -15,35 +15,26 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Peeks at the kind of the next non-trivial token without consuming it.
+    /// Peeks at the kind of the next token that doesn't match `skip`.
     #[must_use]
-    pub fn peek_kind(&mut self) -> Option<TokenKind> {
+    pub fn peek<F: Fn(TokenKind) -> bool>(&mut self, skip: F) -> Option<TokenKind> {
         let checkpoint = self.cursor.checkpoint();
 
         loop {
-            let Some(token) = self.next_token() else {
+            let Some(token) = self.lex() else {
                 self.cursor.restore(checkpoint);
                 return None;
             };
 
-            if !token.kind.is_trivial() {
+            if !skip(token.kind) {
                 self.cursor.restore(checkpoint);
                 return Some(token.kind);
             }
         }
     }
 
-    /// Peeks at the next token (including trivial) without consuming it.
-    #[must_use]
-    pub fn peek_token(&mut self) -> Option<Token> {
-        let checkpoint = self.cursor.checkpoint();
-        let token = self.next_token();
-        self.cursor.restore(checkpoint);
-        token
-    }
-
-    /// Returns the next token.
-    pub fn next_token(&mut self) -> Option<Token> {
+    /// Lex the next token.
+    fn lex(&mut self) -> Option<Token> {
         self.cursor.current()?;
 
         let start = self.cursor.position();
@@ -240,7 +231,7 @@ impl Iterator for Lexer<'_> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.next_token()
+        self.lex()
     }
 }
 

@@ -136,10 +136,22 @@ pub enum Token {
 }
 
 impl Token {
-    /// Checks if this is a trivial token.
+    /// Checks if this is a whitespace token.
     #[must_use]
-    pub const fn is_trivial(self) -> bool {
-        matches!(self, Self::Whitespace | Self::Newline | Self::Comment)
+    pub const fn is_whitespace(self) -> bool {
+        matches!(self, Self::Whitespace)
+    }
+
+    /// Checks if this is a newline token.
+    #[must_use]
+    pub const fn is_newline(self) -> bool {
+        matches!(self, Self::Newline)
+    }
+
+    /// Checks if this is a comment token.
+    #[must_use]
+    pub const fn is_comment(self) -> bool {
+        matches!(self, Self::Comment)
     }
 
     /// Checks if this is a keyword token.

@@ -89,7 +89,7 @@ impl<'src> Parser<'src> {
                 len: 0,
             });
 
-            if token.kind.is_trivial() {
+            if token.kind.is_whitespace() || token.kind.is_newline() || token.kind.is_comment() {
                 self.builder.token(token.kind, token.len);
                 self.position += token.len;
             } else {
