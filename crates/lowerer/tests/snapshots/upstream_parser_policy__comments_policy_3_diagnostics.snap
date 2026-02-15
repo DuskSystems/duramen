@@ -3,10 +3,27 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `}`
-  ╭▸ comments_policy_3:2:8
+  ╭▸ comments_policy_3:2:10
   │
 2 │ when { 1 /* multi-line
-  ╰╴       ━ expected `}`
+  ╰╴         ━ expected `}`
+error: expected `;`
+  ╭▸ comments_policy_3:2:10
+  │
+2 │ when { 1 /* multi-line
+  ╰╴         ━ expected `;`
+error: unexpected token
+  ╭▸ comments_policy_3:2:10
+  │
+2 │   when { 1 /* multi-line
+  │ ┏━━━━━━━━━━┛
+3 │ ┃ comment */d };
+  ╰╴┗━━━━━━━━━━━━━━━┛ unexpected token
+error: expected `;`
+  ╭▸ comments_policy_3:3:16
+  │
+3 │ comment */d };
+  ╰╴              ━ expected `;`
 error: missing policy effect
   ╭▸ comments_policy_3:2:10
   │

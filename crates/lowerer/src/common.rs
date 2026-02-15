@@ -71,24 +71,6 @@ impl LowerContext {
 
         for annotation in annotations {
             let node = annotation.syntax();
-            if node.child(Token::OpenParenthesis).is_some()
-                && node.child(Token::CloseParenthesis).is_none()
-            {
-                let span = if let Some(child) = node
-                    .after(Token::OpenParenthesis)
-                    .find(|child| !child.kind().is_trivial())
-                {
-                    child.first().range()
-                } else {
-                    let end = node.range().end;
-                    end..end
-                };
-
-                self.diagnostics.push(LowerError::ExpectedToken {
-                    span,
-                    expected: "`)`",
-                });
-            }
 
             let Some(name_node) = annotation.name() else {
                 continue;

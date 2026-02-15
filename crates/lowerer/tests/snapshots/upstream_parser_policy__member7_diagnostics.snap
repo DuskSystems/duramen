@@ -3,10 +3,27 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `}`
-  ╭▸ member7:3:5
+  ╭▸ member7:3:9
   │
 3 │     one { num: true, trivia: "first!" }
-  ╰╴    ━━━ expected `}`
+  ╰╴        ━ expected `}`
+error: expected `;`
+  ╭▸ member7:3:9
+  │
+3 │     one { num: true, trivia: "first!" }
+  ╰╴        ━ expected `;`
+error: unexpected token
+  ╭▸ member7:3:9
+  │
+3 │       one { num: true, trivia: "first!" }
+  │ ┏━━━━━━━━━┛
+4 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `;`
+  ╭▸ member7:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `;`
 error: unknown variable `one `
   ╭▸ member7:3:5
   │

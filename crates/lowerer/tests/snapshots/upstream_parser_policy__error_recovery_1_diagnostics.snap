@@ -3,10 +3,15 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `)`
-  ╭▸ error_recovery_1:1:9
+  ╭▸ error_recovery_1:1:28
   │
 1 │ permit (principal, action, !)
-  ╰╴        ━━━━━━━━━ expected `)`
+  ╰╴                           ━ expected `)`
+error: expected `;`
+  ╭▸ error_recovery_1:1:28
+  │
+1 │ permit (principal, action, !)
+  ╰╴                           ━ expected `;`
 error: unexpected token
   ╭▸ error_recovery_1:1:28
   │

@@ -3,10 +3,29 @@ source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
 error: expected `)`
-  ╭▸ no_comments_policy4:1:9
+  ╭▸ no_comments_policy4:1:38
   │
 1 │ permit (principal, action, resource, context)
-  ╰╴        ━━━━━━━━━ expected `)`
+  ╰╴                                     ━ expected `)`
+error: expected `;`
+  ╭▸ no_comments_policy4:1:38
+  │
+1 │ permit (principal, action, resource, context)
+  ╰╴                                     ━ expected `;`
+error: unexpected token
+  ╭▸ no_comments_policy4:1:38
+  │
+1 │   permit (principal, action, resource, context)
+  │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2 │ ┃ when {
+3 │ ┃     context.contains(3, "four", five(6, 7))
+4 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `;`
+  ╭▸ no_comments_policy4:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `;`
 error: missing policy effect
   ╭▸ no_comments_policy4:1:38
   │

@@ -2,11 +2,23 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `}`
-  ╭▸ unclosed_strings_1:3:5
+error: unexpected token
+  ╭▸ unclosed_strings_1:3:21
   │
-3 │     principal.foo = "bar
-  ╰╴    ━━━━━━━━━ expected `}`
+3 │       principal.foo = "bar
+  │ ┏━━━━━━━━━━━━━━━━━━━━━┛
+4 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `}`
+  ╭▸ unclosed_strings_1:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `}`
+error: expected `;`
+  ╭▸ unclosed_strings_1:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `;`
 error: invalid operator `=`
   ╭▸ unclosed_strings_1:3:19
   │

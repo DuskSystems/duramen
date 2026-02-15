@@ -7,11 +7,11 @@ error: expected `)`
   │
 1 │ @id('0')
   ╰╴    ━ expected `)`
-error: missing policy effect
-  ╭▸ single_quote_string_3:1:1
+error: expected `;`
+  ╭▸ single_quote_string_3:1:5
   │
 1 │ @id('0')
-  ╰╴━━━━ expected `permit` or `forbid`
+  ╰╴    ━ expected `;`
 error: unexpected token
   ╭▸ single_quote_string_3:1:5
   │
@@ -19,3 +19,13 @@ error: unexpected token
   │ ┏━━━━━┛
 2 │ ┃ permit (principal, action, resource);
   ╰╴┗━┛ unexpected token
+error: expected a string literal
+  ╭▸ single_quote_string_3:1:5
+  │
+1 │ @id('0')
+  ╰╴    ━ expected a string literal
+error: missing policy effect
+  ╭▸ single_quote_string_3:1:1
+  │
+1 │ @id('0')
+  ╰╴━━━━ expected `permit` or `forbid`

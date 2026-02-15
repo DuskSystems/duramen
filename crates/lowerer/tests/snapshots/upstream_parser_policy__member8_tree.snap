@@ -1,0 +1,57 @@
+---
+source: crates/lowerer/tests/upstream_parser_policy.rs
+expression: value
+---
+Policies 0..82
+└─Policy 0..82
+  ├─PermitKeyword "permit" 0..6
+  ├─Whitespace " " 6..7
+  ├─OpenParenthesis "(" 7..8
+  ├─VariableDefinition 8..17
+  │ └─PrincipalKeyword "principal" 8..17
+  ├─Comma "," 17..18
+  ├─Whitespace " " 18..19
+  ├─VariableDefinition 19..25
+  │ └─ActionKeyword "action" 19..25
+  ├─Comma "," 25..26
+  ├─Whitespace " " 26..27
+  ├─VariableDefinition 27..35
+  │ └─ResourceKeyword "resource" 27..35
+  ├─CloseParenthesis ")" 35..36
+  ├─Newline "\n" 36..37
+  ├─Condition 37..80
+  │ ├─WhenKeyword "when" 37..41
+  │ ├─Whitespace " " 41..42
+  │ ├─OpenBrace "{" 42..43
+  │ ├─Newline "\n" 43..44
+  │ ├─Whitespace "    " 44..48
+  │ ├─MemberExpression 48..79
+  │ │ ├─Record 48..64
+  │ │ │ ├─OpenBrace "{" 48..49
+  │ │ │ ├─RecordEntry 49..56
+  │ │ │ │ └─Error 49..56
+  │ │ │ │   ├─Integer "2" 49..50
+  │ │ │ │   ├─Colon ":" 50..51
+  │ │ │ │   ├─Whitespace " " 51..52
+  │ │ │ │   └─TrueKeyword "true" 52..56
+  │ │ │ ├─Comma "," 56..57
+  │ │ │ ├─Whitespace " " 57..58
+  │ │ │ ├─RecordEntry 58..63
+  │ │ │ │ └─Error 58..63
+  │ │ │ │   ├─Integer "4" 58..59
+  │ │ │ │   ├─Colon ":" 59..60
+  │ │ │ │   ├─Whitespace " " 60..61
+  │ │ │ │   └─Identifier "me" 61..63
+  │ │ │ └─CloseBrace "}" 63..64
+  │ │ ├─Field 64..69
+  │ │ │ ├─Dot "." 64..65
+  │ │ │ └─Identifier "with" 65..69
+  │ │ └─Index 69..79
+  │ │   ├─OpenBracket "[" 69..70
+  │ │   ├─Literal 70..77
+  │ │   │ └─String "\"pizza\"" 70..77
+  │ │   ├─CloseBracket "]" 77..78
+  │ │   └─Newline "\n" 78..79
+  │ └─CloseBrace "}" 79..80
+  ├─Semicolon ";" 80..81
+  └─Newline "\n" 81..82

@@ -60,13 +60,16 @@ Policies 0..174
 │ │   └─String "\"jane_trips\"" 139..151
 │ ├─Comma "," 151..152
 │ ├─Newline "\n" 152..153
-│ └─Whitespace "    " 153..157
+│ ├─Whitespace "    " 153..157
+│ ├─CloseParenthesis "" 157..157
+│ └─Semicolon "" 157..157
 └─Policy 157..174
-  └─Error 157..174
-    ├─ContextKeyword "context" 157..164
-    ├─Colon ":" 164..165
-    ├─Identifier "Group" 165..170
-    ├─Newline "\n" 170..171
-    ├─CloseParenthesis ")" 171..172
-    ├─Semicolon ";" 172..173
-    └─Newline "\n" 173..174
+  ├─Error 157..174
+  │ ├─ContextKeyword "context" 157..164
+  │ ├─Colon ":" 164..165
+  │ ├─Identifier "Group" 165..170
+  │ ├─Newline "\n" 170..171
+  │ ├─CloseParenthesis ")" 171..172
+  │ ├─Semicolon ";" 172..173
+  │ └─Newline "\n" 173..174
+  └─Semicolon "" 174..174

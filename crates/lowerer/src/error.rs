@@ -68,9 +68,6 @@ pub enum LowerError {
         span: Range<usize>,
         expected: &'static str,
     },
-    InvalidToken {
-        span: Range<usize>,
-    },
 }
 
 impl From<LowerError> for Diagnostic {
@@ -154,9 +151,6 @@ impl From<LowerError> for Diagnostic {
             LowerError::ExpectedToken { span, expected } => {
                 Self::error(format!("expected {expected}"))
                     .with_label(span, format!("expected {expected}"))
-            }
-            LowerError::InvalidToken { span } => {
-                Self::error("unexpected token").with_label(span, "unexpected token")
             }
         }
     }

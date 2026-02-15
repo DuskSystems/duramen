@@ -2,11 +2,33 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
-error: expected `}`
-  ╭▸ single_quote_string_1:3:5
+error: unexpected token
+  ╭▸ single_quote_string_1:3:21
   │
 3 │     principal.foo = 'bar'
-  ╰╴    ━━━━━━━━━ expected `}`
+  ╰╴                    ━ unexpected token
+error: expected `}`
+  ╭▸ single_quote_string_1:3:22
+  │
+3 │     principal.foo = 'bar'
+  ╰╴                     ━ expected `}`
+error: expected `;`
+  ╭▸ single_quote_string_1:3:22
+  │
+3 │     principal.foo = 'bar'
+  ╰╴                     ━ expected `;`
+error: unexpected token
+  ╭▸ single_quote_string_1:3:22
+  │
+3 │       principal.foo = 'bar'
+  │ ┏━━━━━━━━━━━━━━━━━━━━━━┛
+4 │ ┃ };
+  ╰╴┗━━━┛ unexpected token
+error: expected `;`
+  ╭▸ single_quote_string_1:4:4
+  │
+4 │ };
+  ╰╴  ━ expected `;`
 error: invalid operator `=`
   ╭▸ single_quote_string_1:3:19
   │

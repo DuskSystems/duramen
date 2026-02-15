@@ -7,7 +7,7 @@ use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
 use duramen_diagnostic::Diagnostics;
 use duramen_escape::Escaper;
-use duramen_syntax::{Group, Syntax, Token, Tree};
+use duramen_syntax::{Syntax, Token, Tree};
 
 use crate::common::LowerContext;
 use crate::error::LowerError;
@@ -73,39 +73,6 @@ impl PolicyLowerer {
 
     /// Lowers a single policy.
     fn lower_policy<'src>(&mut self, policy: &cst::Policy<'src>) -> Option<ast::Policy<'src>> {
-        let node = policy.syntax();
-
-        if let Some(effect_token) = policy.effect_token() {
-            let effect_start = effect_token.range().start;
-
-            for child in node.children() {
-                if child.kind() == Group::Error && child.range().start < effect_start {
-                    self.ctx.diagnostics.push(LowerError::InvalidToken {
-                        span: child.range(),
-                    });
-                }
-            }
-        }
-
-        if node.child(Token::OpenParenthesis).is_some()
-            && node.child(Token::CloseParenthesis).is_none()
-        {
-            let span = if let Some(child) = node
-                .after(Token::OpenParenthesis)
-                .find(|child| !child.kind().is_trivial())
-            {
-                child.first().range()
-            } else {
-                let end = node.range().end;
-                end..end
-            };
-
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span,
-                expected: "`)`",
-            });
-        }
-
         let annotations = self.ctx.lower_annotations(policy.annotations())?;
 
         let effect = policy.effect().map(|effect| match effect {
@@ -389,39 +356,13 @@ impl PolicyLowerer {
         &mut self,
         condition: &cst::Condition<'src>,
     ) -> Option<ast::Condition<'src>> {
-        let node = condition.syntax();
-        if node.child(Token::OpenBrace).is_some() && node.child(Token::CloseBrace).is_none() {
-            let span = if let Some(child) = node
-                .after(Token::OpenBrace)
-                .find(|child| !child.kind().is_trivial())
-            {
-                child.first().range()
-            } else {
-                let end = node.range().end;
-                end..end
-            };
-
-            self.ctx.diagnostics.push(LowerError::ExpectedToken {
-                span,
-                expected: "`}`",
-            });
-        }
-
         let kind = condition.kind().map(|kind| match kind {
             cst::ConditionKind::When => ast::ConditionKind::When,
             cst::ConditionKind::Unless => ast::ConditionKind::Unless,
         })?;
 
-        let body = condition.body();
-        if body.is_none()
-            && let Some(error_node) = node.children().find(|child| child.kind() == Group::Error)
-        {
-            self.ctx.diagnostics.push(LowerError::InvalidToken {
-                span: error_node.range(),
-            });
-        }
-
-        let body = self.lower_expression(&body?)?;
+        let body = condition.body()?;
+        let body = self.lower_expression(&body)?;
         Some(ast::Condition::new(kind, body))
     }
 
