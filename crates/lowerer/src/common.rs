@@ -1,8 +1,9 @@
 use alloc::borrow::Cow;
 use alloc::vec::Vec;
+use core::ops::Range;
 
 use duramen_cst::CstNode as _;
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::{Node, Token};
 use {duramen_ast as ast, duramen_cst as cst};
@@ -29,7 +30,11 @@ impl LowerContext {
         let basename = match ast::Identifier::new(segments[last].text()) {
             Ok(identifier) => identifier,
             Err(error) => {
-                self.diagnostics.push(error);
+                self.diagnostics.push(
+                    Diagnostic::from(error)
+                        .with_label(segments[last].range(), "invalid identifier"),
+                );
+
                 return None;
             }
         };
@@ -38,7 +43,9 @@ impl LowerContext {
         for &segment in &segments[..last] {
             match ast::Identifier::new(segment.text()) {
                 Ok(identifier) => path.push(identifier),
-                Err(error) => self.diagnostics.push(error),
+                Err(error) => self.diagnostics.push(
+                    Diagnostic::from(error).with_label(segment.range(), "invalid identifier"),
+                ),
             }
         }
 
@@ -54,7 +61,9 @@ impl LowerContext {
         match ast::Identifier::new(text) {
             Ok(identifier) => Some(identifier),
             Err(error) => {
-                self.diagnostics.push(error);
+                self.diagnostics
+                    .push(Diagnostic::from(error).with_label(name.range(), "invalid identifier"));
+
                 None
             }
         }
@@ -66,9 +75,16 @@ impl LowerContext {
         annotations: I,
     ) -> Option<ast::Annotations<'src>> {
         let mut entries = Vec::new();
+        let mut span: Option<Range<usize>> = None;
 
         for annotation in annotations {
             let node = annotation.syntax();
+            let annotation_range = node.range();
+
+            span = Some(match span {
+                Some(existing) => existing.start..annotation_range.end,
+                None => annotation_range,
+            });
 
             let Some(name_node) = annotation.name() else {
                 continue;
@@ -77,7 +93,11 @@ impl LowerContext {
             let identifier = match ast::Identifier::new(name_node.text()) {
                 Ok(identifier) => identifier,
                 Err(error) => {
-                    self.diagnostics.push(error);
+                    self.diagnostics.push(
+                        Diagnostic::from(error)
+                            .with_label(name_node.range(), "invalid annotation name"),
+                    );
+
                     continue;
                 }
             };
@@ -107,7 +127,13 @@ impl LowerContext {
         match ast::Annotations::new(entries) {
             Ok(annotations) => Some(annotations),
             Err(error) => {
-                self.diagnostics.push(error);
+                if let Some(span) = span {
+                    self.diagnostics
+                        .push(Diagnostic::from(error).with_label(span, "in this annotation list"));
+                } else {
+                    self.diagnostics.push(error);
+                }
+
                 None
             }
         }

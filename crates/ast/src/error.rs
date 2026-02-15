@@ -19,6 +19,8 @@ pub enum Error {
     InvalidSlot { name: String },
     /// An integer literal overflows `i64`.
     IntegerOverflow { text: String },
+    /// An identifier contains invalid characters.
+    InvalidIdentifier { name: String },
 }
 
 impl fmt::Display for Error {
@@ -36,6 +38,9 @@ impl fmt::Display for Error {
             Self::IntegerOverflow { text } => {
                 write!(f, "integer literal `{text}` is out of range")
             }
+            Self::InvalidIdentifier { name } => {
+                write!(f, "`{name}` is not a valid identifier")
+            }
         }
     }
 }
@@ -47,6 +52,9 @@ impl From<Error> for Diagnostic {
         match &value {
             Error::InvalidSlot { .. } => Self::error(format!("{value}"))
                 .with_note("only `?principal` and `?resource` are allowed"),
+            Error::InvalidIdentifier { .. } => Self::error(format!("{value}")).with_note(
+                "identifiers must start with `_` or a letter, followed by `_`, letters, or digits",
+            ),
             _ => Self::error(format!("{value}")),
         }
     }

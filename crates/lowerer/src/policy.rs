@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 
 use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
-use duramen_diagnostic::Diagnostics;
+use duramen_diagnostic::{Diagnostic, Diagnostics};
 use duramen_escape::Escaper;
 use duramen_syntax::{Syntax, Token, Tree};
 
@@ -229,7 +229,10 @@ impl PolicyLowerer {
         match ast::SlotKind::new(text) {
             Ok(_) => Some(ast::EntityOrSlot::Slot),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx
+                    .diagnostics
+                    .push(Diagnostic::from(error).with_label(node.range(), "invalid slot"));
+
                 None
             }
         }
@@ -304,7 +307,11 @@ impl PolicyLowerer {
             match ast::ActionList::new(actions) {
                 Ok(list) => Some(ast::ActionConstraint::In(list)),
                 Err(error) => {
-                    self.ctx.diagnostics.push(error);
+                    self.ctx.diagnostics.push(
+                        Diagnostic::from(error)
+                            .with_label(expression.range(), "in this action list"),
+                    );
+
                     None
                 }
             }
@@ -313,7 +320,11 @@ impl PolicyLowerer {
             match ast::ActionList::new(vec![entity_reference]) {
                 Ok(list) => Some(ast::ActionConstraint::In(list)),
                 Err(error) => {
-                    self.ctx.diagnostics.push(error);
+                    self.ctx.diagnostics.push(
+                        Diagnostic::from(error)
+                            .with_label(expression.range(), "in this action constraint"),
+                    );
+
                     None
                 }
             }
@@ -645,7 +656,10 @@ impl PolicyLowerer {
             return match ast::IntegerLiteral::new(&negated) {
                 Ok(literal) => Some(ast::Expression::integer(literal)),
                 Err(error) => {
-                    self.ctx.diagnostics.push(error);
+                    self.ctx.diagnostics.push(
+                        Diagnostic::from(error).with_label(expression.range(), "overflows `i64`"),
+                    );
+
                     None
                 }
             };
@@ -838,7 +852,11 @@ impl PolicyLowerer {
                     let identifier = match ast::Identifier::new(method_name) {
                         Ok(identifier) => identifier,
                         Err(error) => {
-                            self.ctx.diagnostics.push(error);
+                            self.ctx.diagnostics.push(
+                                Diagnostic::from(error)
+                                    .with_label(name_node.range(), "invalid identifier"),
+                            );
+
                             return None;
                         }
                     };
@@ -886,7 +904,10 @@ impl PolicyLowerer {
         let identifier = match ast::Identifier::new(text) {
             Ok(identifier) => identifier,
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx
+                    .diagnostics
+                    .push(Diagnostic::from(error).with_label(name.range(), "invalid identifier"));
+
                 return None;
             }
         };
@@ -914,7 +935,10 @@ impl PolicyLowerer {
                 match ast::IntegerLiteral::new(text) {
                     Ok(literal) => Some(ast::Expression::integer(literal)),
                     Err(error) => {
-                        self.ctx.diagnostics.push(error);
+                        self.ctx.diagnostics.push(
+                            Diagnostic::from(error).with_label(token.range(), "overflows `i64`"),
+                        );
+
                         None
                     }
                 }
@@ -934,7 +958,10 @@ impl PolicyLowerer {
         match ast::SlotKind::new(text) {
             Ok(kind) => Some(ast::Expression::slot(kind)),
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx
+                    .diagnostics
+                    .push(Diagnostic::from(error).with_label(node.range(), "invalid slot"));
+
                 None
             }
         }
@@ -987,7 +1014,10 @@ impl PolicyLowerer {
         let record_expression = match ast::RecordExpression::new(entries) {
             Ok(record_expression) => record_expression,
             Err(error) => {
-                self.ctx.diagnostics.push(error);
+                self.ctx
+                    .diagnostics
+                    .push(Diagnostic::from(error).with_label(record.range(), "in this record"));
+
                 return None;
             }
         };

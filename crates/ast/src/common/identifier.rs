@@ -24,6 +24,23 @@ impl<'a> Identifier<'a> {
             });
         }
 
+        let mut chars = value.chars();
+
+        if let Some(first) = chars.next()
+            && first != '_'
+            && !first.is_ascii_alphabetic()
+        {
+            return Err(Error::InvalidIdentifier {
+                name: String::from(value),
+            });
+        }
+
+        if !chars.all(|char| char == '_' || char.is_ascii_alphanumeric()) {
+            return Err(Error::InvalidIdentifier {
+                name: String::from(value),
+            });
+        }
+
         Ok(Self(value))
     }
 
