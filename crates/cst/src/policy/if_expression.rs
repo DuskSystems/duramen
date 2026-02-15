@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Expression;
@@ -10,8 +10,8 @@ pub struct IfExpression<'a> {
 
 impl<'a> CstNode<'a> for IfExpression<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::IfExpression => Some(Self { node }),
+        match node.kind().group()? {
+            Group::IfExpression => Some(Self { node }),
             _ => None,
         }
     }
@@ -25,16 +25,14 @@ impl<'a> IfExpression<'a> {
     /// Returns the test expression.
     #[must_use]
     pub fn test(&self) -> Option<Expression<'a>> {
-        self.node
-            .after(Syntax::IfKeyword)
-            .find_map(Expression::cast)
+        self.node.after(Token::IfKeyword).find_map(Expression::cast)
     }
 
     /// Returns the consequent expression.
     #[must_use]
     pub fn consequent(&self) -> Option<Expression<'a>> {
         self.node
-            .after(Syntax::ThenKeyword)
+            .after(Token::ThenKeyword)
             .find_map(Expression::cast)
     }
 
@@ -42,25 +40,25 @@ impl<'a> IfExpression<'a> {
     #[must_use]
     pub fn alternate(&self) -> Option<Expression<'a>> {
         self.node
-            .after(Syntax::ElseKeyword)
+            .after(Token::ElseKeyword)
             .find_map(Expression::cast)
     }
 
     /// Returns the `if` keyword token.
     #[must_use]
     pub fn if_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::IfKeyword)
+        self.node.child(Token::IfKeyword)
     }
 
     /// Returns the `then` keyword token.
     #[must_use]
     pub fn then_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::ThenKeyword)
+        self.node.child(Token::ThenKeyword)
     }
 
     /// Returns the `else` keyword token.
     #[must_use]
     pub fn else_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::ElseKeyword)
+        self.node.child(Token::ElseKeyword)
     }
 }

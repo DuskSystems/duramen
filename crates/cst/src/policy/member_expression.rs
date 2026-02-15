@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node};
 
 use crate::CstNode;
 use crate::policy::{Expression, MemberAccess};
@@ -10,8 +10,8 @@ pub struct MemberExpression<'a> {
 
 impl<'a> CstNode<'a> for MemberExpression<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::MemberExpression => Some(Self { node }),
+        match node.kind().group()? {
+            Group::MemberExpression => Some(Self { node }),
             _ => None,
         }
     }

@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::LiteralKind;
@@ -10,8 +10,8 @@ pub struct Literal<'a> {
 
 impl<'a> CstNode<'a> for Literal<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Literal => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Literal => Some(Self { node }),
             _ => None,
         }
     }
@@ -25,12 +25,14 @@ impl<'a> Literal<'a> {
     /// Returns the literal kind.
     #[must_use]
     pub fn kind(&self) -> Option<LiteralKind> {
-        self.node.children().find_map(|child| match child.kind() {
-            Syntax::TrueKeyword | Syntax::FalseKeyword => Some(LiteralKind::Bool),
-            Syntax::Integer => Some(LiteralKind::Integer),
-            Syntax::String => Some(LiteralKind::String),
-            _ => None,
-        })
+        self.node
+            .children()
+            .find_map(|child| match child.kind().token()? {
+                Token::TrueKeyword | Token::FalseKeyword => Some(LiteralKind::Bool),
+                Token::Integer => Some(LiteralKind::Integer),
+                Token::String => Some(LiteralKind::String),
+                _ => None,
+            })
     }
 
     /// Returns the literal value token.

@@ -10,9 +10,9 @@ Policies 0..47
 │   └─OpenParenthesis "(" 3..4
 └─Policy 4..47
   ├─Error 4..9
-  │ ├─Error "'" 4..5
+  │ ├─Unknown "'" 4..5
   │ ├─Integer "0" 5..6
-  │ ├─Error "'" 6..7
+  │ ├─Unknown "'" 6..7
   │ ├─CloseParenthesis ")" 7..8
   │ └─Whitespace "\n" 8..9
   ├─PermitKeyword "permit" 9..15

@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node};
 
 use crate::CstNode;
 use crate::common::Annotation;
@@ -70,8 +70,8 @@ pub struct Schema<'a> {
 
 impl<'a> CstNode<'a> for Schema<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Schema => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Schema => Some(Self { node }),
             _ => None,
         }
     }

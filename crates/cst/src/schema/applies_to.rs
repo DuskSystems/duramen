@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::schema::{ContextType, PrincipalTypes, ResourceTypes};
@@ -10,8 +10,8 @@ pub struct AppliesTo<'a> {
 
 impl<'a> CstNode<'a> for AppliesTo<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::AppliesToClause => Some(Self { node }),
+        match node.kind().group()? {
+            Group::AppliesToClause => Some(Self { node }),
             _ => None,
         }
     }
@@ -43,18 +43,18 @@ impl<'a> AppliesTo<'a> {
     /// Returns the `appliesTo` keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::AppliesToKeyword)
+        self.node.child(Token::AppliesToKeyword)
     }
 
     /// Returns the opening brace token.
     #[must_use]
     pub fn open_brace(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenBrace)
+        self.node.child(Token::OpenBrace)
     }
 
     /// Returns the closing brace token.
     #[must_use]
     pub fn close_brace(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseBrace)
+        self.node.child(Token::CloseBrace)
     }
 }

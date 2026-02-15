@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Expression;
@@ -10,8 +10,8 @@ pub struct Parenthesized<'a> {
 
 impl<'a> CstNode<'a> for Parenthesized<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Parenthesized => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Parenthesized => Some(Self { node }),
             _ => None,
         }
     }
@@ -31,12 +31,12 @@ impl<'a> Parenthesized<'a> {
     /// Returns the opening parenthesis token.
     #[must_use]
     pub fn open_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenParenthesis)
+        self.node.child(Token::OpenParenthesis)
     }
 
     /// Returns the closing parenthesis token.
     #[must_use]
     pub fn close_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseParenthesis)
+        self.node.child(Token::CloseParenthesis)
     }
 }

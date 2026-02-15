@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 
@@ -9,8 +9,8 @@ pub struct EntityType<'a> {
 
 impl<'a> CstNode<'a> for EntityType<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::EntityType => Some(Self { node }),
+        match node.kind().group()? {
+            Group::EntityType => Some(Self { node }),
             _ => None,
         }
     }
@@ -24,6 +24,6 @@ impl<'a> EntityType<'a> {
     /// Returns the `entity` keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::EntityKeyword)
+        self.node.child(Token::EntityKeyword)
     }
 }

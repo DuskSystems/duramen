@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -11,8 +11,8 @@ pub struct VariableDefinition<'a> {
 
 impl<'a> CstNode<'a> for VariableDefinition<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::VariableDefinition => Some(Self { node }),
+        match node.kind().group()? {
+            Group::VariableDefinition => Some(Self { node }),
             _ => None,
         }
     }
@@ -34,11 +34,11 @@ impl<'a> VariableDefinition<'a> {
     pub fn variable(&self) -> Option<Variable> {
         let token = self.variable_token()?;
 
-        match token.kind() {
-            Syntax::PrincipalKeyword => Some(Variable::Principal),
-            Syntax::ActionKeyword => Some(Variable::Action),
-            Syntax::ResourceKeyword => Some(Variable::Resource),
-            Syntax::ContextKeyword => Some(Variable::Context),
+        match token.kind().token()? {
+            Token::PrincipalKeyword => Some(Variable::Principal),
+            Token::ActionKeyword => Some(Variable::Action),
+            Token::ResourceKeyword => Some(Variable::Resource),
+            Token::ContextKeyword => Some(Variable::Context),
             _ => None,
         }
     }
@@ -64,10 +64,7 @@ impl<'a> VariableDefinition<'a> {
     #[must_use]
     pub fn expression(&self) -> Option<Expression<'a>> {
         // Prefer expression after `in` (handles `is Type in expr`)
-        let after_in = self
-            .node
-            .after(Syntax::InKeyword)
-            .find_map(Expression::cast);
+        let after_in = self.node.after(Token::InKeyword).find_map(Expression::cast);
 
         if after_in.is_some() {
             return after_in;
@@ -76,14 +73,16 @@ impl<'a> VariableDefinition<'a> {
         // Fall back to expression after a comparison operator
         for child in self.node.children() {
             if matches!(
-                child.kind(),
-                Syntax::Equal
-                    | Syntax::NotEqual
-                    | Syntax::Less
-                    | Syntax::LessEqual
-                    | Syntax::Greater
-                    | Syntax::GreaterEqual
-                    | Syntax::Assign
+                child.kind().token(),
+                Some(
+                    Token::Equal
+                        | Token::NotEqual
+                        | Token::Less
+                        | Token::LessEqual
+                        | Token::Greater
+                        | Token::GreaterEqual
+                        | Token::Assign
+                )
             ) {
                 return self.node.after(child.kind()).find_map(Expression::cast);
             }
@@ -95,19 +94,19 @@ impl<'a> VariableDefinition<'a> {
     /// Returns the `is` keyword token.
     #[must_use]
     pub fn is_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::IsKeyword)
+        self.node.child(Token::IsKeyword)
     }
 
     /// Returns the `in` keyword token.
     #[must_use]
     pub fn in_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::InKeyword)
+        self.node.child(Token::InKeyword)
     }
 
     /// Returns the colon token.
     #[must_use]
     pub fn colon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Colon)
+        self.node.child(Token::Colon)
     }
 
     /// Returns the comparison operator token (`==`, `!=`, `<`, etc.).
@@ -115,15 +114,17 @@ impl<'a> VariableDefinition<'a> {
     pub fn operator_token(&self) -> Option<Node<'a>> {
         self.node.children().find(|child| {
             matches!(
-                child.kind(),
-                Syntax::Equal
-                    | Syntax::NotEqual
-                    | Syntax::Less
-                    | Syntax::LessEqual
-                    | Syntax::Greater
-                    | Syntax::GreaterEqual
-                    | Syntax::InKeyword
-                    | Syntax::Assign
+                child.kind().token(),
+                Some(
+                    Token::Equal
+                        | Token::NotEqual
+                        | Token::Less
+                        | Token::LessEqual
+                        | Token::Greater
+                        | Token::GreaterEqual
+                        | Token::InKeyword
+                        | Token::Assign
+                )
             )
         })
     }

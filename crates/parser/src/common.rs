@@ -4,7 +4,7 @@ use core::ops::Range;
 
 use duramen_diagnostic::Diagnostics;
 use duramen_lexer::{Lexer, Token, TokenKind};
-use duramen_syntax::{Builder, Syntax};
+use duramen_syntax::{Builder, Group};
 
 use crate::error::ParseError;
 
@@ -76,9 +76,7 @@ impl<'src> Parser<'src> {
     /// Consumes the current token and moves to the next non-trivial token.
     pub fn next(&mut self) {
         if self.current.kind != TokenKind::Eof {
-            self.builder
-                .token(Syntax::from(self.current.kind), self.current.len);
-
+            self.builder.token(self.current.kind, self.current.len);
             self.position += self.current.len;
         }
 
@@ -89,7 +87,7 @@ impl<'src> Parser<'src> {
             });
 
             if token.kind.is_trivial() {
-                self.builder.token(Syntax::from(token.kind), token.len);
+                self.builder.token(token.kind, token.len);
                 self.position += token.len;
             } else {
                 self.current = token;
@@ -104,7 +102,7 @@ impl<'src> Parser<'src> {
     /// @id("policy name")
     /// ```
     pub fn annotation(&mut self) {
-        let branch = self.builder.open(Syntax::Annotation);
+        let branch = self.builder.open(Group::Annotation);
 
         self.next();
         if self.kind().is_identifier() {

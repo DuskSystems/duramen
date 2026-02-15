@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 
@@ -9,8 +9,8 @@ pub struct Field<'a> {
 
 impl<'a> CstNode<'a> for Field<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Field => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Field => Some(Self { node }),
             _ => None,
         }
     }
@@ -24,7 +24,7 @@ impl<'a> Field<'a> {
     /// Returns the `.` dot token.
     #[must_use]
     pub fn dot(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Dot)
+        self.node.child(Token::Dot)
     }
 
     /// Returns the field name token.

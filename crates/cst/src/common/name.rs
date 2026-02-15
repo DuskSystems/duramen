@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 
@@ -9,8 +9,8 @@ pub struct Name<'a> {
 
 impl<'a> CstNode<'a> for Name<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Name => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Name => Some(Self { node }),
             _ => None,
         }
     }
@@ -32,7 +32,7 @@ impl<'a> Name<'a> {
     pub fn separators(&self) -> impl Iterator<Item = Node<'a>> {
         self.node
             .children()
-            .filter(|child| child.kind() == Syntax::PathSeparator)
+            .filter(|child| child.kind() == Token::PathSeparator)
     }
 
     /// Returns the text of the last identifier segment.

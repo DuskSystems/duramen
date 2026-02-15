@@ -12,4 +12,4 @@ Policies 0..81
 └─Policy 73..81
   └─Error 73..81
     ├─Identifier "bar" 73..76
-    └─Error "\"\n};\n" 76..81
+    └─Unknown "\"\n};\n" 76..81

@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node};
 
 use crate::CstNode;
 use crate::policy::Expression;
@@ -10,8 +10,8 @@ pub struct Arguments<'a> {
 
 impl<'a> CstNode<'a> for Arguments<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Arguments => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Arguments => Some(Self { node }),
             _ => None,
         }
     }

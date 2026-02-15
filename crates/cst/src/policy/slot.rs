@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 
@@ -9,8 +9,8 @@ pub struct Slot<'a> {
 
 impl<'a> CstNode<'a> for Slot<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Slot => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Slot => Some(Self { node }),
             _ => None,
         }
     }
@@ -24,7 +24,7 @@ impl<'a> Slot<'a> {
     /// Returns the `?` token.
     #[must_use]
     pub fn question_mark(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::QuestionMark)
+        self.node.child(Token::QuestionMark)
     }
 
     /// Returns the identifier token after `?`.

@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Arguments;
@@ -10,8 +10,8 @@ pub struct Call<'a> {
 
 impl<'a> CstNode<'a> for Call<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Call => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Call => Some(Self { node }),
             _ => None,
         }
     }
@@ -25,7 +25,7 @@ impl<'a> Call<'a> {
     /// Returns the `.` dot token.
     #[must_use]
     pub fn dot(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Dot)
+        self.node.child(Token::Dot)
     }
 
     /// Returns the method name token.
@@ -45,12 +45,12 @@ impl<'a> Call<'a> {
     /// Returns the opening parenthesis token.
     #[must_use]
     pub fn open_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenParenthesis)
+        self.node.child(Token::OpenParenthesis)
     }
 
     /// Returns the closing parenthesis token.
     #[must_use]
     pub fn close_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseParenthesis)
+        self.node.child(Token::CloseParenthesis)
     }
 }

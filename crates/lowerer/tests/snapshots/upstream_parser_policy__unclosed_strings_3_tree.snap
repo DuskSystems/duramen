@@ -10,4 +10,4 @@ Policies 0..46
 │   └─OpenParenthesis "(" 3..4
 └─Policy 4..46
   └─Error 4..46
-    └─Error "\"0)\npermit (principal, action, resource);\n" 4..46
+    └─Unknown "\"0)\npermit (principal, action, resource);\n" 4..46

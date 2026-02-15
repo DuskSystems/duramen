@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::{Annotation, Name};
@@ -11,8 +11,8 @@ pub struct ActionDeclaration<'a> {
 
 impl<'a> CstNode<'a> for ActionDeclaration<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::ActionDeclaration => Some(Self { node }),
+        match node.kind().group()? {
+            Group::ActionDeclaration => Some(Self { node }),
             _ => None,
         }
     }
@@ -54,12 +54,12 @@ impl<'a> ActionDeclaration<'a> {
     /// Returns the `action` keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::ActionKeyword)
+        self.node.child(Token::ActionKeyword)
     }
 
     /// Returns the semicolon token.
     #[must_use]
     pub fn semicolon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Semicolon)
+        self.node.child(Token::Semicolon)
     }
 }

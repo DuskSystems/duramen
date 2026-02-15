@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -32,25 +32,25 @@ pub enum Expression<'a> {
 
 impl<'a> CstNode<'a> for Expression<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::IfExpression => IfExpression::cast(node).map(Self::If),
-            Syntax::OrExpression => OrExpression::cast(node).map(Self::Or),
-            Syntax::AndExpression => AndExpression::cast(node).map(Self::And),
-            Syntax::RelationExpression => RelationExpression::cast(node).map(Self::Relation),
-            Syntax::SumExpression => SumExpression::cast(node).map(Self::Sum),
-            Syntax::ProductExpression => ProductExpression::cast(node).map(Self::Product),
-            Syntax::HasExpression => HasExpression::cast(node).map(Self::Has),
-            Syntax::LikeExpression => LikeExpression::cast(node).map(Self::Like),
-            Syntax::IsExpression => IsExpression::cast(node).map(Self::Is),
-            Syntax::UnaryExpression => UnaryExpression::cast(node).map(Self::Unary),
-            Syntax::MemberExpression => MemberExpression::cast(node).map(Self::Member),
-            Syntax::Literal => Literal::cast(node).map(Self::Literal),
-            Syntax::EntityReference => EntityReference::cast(node).map(Self::EntityReference),
-            Syntax::Slot => Slot::cast(node).map(Self::Slot),
-            Syntax::Parenthesized => Parenthesized::cast(node).map(Self::Parenthesized),
-            Syntax::List => List::cast(node).map(Self::List),
-            Syntax::Record => Record::cast(node).map(Self::Record),
-            Syntax::Name => Name::cast(node).map(Self::Name),
+        match node.kind().group()? {
+            Group::IfExpression => IfExpression::cast(node).map(Self::If),
+            Group::OrExpression => OrExpression::cast(node).map(Self::Or),
+            Group::AndExpression => AndExpression::cast(node).map(Self::And),
+            Group::RelationExpression => RelationExpression::cast(node).map(Self::Relation),
+            Group::SumExpression => SumExpression::cast(node).map(Self::Sum),
+            Group::ProductExpression => ProductExpression::cast(node).map(Self::Product),
+            Group::HasExpression => HasExpression::cast(node).map(Self::Has),
+            Group::LikeExpression => LikeExpression::cast(node).map(Self::Like),
+            Group::IsExpression => IsExpression::cast(node).map(Self::Is),
+            Group::UnaryExpression => UnaryExpression::cast(node).map(Self::Unary),
+            Group::MemberExpression => MemberExpression::cast(node).map(Self::Member),
+            Group::Literal => Literal::cast(node).map(Self::Literal),
+            Group::EntityReference => EntityReference::cast(node).map(Self::EntityReference),
+            Group::Slot => Slot::cast(node).map(Self::Slot),
+            Group::Parenthesized => Parenthesized::cast(node).map(Self::Parenthesized),
+            Group::List => List::cast(node).map(Self::List),
+            Group::Record => Record::cast(node).map(Self::Record),
+            Group::Name => Name::cast(node).map(Self::Name),
             _ => None,
         }
     }

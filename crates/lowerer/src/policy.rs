@@ -7,7 +7,7 @@ use duramen_ast as ast;
 use duramen_cst::{self as cst, CstNode as _};
 use duramen_diagnostic::Diagnostics;
 use duramen_escape::Escaper;
-use duramen_syntax::{Syntax, Tree};
+use duramen_syntax::{Group, Syntax, Token, Tree};
 
 use crate::common::LowerContext;
 use crate::error::LowerError;
@@ -79,7 +79,7 @@ impl PolicyLowerer {
             let effect_start = effect_token.range().start;
 
             for child in node.children() {
-                if child.kind() == Syntax::Error && child.range().start < effect_start {
+                if child.kind() == Group::Error && child.range().start < effect_start {
                     self.ctx.diagnostics.push(LowerError::InvalidToken {
                         span: child.range(),
                     });
@@ -87,11 +87,11 @@ impl PolicyLowerer {
             }
         }
 
-        if node.child(Syntax::OpenParenthesis).is_some()
-            && node.child(Syntax::CloseParenthesis).is_none()
+        if node.child(Token::OpenParenthesis).is_some()
+            && node.child(Token::CloseParenthesis).is_none()
         {
             let span = if let Some(child) = node
-                .after(Syntax::OpenParenthesis)
+                .after(Token::OpenParenthesis)
                 .find(|child| !child.kind().is_trivial())
             {
                 child.first().range()
@@ -219,11 +219,11 @@ impl PolicyLowerer {
         let operator_token = variable_definition.operator_token()?;
 
         match operator_token.kind() {
-            Syntax::Equal => {
+            Syntax::Token(Token::Equal) => {
                 let entity_or_slot = self.lower_entity_or_slot_expression(variable_definition)?;
                 Some(ast::ScopeConstraint::Equal(entity_or_slot))
             }
-            Syntax::InKeyword => {
+            Syntax::Token(Token::InKeyword) => {
                 let entity_or_slot = self.lower_entity_or_slot_expression(variable_definition)?;
                 Some(ast::ScopeConstraint::In(entity_or_slot))
             }
@@ -300,12 +300,12 @@ impl PolicyLowerer {
         };
 
         match operator_token.kind() {
-            Syntax::Equal => {
+            Syntax::Token(Token::Equal) => {
                 let expression = variable_definition.expression()?;
                 let entity_reference = self.lower_action_entity_reference(&expression)?;
                 Some(ast::ActionConstraint::Equal(entity_reference))
             }
-            Syntax::InKeyword => self.lower_action_in_constraint(variable_definition),
+            Syntax::Token(Token::InKeyword) => self.lower_action_in_constraint(variable_definition),
             _ => {
                 self.ctx.diagnostics.push(LowerError::InvalidScopeOperator {
                     span: operator_token.range(),
@@ -390,9 +390,9 @@ impl PolicyLowerer {
         condition: &cst::Condition<'src>,
     ) -> Option<ast::Condition<'src>> {
         let node = condition.syntax();
-        if node.child(Syntax::OpenBrace).is_some() && node.child(Syntax::CloseBrace).is_none() {
+        if node.child(Token::OpenBrace).is_some() && node.child(Token::CloseBrace).is_none() {
             let span = if let Some(child) = node
-                .after(Syntax::OpenBrace)
+                .after(Token::OpenBrace)
                 .find(|child| !child.kind().is_trivial())
             {
                 child.first().range()
@@ -414,7 +414,7 @@ impl PolicyLowerer {
 
         let body = condition.body();
         if body.is_none()
-            && let Some(error_node) = node.children().find(|child| child.kind() == Syntax::Error)
+            && let Some(error_node) = node.children().find(|child| child.kind() == Group::Error)
         {
             self.ctx.diagnostics.push(LowerError::InvalidToken {
                 span: error_node.range(),
@@ -531,7 +531,7 @@ impl PolicyLowerer {
     ) -> Option<ast::Expression<'src>> {
         let Some(operator) = expression.operator() else {
             if let Some(token) = expression.operator_token()
-                && token.kind() == Syntax::Assign
+                && token.kind() == Token::Assign
             {
                 self.ctx.diagnostics.push(LowerError::InvalidEquals {
                     span: token.range(),
@@ -632,7 +632,7 @@ impl PolicyLowerer {
         match expression {
             cst::Expression::Literal(literal) => {
                 let token = literal.token()?;
-                if token.kind() == Syntax::String {
+                if token.kind() == Token::String {
                     self.ctx.lower_string(token)
                 } else {
                     Some(Cow::Borrowed(token.text()))
@@ -1052,7 +1052,7 @@ impl PolicyLowerer {
                 continue;
             };
 
-            let key = if key_node.kind() == Syntax::String {
+            let key = if key_node.kind() == Token::String {
                 match self.ctx.lower_string(key_node) {
                     Some(unescaped) => unescaped,
                     None => continue,

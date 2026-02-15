@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -11,8 +11,8 @@ pub struct PrincipalTypes<'a> {
 
 impl<'a> CstNode<'a> for PrincipalTypes<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::PrincipalTypes => Some(Self { node }),
+        match node.kind().group()? {
+            Group::PrincipalTypes => Some(Self { node }),
             _ => None,
         }
     }
@@ -38,12 +38,12 @@ impl<'a> PrincipalTypes<'a> {
     /// Returns the `principal` keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::PrincipalKeyword)
+        self.node.child(Token::PrincipalKeyword)
     }
 
     /// Returns the colon token.
     #[must_use]
     pub fn colon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Colon)
+        self.node.child(Token::Colon)
     }
 }

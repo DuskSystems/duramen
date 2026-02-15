@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node};
 
 use crate::CstNode;
 use crate::policy::{Call, Field, Index};
@@ -12,10 +12,10 @@ pub enum MemberAccess<'a> {
 
 impl<'a> CstNode<'a> for MemberAccess<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Field => Field::cast(node).map(Self::Field),
-            Syntax::Call => Call::cast(node).map(Self::Call),
-            Syntax::Index => Index::cast(node).map(Self::Index),
+        match node.kind().group()? {
+            Group::Field => Field::cast(node).map(Self::Field),
+            Group::Call => Call::cast(node).map(Self::Call),
+            Group::Index => Index::cast(node).map(Self::Index),
             _ => None,
         }
     }

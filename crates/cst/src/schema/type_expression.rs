@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node};
 
 use crate::CstNode;
 use crate::common::Name;
@@ -15,13 +15,13 @@ pub enum TypeExpression<'a> {
 
 impl<'a> CstNode<'a> for TypeExpression<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::TypeExpression => node.children().find_map(Self::cast),
-            Syntax::SetType => SetType::cast(node).map(Self::Set),
-            Syntax::RecordType => RecordType::cast(node).map(Self::Record),
-            Syntax::EntityType => EntityType::cast(node).map(Self::Entity),
-            Syntax::EnumType => EnumType::cast(node).map(Self::Enum),
-            Syntax::Name => Name::cast(node).map(Self::Reference),
+        match node.kind().group() {
+            Some(Group::TypeExpression) => node.children().find_map(Self::cast),
+            Some(Group::SetType) => SetType::cast(node).map(Self::Set),
+            Some(Group::RecordType) => RecordType::cast(node).map(Self::Record),
+            Some(Group::EntityType) => EntityType::cast(node).map(Self::Entity),
+            Some(Group::EnumType) => EnumType::cast(node).map(Self::Enum),
+            Some(Group::Name) => Name::cast(node).map(Self::Reference),
             _ => None,
         }
     }

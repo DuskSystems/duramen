@@ -25,11 +25,11 @@ Policies 0..59
 │     └─PathSeparator "::" 44..46
 └─Policy 46..59
   └─Error 46..59
-    ├─Error "'" 46..47
+    ├─Unknown "'" 46..47
     ├─Identifier "mine" 47..51
     ├─Dot "." 51..52
     ├─Identifier "jpg" 52..55
-    ├─Error "'" 55..56
+    ├─Unknown "'" 55..56
     ├─CloseParenthesis ")" 56..57
     ├─Semicolon ";" 57..58
     └─Whitespace "\n" 58..59

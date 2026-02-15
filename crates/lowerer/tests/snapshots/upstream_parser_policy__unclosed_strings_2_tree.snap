@@ -25,4 +25,4 @@ Policies 0..58
 │     └─PathSeparator "::" 44..46
 └─Policy 46..58
   └─Error 46..58
-    └─Error "\"mine.jpg);\n" 46..58
+    └─Unknown "\"mine.jpg);\n" 46..58

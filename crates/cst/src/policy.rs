@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::common::Annotation;
@@ -115,8 +115,8 @@ pub struct Policy<'a> {
 
 impl<'a> CstNode<'a> for Policy<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::Policy => Some(Self { node }),
+        match node.kind().group()? {
+            Group::Policy => Some(Self { node }),
             _ => None,
         }
     }
@@ -135,19 +135,24 @@ impl<'a> Policy<'a> {
     /// Returns the effect (`permit` or `forbid`).
     #[must_use]
     pub fn effect(&self) -> Option<Effect> {
-        self.node.children().find_map(|child| match child.kind() {
-            Syntax::PermitKeyword => Some(Effect::Permit),
-            Syntax::ForbidKeyword => Some(Effect::Forbid),
-            _ => None,
-        })
+        self.node
+            .children()
+            .find_map(|child| match child.kind().token()? {
+                Token::PermitKeyword => Some(Effect::Permit),
+                Token::ForbidKeyword => Some(Effect::Forbid),
+                _ => None,
+            })
     }
 
     /// Returns the effect keyword token.
     #[must_use]
     pub fn effect_token(&self) -> Option<Node<'a>> {
-        self.node
-            .children()
-            .find(|child| matches!(child.kind(), Syntax::PermitKeyword | Syntax::ForbidKeyword))
+        self.node.children().find(|child| {
+            matches!(
+                child.kind().token(),
+                Some(Token::PermitKeyword | Token::ForbidKeyword)
+            )
+        })
     }
 
     /// Returns an iterator over the variable definition children.
@@ -163,18 +168,18 @@ impl<'a> Policy<'a> {
     /// Returns the opening parenthesis token.
     #[must_use]
     pub fn open_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::OpenParenthesis)
+        self.node.child(Token::OpenParenthesis)
     }
 
     /// Returns the closing parenthesis token.
     #[must_use]
     pub fn close_parenthesis(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::CloseParenthesis)
+        self.node.child(Token::CloseParenthesis)
     }
 
     /// Returns the semicolon token.
     #[must_use]
     pub fn semicolon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Semicolon)
+        self.node.child(Token::Semicolon)
     }
 }

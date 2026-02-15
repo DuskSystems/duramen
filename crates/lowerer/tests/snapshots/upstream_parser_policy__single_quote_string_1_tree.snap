@@ -35,11 +35,11 @@ Policies 0..73
 │     ├─Assign "=" 62..63
 │     ├─Whitespace " " 63..64
 │     └─Error 64..65
-│       └─Error "'" 64..65
+│       └─Unknown "'" 64..65
 └─Policy 65..73
   └─Error 65..73
     ├─Identifier "bar" 65..68
-    ├─Error "'" 68..69
+    ├─Unknown "'" 68..69
     ├─Whitespace "\n" 69..70
     ├─CloseBrace "}" 70..71
     ├─Semicolon ";" 71..72

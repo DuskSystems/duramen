@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::schema::TypeExpression;
@@ -10,8 +10,8 @@ pub struct ContextType<'a> {
 
 impl<'a> CstNode<'a> for ContextType<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::ContextType => Some(Self { node }),
+        match node.kind().group()? {
+            Group::ContextType => Some(Self { node }),
             _ => None,
         }
     }
@@ -31,12 +31,12 @@ impl<'a> ContextType<'a> {
     /// Returns the `context` keyword token.
     #[must_use]
     pub fn keyword(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::ContextKeyword)
+        self.node.child(Token::ContextKeyword)
     }
 
     /// Returns the colon token.
     #[must_use]
     pub fn colon(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::Colon)
+        self.node.child(Token::Colon)
     }
 }

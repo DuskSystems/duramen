@@ -1,4 +1,4 @@
-use duramen_syntax::{Node, Syntax};
+use duramen_syntax::{Group, Node, Token};
 
 use crate::CstNode;
 use crate::policy::Expression;
@@ -10,8 +10,8 @@ pub struct LikeExpression<'a> {
 
 impl<'a> CstNode<'a> for LikeExpression<'a> {
     fn cast(node: Node<'a>) -> Option<Self> {
-        match node.kind() {
-            Syntax::LikeExpression => Some(Self { node }),
+        match node.kind().group()? {
+            Group::LikeExpression => Some(Self { node }),
             _ => None,
         }
     }
@@ -37,6 +37,6 @@ impl<'a> LikeExpression<'a> {
     /// Returns the `like` keyword token.
     #[must_use]
     pub fn like_token(&self) -> Option<Node<'a>> {
-        self.node.child(Syntax::LikeKeyword)
+        self.node.child(Token::LikeKeyword)
     }
 }
