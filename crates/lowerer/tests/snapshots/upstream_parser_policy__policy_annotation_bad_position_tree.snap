@@ -6,9 +6,10 @@ Policies 0..65
 ├─Policy 0..8
 │ ├─PermitKeyword "permit" 0..6
 │ ├─Whitespace " " 6..7
-│ ├─OpenParenthesis "(" 7..8
-│ ├─VariableDefinition "" 8..8
-│ ├─CloseParenthesis "" 8..8
+│ ├─Scope 7..8
+│ │ ├─OpenParenthesis "(" 7..8
+│ │ ├─VariableDefinition "" 8..8
+│ │ └─CloseParenthesis "" 8..8
 │ └─Semicolon "" 8..8
 ├─Policy 8..35
 │ ├─Annotation 8..35

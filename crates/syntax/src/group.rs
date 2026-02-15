@@ -15,6 +15,8 @@ pub enum Group {
     Policies,
     /// Policy statement.
     Policy,
+    /// Scope: `(principal, action, resource)`.
+    Scope,
     /// Variable definition: `principal == User::"alice"`.
     VariableDefinition,
     /// Condition clause: `when { ... }`.
@@ -135,6 +137,7 @@ impl fmt::Display for Group {
 
             Self::Policies => "policies",
             Self::Policy => "policy",
+            Self::Scope => "scope",
             Self::VariableDefinition => "variable definition",
             Self::Condition => "condition",
 

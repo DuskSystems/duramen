@@ -2,6 +2,11 @@
 source: crates/lowerer/tests/upstream_parser_policy.rs
 expression: value
 ---
+error: expected string
+  ╭▸ policy_annotations_bad_val_3:1:17
+  │
+1 │ @bad_annotation(bad_annotation)
+  ╰╴                ━ expected string
 error: expected `)`
   ╭▸ policy_annotations_bad_val_3:1:17
   │
@@ -19,11 +24,6 @@ error: unexpected token
   │ ┏━━━━━━━━━━━━━━━━━┛
 2 │ ┃ permit (principal, action, resource);
   ╰╴┗━┛ unexpected token
-error: expected a string literal
-  ╭▸ policy_annotations_bad_val_3:1:17
-  │
-1 │ @bad_annotation(bad_annotation)
-  ╰╴                ━ expected a string literal
 error: missing policy effect
   ╭▸ policy_annotations_bad_val_3:1:1
   │

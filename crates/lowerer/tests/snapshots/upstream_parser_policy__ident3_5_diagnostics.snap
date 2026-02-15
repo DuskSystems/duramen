@@ -7,6 +7,16 @@ error: unexpected token
   │
 2 │ when { if::true::then::false::else::true };
   ╰╴         ━━ unexpected token
+error: expected `then`
+  ╭▸ ident3_5:2:12
+  │
+2 │ when { if::true::then::false::else::true };
+  ╰╴           ━ expected `then`
+error: expected `else`
+  ╭▸ ident3_5:2:12
+  │
+2 │ when { if::true::then::false::else::true };
+  ╰╴           ━ expected `else`
 error: expected `}`
   ╭▸ ident3_5:2:12
   │

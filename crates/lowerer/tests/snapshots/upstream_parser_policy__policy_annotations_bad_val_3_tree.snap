@@ -8,6 +8,7 @@ Policies 0..70
 │ │ ├─At "@" 0..1
 │ │ ├─Identifier "bad_annotation" 1..15
 │ │ ├─OpenParenthesis "(" 15..16
+│ │ ├─String "" 16..16
 │ │ └─CloseParenthesis "" 16..16
 │ └─Semicolon "" 16..16
 └─Policy 16..70
@@ -17,17 +18,18 @@ Policies 0..70
   │ └─Newline "\n" 31..32
   ├─PermitKeyword "permit" 32..38
   ├─Whitespace " " 38..39
-  ├─OpenParenthesis "(" 39..40
-  ├─VariableDefinition 40..49
-  │ └─PrincipalKeyword "principal" 40..49
-  ├─Comma "," 49..50
-  ├─Whitespace " " 50..51
-  ├─VariableDefinition 51..57
-  │ └─ActionKeyword "action" 51..57
-  ├─Comma "," 57..58
-  ├─Whitespace " " 58..59
-  ├─VariableDefinition 59..67
-  │ └─ResourceKeyword "resource" 59..67
-  ├─CloseParenthesis ")" 67..68
+  ├─Scope 39..68
+  │ ├─OpenParenthesis "(" 39..40
+  │ ├─VariableDefinition 40..49
+  │ │ └─PrincipalKeyword "principal" 40..49
+  │ ├─Comma "," 49..50
+  │ ├─Whitespace " " 50..51
+  │ ├─VariableDefinition 51..57
+  │ │ └─ActionKeyword "action" 51..57
+  │ ├─Comma "," 57..58
+  │ ├─Whitespace " " 58..59
+  │ ├─VariableDefinition 59..67
+  │ │ └─ResourceKeyword "resource" 59..67
+  │ └─CloseParenthesis ")" 67..68
   ├─Semicolon ";" 68..69
   └─Newline "\n" 69..70
